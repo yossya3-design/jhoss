@@ -340,8 +340,8 @@ window.dash = (function () {
       <div class="bx-filters" id="filtros" data-source="registros">
         <button class="bx-btn" id="f-hoy" type="button" aria-pressed="false">Hoy</button>
         <div class="bx-f"><label for="f-mes">Mes</label><select id="f-mes"></select></div>
-        <div class="bx-f"><label for="f-desde">Desde</label><input id="f-desde" type="date" min="2020-01-01" max="2099-12-31"></div>
-        <div class="bx-f"><label for="f-hasta">Hasta</label><input id="f-hasta" type="date" min="2020-01-01" max="2099-12-31"></div>
+        <div class="bx-f"><label for="f-sem">Semana</label><select id="f-sem"></select></div><div class="bx-f"><label for="f-dia">Día</label><input id="f-dia" type="date" min="2020-01-01" max="2099-12-31"></div><div hidden><input id="f-desde" type="date" min="2020-01-01" max="2099-12-31">
+        <input id="f-hasta" type="date" min="2020-01-01" max="2099-12-31"></div>
         <div class="bx-f" id="f-sv-box"><label for="f-sv">Supervisor de ventas</label><select id="f-sv"></select></div>
         <button class="bx-btn" id="f-reset" type="button">Quitar filtros</button>
       </div>
@@ -929,6 +929,11 @@ window.dash = (function () {
   [fD, fH].forEach((inp) => inp.addEventListener('blur', () => { const p = dash.params(); inp.value = (inp === fD ? p.desde : p.hasta) || ''; }));
   const hoyLima = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
   $('f-hoy').addEventListener('click', () => { const t = hoyLima(); const p = dash.params(); if (p.desde === t && p.hasta === t) dash.setParams({ desde: null, hasta: null }); else dash.setParams({ desde: t, hasta: t, mes: null }); });
+  const fSem = $('f-sem'), fDia = $('f-dia');
+  const semFin = (w) => iso(d3.utcDay.offset(new Date(w + 'T00:00:00Z'), 6));
+  fSem.addEventListener('change', () => { const w = fSem.value; dash.setParams(w ? { desde: w, hasta: semFin(w), mes: null } : { desde: null, hasta: null }); });
+  fDia.addEventListener('change', () => { const v = fDia.value; if (!v) dash.setParams({ desde: null, hasta: null });
+    else if (fDia.validity.valid && /^\d{4}-\d{2}-\d{2}$/.test(v) && v >= '2020-01-01') dash.setParams({ desde: v, hasta: v, mes: null }); });
   $('f-reset').addEventListener('click', () => { dash.resetParams(); dash.setParams({ edt: null, sv: null, mes: null, desde: null, hasta: null }); });
   const units = { 'd-u-hl': 'hl', 'd-u-ca': 'ca', 'd-u-cl': 'cl' };
   Object.keys(units).forEach((id) => $(id).addEventListener('click', () => { state.unit = units[id]; Object.keys(units).forEach((j) => $(j).setAttribute('aria-pressed', String(j === id))); redraw(); }));
@@ -1065,8 +1070,14 @@ window.dash = (function () {
     $('f-sv-box').hidden = state.tab !== 'ventas';
     const meses = [...new Set(all.map((r) => r.fecha.slice(0, 7)))].sort().reverse();
     fMes.replaceChildren(new Option('Todos los meses', ''), ...meses.map((m) => new Option(MESES[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4), m))); fMes.value = mes;
+    const sems = [...new Set(all.map((r) => iso(d3.utcMonday.floor(new Date(r.fecha + 'T00:00:00Z')))))].sort().reverse();
+    const semLab = (w) => { const f = semFin(w); return `${+w.slice(8, 10)} ${MES3[+w.slice(5, 7) - 1]} – ${+f.slice(8, 10)} ${MES3[+f.slice(5, 7) - 1]}`; };
+    fSem.replaceChildren(new Option('Todas las semanas', ''), ...sems.map((w) => new Option(semLab(w), w)));
+    const esSem = !!desde && hasta === semFin(desde) && new Date(desde + 'T00:00:00Z').getUTCDay() === 1;
+    fSem.value = esSem && sems.includes(desde) ? desde : '';
+    if (document.activeElement !== fDia) fDia.value = desde && desde === hasta ? desde : '';
     const fechas = all.map((r) => r.fecha).sort(); const dMin = fechas[0] || '', dMax = fechas[fechas.length - 1] || '';
-    if (fechas.length) [fD, fH].forEach((inp) => { inp.min = dMin; inp.max = dMax; });
+    if (fechas.length) [fD, fH, fDia].forEach((inp) => { inp.min = dMin; inp.max = dMax; });
     if (document.activeElement !== fD) fD.value = desde; if (document.activeElement !== fH) fH.value = hasta;
 
     // periodo actual y anterior
