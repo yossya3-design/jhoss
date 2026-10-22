@@ -50,6 +50,28 @@ export function convert(buf) {
   }
   const zof = (c) => { const k = toInt(c); return k === null ? "SIN ZONA" : zonas.get(k) || "SIN ZONA"; };
   const svof = (c) => { const k = toInt(c); return k === null ? "SIN SUPERVISOR" : supervisores.get(k) || "SIN SUPERVISOR"; };
+  // Teléfonos: además de BD CLIENTE, se busca en cualquier otra hoja (incluso oculta) que tenga código de cliente y teléfono.
+  const TEL_RE = /tel[eé]f|^telf|^tel\b|celular|^cel\b|m[oó]vil|phone|whats|contacto/;
+  const COD_RE = /^(customer\s*id|c[oó]digo(\s*(de\s*)?cliente)?|cod\.?(\s*(de\s*)?cliente)?|cliente\s*id|id\s*cliente|cod_cliente|customer|solicitante|sold.?to)$/;
+  const SKIP = new Set(["BITACORA", "DESPLANIFICACIÓN", "ADULTERADO", "LISTA DE TT", "RECLAMOS", "RESUMEN", "DETALLE BK", "BD EDT", "SKU", "LISTAS", "GUÍA", "GUIA"]);
+  const telSheets = [];
+  for (const name of wb.sheetNames) {
+    if (SKIP.has(name.trim().toUpperCase())) continue;
+    let rs;
+    try { rs = wb.rows(name, 1); } catch (e) { continue; }
+    for (let h = 0; h < Math.min(10, rs.length); h++) {
+      const hdr = rs[h].map((x) => s(or(x, "")).toLowerCase());
+      const ic = hdr.findIndex((x) => COD_RE.test(x)), itl = hdr.findIndex((x) => TEL_RE.test(x));
+      if (ic < 0 || itl < 0) continue;
+      let n = 0;
+      for (const r of rs.slice(h + 1)) {
+        const k = toInt(g(r, ic)), t = s(or(g(r, itl), ""));
+        if (k !== null && t && !telefonos.get(k)) { telefonos.set(k, t); n++; }
+      }
+      telSheets.push(`${name}: ${n}`);
+      break;
+    }
+  }
   const telof = (c) => { const k = toInt(c); return k === null ? "" : telefonos.get(k) || ""; };
   const sku = new Map();
   for (const r of rows("SKU", 2)) if (!falsy(g(r, 0))) sku.set(g(r, 0), g(r, 1));
@@ -106,6 +128,6 @@ export function convert(buf) {
   }
 
   const now = new Date();
-  out.push({ tipo: "_meta", fecha: "", act: limaIso(now), xact: wb.modified && !isNaN(wb.modified) ? limaIso(wb.modified) : "" });
+  out.push({ tipo: "_meta", fecha: "", act: limaIso(now), xact: wb.modified && !isNaN(wb.modified) ? limaIso(wb.modified) : "", hojas: wb.sheetNames.join(" · "), tels: telefonos.size, telHojas: telSheets.join(" · ") });
   return out;
 }
