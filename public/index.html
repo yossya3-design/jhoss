@@ -317,7 +317,9 @@ window.dash = (function () {
 .bx-resp{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-line);border-radius:8px;padding:3px 6px;font:inherit;font-size:11px;color-scheme:dark}
 .bx-conf.edit{flex-direction:column;align-items:stretch;gap:5px;min-width:190px}
 .bx-conf select{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:5px 8px;font:inherit;font-size:12px;color-scheme:dark}
-.bx-cbs{display:flex;gap:6px}.bx-cb{padding:4px 10px;font-size:12px}
+.bx-cbs{display:flex;gap:6px}
+.bx-cdl{display:flex;flex-direction:column;gap:2px;font-size:10px;font-family:var(--f-mono);color:var(--k-mute);text-transform:uppercase;letter-spacing:.08em}
+.bx-cdl input{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:4px 8px;font:inherit;font-family:var(--f-text);font-size:12px;text-transform:none;letter-spacing:0;color-scheme:dark}.bx-cb{padding:4px 10px;font-size:12px}
 .bx-cmsg{font-size:11px;color:#E8776F;white-space:normal}
 .bx-cbtn{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
 .bx-cz{color:var(--k-mute);white-space:nowrap}
@@ -1113,23 +1115,26 @@ window.dash = (function () {
     if (editing) {
       const s1 = el('select'); [['', '¿Se reprograma?'], ['SI', 'Sí, se reprograma'], ['NO', 'No se reprograma']].forEach(([v, t]) => s1.append(new Option(t, v)));
       const s2 = el('select'); [['', '¿Quién autorizó?'], ...AUT.map((a) => [a, a])].forEach(([v, t]) => s2.append(new Option(t, v)));
+      const s3 = el('input'); s3.type = 'date'; s3.min = limaHoy(); s3.value = rec && rec.freprog ? rec.freprog : mananaIso();
+      const s3l = el('label', 'bx-cdl', '¿Para qué día?'); s3l.append(s3);
       if (rec) { s1.value = rec.reprog; s2.value = rec.autoriza; }
+      const tog = () => { s3l.hidden = s1.value !== 'SI'; }; s1.addEventListener('change', tog); tog();
       const ok = el('button', 'bx-btn bx-solid bx-cb', 'Guardar'); ok.type = 'button';
       const no = el('button', 'bx-btn bx-cb', 'Cancelar'); no.type = 'button';
       const msg = el('span', 'bx-cmsg', '');
-      ok.addEventListener('click', async () => { if (!s1.value || !s2.value) { msg.textContent = 'Elige las dos opciones'; return; }
+      ok.addEventListener('click', async () => { if (!s1.value || !s2.value) { msg.textContent = 'Completa las opciones'; return; } if (s1.value === 'SI' && !s3.value) { msg.textContent = 'Elige para qué día es la reprogramación'; return; }
         ok.disabled = true; msg.textContent = 'Guardando…';
-        try { await confApi('POST', { id, fecha: r.fecha, ruta: r.ruta, codigo: r.codigo, cliente: r.cliente, reprog: s1.value, autoriza: s2.value }); fillConf(box, r, false); updConfCount(); }
+        try { await confApi('POST', { id, fecha: r.fecha, ruta: r.ruta, codigo: r.codigo, cliente: r.cliente, reprog: s1.value, autoriza: s2.value, freprog: s1.value === 'SI' ? s3.value : '' }); fillConf(box, r, false); updConfCount(); }
         catch (e) { ok.disabled = false; msg.textContent = e.message; } });
       no.addEventListener('click', () => fillConf(box, r, false));
-      box.replaceChildren(s1, s2, el('span', 'bx-cbs', ''), msg); box.querySelector('.bx-cbs').append(ok, no); return; }
-    const pill = rec ? el('span', 'bx-pill ' + (rec.reprog === 'SI' ? 'ok' : 'bad'), (rec.reprog === 'SI' ? 'Sí' : 'No') + ' · ' + rec.autoriza) : el('span', 'bx-pill pend', 'Pendiente');
+      box.replaceChildren(s1, s3l, s2, el('span', 'bx-cbs', ''), msg); box.querySelector('.bx-cbs').append(ok, no); return; }
+    const pill = rec ? el('span', 'bx-pill ' + (rec.reprog === 'SI' ? 'ok' : 'bad'), (rec.reprog === 'SI' ? 'Sí · ' + (rec.freprog ? dlabel(rec.freprog) : 'sin fecha') : 'No') + ' · ' + rec.autoriza) : el('span', 'bx-pill pend', 'Pendiente');
     if (rec) pill.title = `Registrado por ${rec.by === 'dec' ? 'DEC' : 'administrador'} el ${limaTxt(rec.at)}`;
     box.replaceChildren(pill);
     if (canConf) { const b = el('button', 'bx-lnk bx-cbtn', rec ? 'Cambiar' : 'Confirmar'); b.type = 'button'; b.addEventListener('click', () => fillConf(box, r, true)); box.append(b); }
     if (rec && rec.reprog === 'SI') {
       const ln = el('div', 'bx-wal');
-      if (canConf) { const w = el('a', 'bx-wa', rec.wa ? 'Reenviar WhatsApp' : 'Enviar WhatsApp'); w.href = waLink(r); w.target = '_blank'; w.rel = 'noopener';
+      if (canConf) { const w = el('a', 'bx-wa', rec.wa ? 'Reenviar WhatsApp' : 'Enviar WhatsApp'); w.href = waLink(r, rec); w.target = '_blank'; w.rel = 'noopener';
         if (!r.tel) w.title = 'Sin teléfono en BD CLIENTE: WhatsApp te pedirá elegir el contacto';
         w.addEventListener('click', () => { confApi('POST', { id, wa: true }).then(() => { fillConf(box, r, false); updConfCount(); }).catch(() => {}); }); ln.append(w); }
       if (rec.wa) ln.append(el('span', 'bx-cz', 'WhatsApp enviado ' + limaTxt(rec.wa)));
@@ -1139,19 +1144,23 @@ window.dash = (function () {
         else if (rec.resp) ln.append(el('span', 'bx-pill ' + (rec.resp === 'CONFIRMO' ? 'ok' : rec.resp === 'NO CONFIRMO' ? 'bad' : 'pend'), RESPT[rec.resp])); }
       if (ln.childNodes.length) box.append(ln); } }
   const RESPT = { CONFIRMO: 'Cliente confirmó', 'NO CONFIRMO': 'Cliente no confirmó', 'SIN RESPUESTA': 'Sin respuesta' };
+  const mananaIso = () => new Date(Date.now() - 5 * 3600e3 + 864e5).toISOString().slice(0, 10);
+  const DLARGO = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const entregaTxt = (f) => { if (!f) return 'mañana ' + manana(); const d = new Date(f + 'T12:00:00Z'); const dm = `${f.slice(8, 10)}/${f.slice(5, 7)}`;
+    return f === mananaIso() ? `mañana ${DLARGO[d.getUTCDay()]} ${dm}` : `el ${DLARGO[d.getUTCDay()]} ${dm}`; };
   const manana = () => { const t = new Date(Date.now() - 5 * 3600e3 + 864e5).toISOString(); return `${t.slice(8, 10)}/${t.slice(5, 7)}`; };
   const nomCli = (n) => { const s0 = String(n || '').trim(); const p = s0.split(','); if (p.length !== 2) return s0; return (p[1].trim() + ' ' + p[0].trim()).toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase()); };
   const waNum = (t) => { let d = String(t || '').replace(/\D/g, ''); if (d.length === 9 && d[0] === '9') d = '51' + d; return d; };
-  const waLink = (r) => 'https://wa.me/' + waNum(r.tel) + '?text=' + encodeURIComponent(`Hola ${nomCli(r.cliente)}, le saludamos de Backus – CD Callao. Su pedido (código ${r.codigo}) fue reprogramado y se le entregará mañana ${manana()}. ¿Nos confirma que podrá recibirlo? Responda SÍ o NO. ¡Gracias!`);
+  const waLink = (r, rec) => 'https://wa.me/' + waNum(r.tel) + '?text=' + encodeURIComponent(`Hola ${nomCli(r.cliente)}, le saludamos de Backus – CD Callao. Su pedido (código ${r.codigo}) fue reprogramado y se le entregará ${entregaTxt(rec && rec.freprog)}. ¿Nos confirma que podrá recibirlo? Responda SÍ o NO. ¡Gracias!`);
   const accCorte = (r) => { if (r.accion === 'ZT (rechazo)') return 'CERRADO (ZT)'; if (r.accion !== 'Reprogramación') return 'SIN CLASIFICAR'; const c = confMap.get(confId(r)); return !c ? 'PENDIENTE DE CONFIRMAR' : c.reprog === 'SI' ? 'REPROGRAMAR' : 'CERRAR PEDIDO'; };
   $('d-xl').addEventListener('click', () => {
     const all = (window.__confAll || []).slice(); if (!all.length || !window.makeXlsx) return;
     const ORD = { REPROGRAMAR: 0, 'CERRAR PEDIDO': 1, 'PENDIENTE DE CONFIRMAR': 2, 'CERRADO (ZT)': 3, 'SIN CLASIFICAR': 4 };
-    const H = ['Acción para el corte', 'Fecha', 'Ruta', 'EDT', 'Código', 'Cliente', 'Teléfono', 'Zona', 'Supervisor', 'Cajas', 'HL', 'Qué se hace', '¿Se reprograma?', 'Autorizó', 'WhatsApp enviado', 'Respuesta del cliente', 'Motivo', 'Alertado', 'Confirmado por', 'Hora de confirmación'];
-    const W = [22, 11, 9, 22, 11, 34, 13, 9, 24, 7, 8, 15, 15, 20, 17, 19, 22, 22, 15, 18];
+    const H = ['Acción para el corte', 'Fecha', 'Ruta', 'EDT', 'Código', 'Cliente', 'Teléfono', 'Zona', 'Supervisor', 'Cajas', 'HL', 'Qué se hace', '¿Se reprograma?', 'Fecha de reprogramación', 'Autorizó', 'WhatsApp enviado', 'Respuesta del cliente', 'Motivo', 'Alertado', 'Confirmado por', 'Hora de confirmación'];
+    const W = [22, 11, 9, 22, 11, 34, 13, 9, 24, 7, 8, 15, 15, 18, 20, 17, 19, 22, 22, 15, 18];
     const row = (r) => { const c = r.accion === 'Reprogramación' ? confMap.get(confId(r)) : null; const a = accCorte(r);
       return [a, dlabel(r.fecha), r.ruta, short(r.edt), /^\d+$/.test(r.codigo) ? +r.codigo : r.codigo, r.cliente, r.tel || '', r.zona, String(r.sv || '').toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase()), r.ca, +(+r.hl).toFixed(3), r.accion,
-        c ? (c.reprog === 'SI' ? 'Sí' : 'No') : '', c ? c.autoriza : '', c && c.wa ? limaTxt(c.wa) : '', c && c.resp ? RESPT[c.resp] : '', r.motivo, r.alertado,
+        c ? (c.reprog === 'SI' ? 'Sí' : 'No') : '', c && c.freprog ? dlabel(c.freprog) + '/' + c.freprog.slice(0, 4) : '', c ? c.autoriza : '', c && c.wa ? limaTxt(c.wa) : '', c && c.resp ? RESPT[c.resp] : '', r.motivo, r.alertado,
         c ? (c.by === 'dec' ? 'DEC' : 'Administrador') : '', c && c.at ? limaTxt(c.at) : '']; };
     const rs = all.map((r) => ({ r, a: accCorte(r) })).sort((x, y) => ORD[x.a] - ORD[y.a] || y.r.fecha.localeCompare(x.r.fecha) || x.r.ruta.localeCompare(y.r.ruta));
     const sh = (name, f) => ({ name, rows: [H, ...rs.filter(f).map((x) => row(x.r))], widths: W });
@@ -1319,7 +1328,7 @@ window.dash = (function () {
         window.__confRows = tr; window.__confAll = des; updConfCount(); const hasTel = tr.some((r) => r.tel);
         table($('d-tabla'), 'd', [
           { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' }, ...(hasTel ? [{ k: 'tel', h: 'Teléfono', node: telNode }] : []), { k: 'zona', h: 'Zona' }, { k: 'svc', h: 'Supervisor' },
-          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'conf', h: '¿Se reprograma? · Autorizó', node: confNode }, { k: 'motivo', h: 'Motivo' }, { k: 'alertado', h: 'Alertado' },
+          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'conf', h: '¿Se reprograma? · Día · Autorizó', node: confNode }, { k: 'motivo', h: 'Motivo' }, { k: 'alertado', h: 'Alertado' },
         ], tr.map((r) => ({ ...r, edtc: short(r.edt), svc: svName(r.sv || '—'), conf: r.accion === 'Reprogramación' ? ((confMap.get(confId(r)) || {}).reprog || 'PENDIENTE') : 'ZZ' })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'ca' ? fmt(d3.sum(rs, (r) => r.ca)) : c.k === 'hl' ? f2(d3.sum(rs, (r) => r.hl)) : '');
       }
 

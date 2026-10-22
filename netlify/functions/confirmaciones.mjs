@@ -23,9 +23,12 @@ export default async (req) => {
     const reprog = b.reprog !== undefined ? clean(b.reprog, 2).toUpperCase() : prev && prev.reprog;
     const autoriza = b.autoriza !== undefined ? clean(b.autoriza, 40) : prev && prev.autoriza;
     if (!["SI", "NO"].includes(reprog) || !AUT.includes(autoriza)) return json({ error: "Elige si se reprograma y quién autorizó" }, 400);
+    const freprog = b.freprog !== undefined ? clean(b.freprog, 10) : prev && prev.freprog;
+    if (reprog === "SI" && !/^\d{4}-\d{2}-\d{2}$/.test(freprog || "")) return json({ error: "Elige para qué día es la reprogramación" }, 400);
     const rec = { ...(prev || {}), id, reprog, autoriza };
+    if (reprog === "SI") rec.freprog = freprog; else delete rec.freprog;
     for (const k of ["fecha", "ruta", "codigo", "cliente"]) if (b[k] !== undefined) rec[k] = clean(b[k], k === "cliente" ? 120 : 20);
-    if (b.reprog !== undefined || b.autoriza !== undefined) { rec.by = role; rec.at = new Date().toISOString(); }
+    if (b.reprog !== undefined || b.autoriza !== undefined || b.freprog !== undefined) { rec.by = role; rec.at = new Date().toISOString(); }
     if (reprog !== "SI") { delete rec.wa; delete rec.resp; }
     if (b.wa === true && reprog === "SI") { rec.wa = new Date().toISOString(); rec.waBy = role; }
     if (b.resp !== undefined) { const r = clean(b.resp, 20).toUpperCase(); if (r && !RESP.includes(r)) return json({ error: "Respuesta no válida" }, 400); if (r) { rec.resp = r; rec.respAt = new Date().toISOString(); } else { delete rec.resp; delete rec.respAt; } }
