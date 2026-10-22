@@ -307,6 +307,18 @@ window.dash = (function () {
 .bx-foot{padding:8px 14px}
 }
 @media (max-width:360px){.bx-title{font-size:2.15rem}.bx-crest{width:84px}.bx-clock strong{font-size:1.8rem}.bx-hubt .n{font-size:1.1rem}.bx-kpi .val{font-size:1.6rem}}
+.bx-loginwrap{padding:0 var(--cds-pad-lg)}.bx-loginwrap>.bx-card{margin-bottom:var(--cds-pad-lg)}
+.bx-pill.bad::before{background:#C94A43}.bx-pill.pend{color:var(--k-mute)!important}.bx-pill.pend::before{background:#6E6758}
+.bx-conf{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;white-space:nowrap}
+.bx-conf.edit{flex-direction:column;align-items:stretch;gap:5px;min-width:190px}
+.bx-conf select{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:5px 8px;font:inherit;font-size:12px;color-scheme:dark}
+.bx-cbs{display:flex;gap:6px}.bx-cb{padding:4px 10px;font-size:12px}
+.bx-cmsg{font-size:11px;color:#E8776F;white-space:normal}
+.bx-cbtn{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+.bx-cz{color:var(--k-mute);white-space:nowrap}
+.bx-tel{color:var(--k-gold);text-decoration:none;font-family:var(--f-mono);white-space:nowrap}.bx-tel:hover{text-decoration:underline}
+.bx-confc{margin:0;font-size:12px;color:var(--k-mute)}.bx-confc b{color:var(--k-fg)}
+@media (max-width:600px){.bx-loginwrap{padding:0 12px}}
 </style>
 
 <div class="bx" id="tablero">
@@ -407,6 +419,7 @@ window.dash = (function () {
             <div class="bx-seg" role="group" aria-label="Acción"><button type="button" data-acc="" aria-pressed="true">Todos</button><button type="button" data-acc="Reprogramación" aria-pressed="false">Reprogramación</button><button type="button" data-acc="ZT (rechazo)" aria-pressed="false">ZT</button><button type="button" data-acc="Sin clasificar" aria-pressed="false">Sin clasificar</button></div>
           </div>
           <div class="bx-tools"><input class="bx-search" id="d-q" type="search" placeholder="Buscar cliente, código o ruta" aria-label="Buscar cliente, código o ruta"><span class="bx-count" id="d-count"></span></div>
+          <p class="bx-confc" id="d-conf"></p>
           <div class="bx-tw" id="d-tabla"></div>
         </div>
         <div class="bx-card bx-wide" id="v-card-sem" data-source="registros">
@@ -529,15 +542,6 @@ window.dash = (function () {
             <button class="bx-btn" type="button" id="n-dl" hidden>Descargar data acumulada (CSV)</button></div>
           <div class="bx-tw" id="n-tb-det"></div>
         </div>
-        <div class="bx-card bx-wide bx-admin" id="n-login" hidden>
-          <div class="bx-card-h"><div><h3 style="color:var(--k-gold)">Acceso administrador</h3><p class="sub">Para ingresar o eliminar placas de incumplimiento y descargar la data acumulada.</p></div>
-            <button class="bx-btn" type="button" id="n-lx">Cerrar</button></div>
-          <form class="bx-lform" id="n-lform" autocomplete="off">
-            <div class="bx-f"><label for="n-lu">Usuario</label><input type="text" id="n-lu" autocomplete="username" required></div>
-            <div class="bx-f"><label for="n-lk">Clave</label><input type="password" id="n-lk" autocomplete="current-password" required></div>
-            <button class="bx-btn bx-solid" type="submit" id="n-lgo">Ingresar</button><span class="bx-count" id="n-lmsg"></span>
-          </form>
-        </div>
         <div class="bx-card bx-wide bx-admin" id="n-adm" hidden>
           <div><h3 style="color:var(--k-gold)">Ingresar placas de incumplimiento</h3><p class="sub">Solo administrador. Se registra el día siguiente: elige la fecha del incumplimiento (por defecto, ayer) y escribe o pega las placas, una por línea o separadas por coma. La ruta y el EDT se completan solos.</p></div>
           <div class="bx-aform">
@@ -599,7 +603,18 @@ window.dash = (function () {
 
 
   </div>
-  <div class="bx-foot" id="pie" data-source="registros"><span>—</span><span class="bx-foot-r"><span id="err" class="bx-err" hidden></span><button type="button" class="bx-lnk" id="adm-btn">Acceso administrador</button><span>Transportes · CD Callao</span></span></div>
+  <div class="bx-loginwrap">
+        <div class="bx-card bx-wide bx-admin" id="n-login" hidden>
+          <div class="bx-card-h"><div><h3 style="color:var(--k-gold)" id="n-lt">Acceso administrador</h3><p class="sub" id="n-ls">Para ingresar o eliminar placas de incumplimiento y descargar la data acumulada.</p></div>
+            <button class="bx-btn" type="button" id="n-lx">Cerrar</button></div>
+          <form class="bx-lform" id="n-lform" autocomplete="off">
+            <div class="bx-f"><label for="n-lu">Usuario</label><input type="text" id="n-lu" autocomplete="username" required></div>
+            <div class="bx-f"><label for="n-lk">Clave</label><input type="password" id="n-lk" autocomplete="current-password" required></div>
+            <button class="bx-btn bx-solid" type="submit" id="n-lgo">Ingresar</button><span class="bx-count" id="n-lmsg"></span>
+          </form>
+        </div>
+  </div>
+  <div class="bx-foot" id="pie" data-source="registros"><span>—</span><span class="bx-foot-r"><span id="err" class="bx-err" hidden></span><button type="button" class="bx-lnk" id="dec-btn">Acceso DEC</button><button type="button" class="bx-lnk" id="adm-btn">Acceso administrador</button><span>Transportes · CD Callao</span></span></div>
   <div class="bx-tip" id="tip" hidden></div>
 </div>
 
@@ -867,7 +882,8 @@ window.dash = (function () {
     const tb = t.createTBody();
     rows.forEach((r) => { const tr = tb.insertRow(); cols.forEach((c) => { const td = tr.insertCell(); if (c.n) td.className = 'n';
       if (c.bg) td.style.background = c.bg(r[c.k]);
-      if (c.pill) td.append(el('span', 'bx-pill ' + c.pill(r), r[c.k] || '—'));
+      if (c.node) td.append(c.node(r));
+      else if (c.pill) td.append(el('span', 'bx-pill ' + c.pill(r), r[c.k] || '—'));
       else td.textContent = c.f ? c.f(r[c.k], r) : (r[c.k] === '' || r[c.k] == null ? '—' : String(r[c.k])); }); });
     if (foot) { const tf = t.createTFoot().insertRow(); cols.forEach((c, i) => { const td = tf.insertCell(); if (c.n) td.className = 'n'; td.textContent = foot(c, i, rows); }); }
     box.replaceChildren(t);
@@ -964,7 +980,7 @@ window.dash = (function () {
   let incF = { lo: '', hi: '', edt: '', isDay: false }, incRows = [], incAdmin = false, incState = 'loading';
   const TK = 'bx_admin_token'; let incTok = ''; try { incTok = sessionStorage.getItem(TK) || ''; } catch (e) { incTok = ''; }
   const tokOk = (t) => { const p = (t || '').split('.'); return p.length === 3 && +p[1] > Date.now(); };
-  if (!tokOk(incTok)) incTok = ''; incAdmin = !!incTok;
+  if (!tokOk(incTok)) incTok = ''; let role = incTok ? incTok.split('.')[0] : ''; incAdmin = role === 'admin'; let canConf = role === 'admin' || role === 'dec';
   const incApi = async (method, body, id) => { const r = await fetch('/api/incumplimientos' + (id ? '?id=' + encodeURIComponent(id) : ''), { method, cache: 'no-store',
       headers: { 'content-type': 'application/json', ...(incTok ? { authorization: 'Bearer ' + incTok } : {}) }, body: body ? JSON.stringify(body) : undefined });
     const j = await r.json().catch(() => ({}));
@@ -972,8 +988,9 @@ window.dash = (function () {
     if (!r.ok) throw new Error(j.error || 'Error ' + r.status);
     if (j.rows) { incRows = j.rows.filter((x) => x.fecha && x.placa); incState = 'ok'; renderInc(); prevInc(); }
     return j; };
-  function setAdmin(t) { incTok = t || ''; incAdmin = !!incTok; try { if (incTok) sessionStorage.setItem(TK, incTok); else sessionStorage.removeItem(TK); } catch (e) { /* sin almacenamiento */ }
-    $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('n-login').hidden = true; renderInc(); }
+  function setAdmin(t) { incTok = t || ''; role = incTok ? incTok.split('.')[0] : ''; incAdmin = role === 'admin'; canConf = role === 'admin' || role === 'dec'; try { if (incTok) sessionStorage.setItem(TK, incTok); else sessionStorage.removeItem(TK); } catch (e) { /* sin almacenamiento */ }
+    $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('adm-btn').hidden = role === 'dec';
+    $('dec-btn').textContent = role === 'dec' ? 'Salir (DEC)' : 'Acceso DEC'; $('dec-btn').hidden = incAdmin; $('n-login').hidden = true; renderInc(); redraw(); }
   function renderInc() {
     const { lo, hi, edt, isDay } = incF;
     const sel = incRows.filter((r) => (!lo || r.fecha >= lo) && (!hi || r.fecha <= hi) && (!edt || r.edt === edt));
@@ -1039,19 +1056,72 @@ window.dash = (function () {
   });
   const loadInc = () => incApi('GET').catch(() => { if (incState !== 'ok') { incState = 'off'; renderInc(); } });
   loadInc(); setInterval(loadInc, 5 * 60e3);
-  const showLogin = () => { $('tab-almacen').click(); const sb = document.querySelector('[data-asub="inc"]'); if (sb) sb.click();
+  let loginKind = 'admin';
+  const showLogin = (kind) => { loginKind = kind; $('n-lt').textContent = kind === 'dec' ? 'Acceso DEC' : 'Acceso administrador';
+    $('n-ls').textContent = kind === 'dec' ? 'Para confirmar las reprogramaciones de los clientes desplanificados.' : 'Para ingresar o eliminar placas de incumplimiento y descargar la data acumulada.';
     $('n-login').hidden = false; $('n-lmsg').textContent = ''; setTimeout(() => { $('n-lu').focus(); $('n-login').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60); };
-  $('adm-btn').addEventListener('click', () => { if (incAdmin) setAdmin(''); else showLogin(); });
+  $('adm-btn').addEventListener('click', () => { if (incAdmin) setAdmin(''); else showLogin('admin'); });
+  $('dec-btn').addEventListener('click', () => { if (role === 'dec') setAdmin(''); else showLogin('dec'); });
   $('n-lx').addEventListener('click', () => { $('n-login').hidden = true; });
   $('n-lform').addEventListener('submit', async (e) => { e.preventDefault(); const m = $('n-lmsg'); m.textContent = 'Verificando…'; $('n-lgo').disabled = true;
     try { const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ usuario: $('n-lu').value, clave: $('n-lk').value }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.token) { m.textContent = j.error || 'No se pudo ingresar'; }
-      else { $('n-lk').value = ''; setAdmin(j.token); $('n-msg').textContent = 'Sesión de administrador iniciada.'; $('n-f').value = ayer(); prevInc(); setTimeout(() => $('n-adm').scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); } }
+      else { $('n-lk').value = ''; setAdmin(j.token); goRole(); } }
     catch (err) { m.textContent = 'Sin conexión. Intenta otra vez.'; }
     $('n-lgo').disabled = false; });
   $('adm-ref').addEventListener('click', async () => { const b = $('adm-ref'), t = b.querySelector('.t'); if (b.disabled) return; b.disabled = true; b.classList.add('spin'); t.textContent = 'Leyendo el Excel…';
     await window.__bxLoad(true); await loadInc(); b.classList.remove('spin'); t.textContent = 'Datos al día'; setTimeout(() => { t.textContent = 'Actualizar datos ahora'; b.disabled = false; }, 4000); });
+  function goRole() {
+    if (role === 'admin') { $('tab-almacen').click(); const sb = document.querySelector('[data-asub="inc"]'); if (sb) sb.click();
+      $('n-msg').textContent = 'Sesión de administrador iniciada.'; $('n-f').value = ayer(); prevInc(); setTimeout(() => $('n-adm').scrollIntoView({ behavior: 'smooth', block: 'center' }), 80); }
+    else if (role === 'dec') { $('tab-ventas').click(); const sb = document.querySelector('[data-vsub="des"]'); if (sb) sb.click();
+      const rb = document.querySelector('[data-acc="Reprogramación"]'); if (rb) rb.click();
+      setTimeout(() => $('d-card-tabla').scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); } }
+  // ----- confirmación de reprogramaciones -----
+  let confMap = new Map(), confSig = '';
+  const confId = (r) => `${r.fecha}|${r.ruta}|${r.codigo}`;
+  const limaTxt = (isoS) => { const t = new Date(Date.parse(isoS) - 5 * 3600e3).toISOString(); return `${t.slice(8, 10)}/${t.slice(5, 7)} ${t.slice(11, 16)}`; };
+  const confApi = async (method, body, id) => { const r = await fetch('/api/confirmaciones' + (id ? '?id=' + encodeURIComponent(id) : ''), { method, cache: 'no-store',
+      headers: { 'content-type': 'application/json', ...(incTok ? { authorization: 'Bearer ' + incTok } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 401) { setAdmin(''); throw new Error(j.error || 'Sesión vencida: vuelve a ingresar'); }
+    if (!r.ok) throw new Error(j.error || 'Error ' + r.status);
+    if (j.rows) { const sig = JSON.stringify(j.rows); const changed = sig !== confSig; confSig = sig; confMap = new Map(j.rows.map((x) => [x.id, x])); if (changed && method === 'GET' && !document.querySelector('.bx-conf.edit')) redraw(); }
+    return j; };
+  const loadConf = () => confApi('GET').catch(() => {});
+  loadConf(); setInterval(loadConf, 2 * 60e3);
+  const AUT = ['Supervisor de ventas', 'BDR', 'Cliente'];
+  function confCount(rows) { const rp = rows.filter((r) => r.accion === 'Reprogramación'); const ids = rp.map(confId);
+    const si = ids.filter((i) => (confMap.get(i) || {}).reprog === 'SI').length, no = ids.filter((i) => (confMap.get(i) || {}).reprog === 'NO').length;
+    return { tot: rp.length, si, no, pend: rp.length - si - no }; }
+  function updConfCount() { const c = window.__confRows ? confCount(window.__confRows) : null; const e = $('d-conf'); if (!e || !c) return;
+    e.replaceChildren(); if (!c.tot) return;
+    e.append('Reprogramaciones: ', B(fmt(c.si)), ' confirmadas · ', B(fmt(c.no)), ' no se reprograman · ', B(fmt(c.pend)), ' pendientes'); }
+  function fillConf(box, r, editing) {
+    const id = confId(r), rec = confMap.get(id); box.className = 'bx-conf' + (editing ? ' edit' : '');
+    if (editing) {
+      const s1 = el('select'); [['', '¿Se reprograma?'], ['SI', 'Sí, se reprograma'], ['NO', 'No se reprograma']].forEach(([v, t]) => s1.append(new Option(t, v)));
+      const s2 = el('select'); [['', '¿Quién autorizó?'], ...AUT.map((a) => [a, a])].forEach(([v, t]) => s2.append(new Option(t, v)));
+      if (rec) { s1.value = rec.reprog; s2.value = rec.autoriza; }
+      const ok = el('button', 'bx-btn bx-solid bx-cb', 'Guardar'); ok.type = 'button';
+      const no = el('button', 'bx-btn bx-cb', 'Cancelar'); no.type = 'button';
+      const msg = el('span', 'bx-cmsg', '');
+      ok.addEventListener('click', async () => { if (!s1.value || !s2.value) { msg.textContent = 'Elige las dos opciones'; return; }
+        ok.disabled = true; msg.textContent = 'Guardando…';
+        try { await confApi('POST', { id, fecha: r.fecha, ruta: r.ruta, codigo: r.codigo, cliente: r.cliente, reprog: s1.value, autoriza: s2.value }); fillConf(box, r, false); updConfCount(); }
+        catch (e) { ok.disabled = false; msg.textContent = e.message; } });
+      no.addEventListener('click', () => fillConf(box, r, false));
+      box.replaceChildren(s1, s2, el('span', 'bx-cbs', ''), msg); box.querySelector('.bx-cbs').append(ok, no); return; }
+    const pill = rec ? el('span', 'bx-pill ' + (rec.reprog === 'SI' ? 'ok' : 'bad'), (rec.reprog === 'SI' ? 'Sí' : 'No') + ' · ' + rec.autoriza) : el('span', 'bx-pill pend', 'Pendiente');
+    if (rec) pill.title = `Registrado por ${rec.by === 'dec' ? 'DEC' : 'administrador'} el ${limaTxt(rec.at)}`;
+    box.replaceChildren(pill);
+    if (canConf) { const b = el('button', 'bx-lnk bx-cbtn', rec ? 'Cambiar' : 'Confirmar'); b.type = 'button'; b.addEventListener('click', () => fillConf(box, r, true)); box.append(b); } }
+  function confNode(r) {
+    if (r.accion === 'ZT (rechazo)') return el('span', 'bx-cz', 'Cerrado · ZT');
+    if (r.accion !== 'Reprogramación') return el('span', 'bx-cz', '—');
+    const box = el('div'); fillConf(box, r, false); return box; }
+  const telNode = (r) => { if (!r.tel) return el('span', 'bx-cz', '—'); const a = el('a', 'bx-tel', r.tel); a.href = 'tel:' + String(r.tel).replace(/[^0-9+]/g, ''); return a; };
   setAdmin(incTok);
 
 
@@ -1205,10 +1275,11 @@ window.dash = (function () {
         let tr = des.filter((r) => !state.acc || r.accion === state.acc);
         if (state.q) tr = tr.filter((r) => (r.cliente + ' ' + r.codigo + ' ' + r.ruta).toLowerCase().includes(state.q));
         $('d-count').textContent = `${fmt(tr.length)} línea(s) · ${f1(d3.sum(tr, (r) => r.hl))} HL · ${fmt(d3.sum(tr, (r) => r.ca))} cajas`;
+        window.__confRows = tr; updConfCount(); const hasTel = tr.some((r) => r.tel);
         table($('d-tabla'), 'd', [
-          { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' }, { k: 'zona', h: 'Zona' }, { k: 'svc', h: 'Supervisor' },
-          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'motivo', h: 'Motivo' },
-        ], tr.map((r) => ({ ...r, edtc: short(r.edt), svc: svName(r.sv || '—') })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'ca' ? fmt(d3.sum(rs, (r) => r.ca)) : c.k === 'hl' ? f2(d3.sum(rs, (r) => r.hl)) : '');
+          { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' }, ...(hasTel ? [{ k: 'tel', h: 'Teléfono', node: telNode }] : []), { k: 'zona', h: 'Zona' }, { k: 'svc', h: 'Supervisor' },
+          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'conf', h: '¿Se reprograma? · Autorizó', node: confNode }, { k: 'motivo', h: 'Motivo' },
+        ], tr.map((r) => ({ ...r, edtc: short(r.edt), svc: svName(r.sv || '—'), conf: r.accion === 'Reprogramación' ? ((confMap.get(confId(r)) || {}).reprog || 'PENDIENTE') : 'ZZ' })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'ca' ? fmt(d3.sum(rs, (r) => r.ca)) : c.k === 'hl' ? f2(d3.sum(rs, (r) => r.hl)) : '');
       }
 
       // ===== TT =====

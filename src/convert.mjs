@@ -36,18 +36,21 @@ export function convert(buf) {
   const edt = new Map();
   for (const r of rows("BD EDT", 2)) if (!falsy(g(r, 0))) edt.set(s(g(r, 0)).toUpperCase(), [g(r, 1), s(or(g(r, 4), "SIN EDT"))]);
 
-  const clientes = new Map(), supervisores = new Map(), zonas = new Map();
+  const clientes = new Map(), supervisores = new Map(), zonas = new Map(), telefonos = new Map();
   const hc = header("BD CLIENTE").map((h) => s(or(h, "")).toLowerCase());
   const isv = hc.indexOf("supervisor name"), iz = hc.indexOf("sales zone");
+  const it = hc.findIndex((h) => /tel[eé]f|^telf|^tel\b|celular|^cel\b|phone|whats/.test(h));
   for (const r of rows("BD CLIENTE", 2)) {
     if (nil(g(r, 0))) continue;
     const k = toInt(g(r, 0)); if (k === null) continue;
     clientes.set(k, s(or(g(r, 1), "")));
     if (isv >= 0 && isv < r.length) supervisores.set(k, s(or(g(r, isv), "")));
     if (iz >= 0 && iz < r.length) zonas.set(k, s(or(g(r, iz), "")));
+    if (it >= 0 && it < r.length) telefonos.set(k, s(or(g(r, it), "")));
   }
   const zof = (c) => { const k = toInt(c); return k === null ? "SIN ZONA" : zonas.get(k) || "SIN ZONA"; };
   const svof = (c) => { const k = toInt(c); return k === null ? "SIN SUPERVISOR" : supervisores.get(k) || "SIN SUPERVISOR"; };
+  const telof = (c) => { const k = toInt(c); return k === null ? "" : telefonos.get(k) || ""; };
   const sku = new Map();
   for (const r of rows("SKU", 2)) if (!falsy(g(r, 0))) sku.set(g(r, 0), g(r, 1));
   const cli = (code, name) => {
@@ -58,7 +61,7 @@ export function convert(buf) {
   const info = (rt) => edt.get(rt) || ["", "SIN EDT"];
 
   const out = [];
-  const add = (k) => out.push({ tipo: "", fecha: "", ruta: "", edt: "", placa: "", motivo: "", accion: "", codigo: "", cliente: "", sv: "", alertado: "", sol: "", asistente: "", viaje: "", nviaje: "", ruta2: "", zona: "", ca: 0, hl: 0, ph: 0, cantidad: 0, status: "", medio: "", obs: "", ...k });
+  const add = (k) => out.push({ tipo: "", fecha: "", ruta: "", edt: "", placa: "", motivo: "", accion: "", codigo: "", cliente: "", sv: "", alertado: "", sol: "", asistente: "", viaje: "", nviaje: "", ruta2: "", zona: "", ca: 0, hl: 0, ph: 0, cantidad: 0, status: "", medio: "", obs: "", tel: "", ...k });
   const placa = (p) => (falsy(p) ? "" : pyStr(p));
 
   for (const r of rows("BITACORA", 6)) {
@@ -76,7 +79,7 @@ export function convert(buf) {
     const f = d(g(r, iF)), rt = ru(g(r, iR)); if (!f || !rt) continue;
     const [p, e] = info(rt); const acc = s(or(g(r, iQ), "")).toUpperCase(); const code = g(r, iC);
     add({ tipo: "Cliente desplanificado", fecha: f, ruta: rt, edt: e, placa: placa(p), motivo: s(or(g(r, iM), "")), accion: ACC[acc] || "Sin clasificar",
-      codigo: pyStr(or(code, "")), cliente: cli(code, g(r, iN)), sv: svof(code), zona: zof(code), ca: num(g(r, iCA)), hl: Math.round(num(g(r, iHL)) * 1000) / 1000,
+      codigo: pyStr(or(code, "")), cliente: cli(code, g(r, iN)), sv: svof(code), zona: zof(code), tel: telof(code), ca: num(g(r, iCA)), hl: Math.round(num(g(r, iHL)) * 1000) / 1000,
       status: s(or(g(r, iS), "")).toUpperCase(), alertado: s(or(g(r, iA), "")).toUpperCase() });
   }
 
@@ -90,7 +93,7 @@ export function convert(buf) {
     const f = d(g(r, 0)), rt = ru(g(r, 2)); if (!f || !rt) continue;
     const [p, e] = info(rt); const code = g(r, 4);
     add({ tipo: "Reclamo de ventas", fecha: f, ruta: rt, edt: e, placa: placa(p), motivo: s(or(g(r, 6), "")),
-      codigo: pyStr(or(code, "")), cliente: cli(code, g(r, 5)), sv: s(or(g(r, 8), "")) || svof(code), zona: s(or(g(r, 9), "")) || zof(code),
+      codigo: pyStr(or(code, "")), cliente: cli(code, g(r, 5)), tel: telof(code), sv: s(or(g(r, 8), "")) || svof(code), zona: s(or(g(r, 9), "")) || zof(code),
       status: s(or(g(r, 10), "PENDIENTE")).toUpperCase(), medio: s(or(g(r, 7), "")).toUpperCase(), obs: s(or(g(r, 12), "")), sol: d(g(r, 11)) || "", asistente: s(or(g(r, 1), "")) });
   }
 
@@ -98,7 +101,7 @@ export function convert(buf) {
     const f = d(g(r, 0)), rt = ru(g(r, 6)); if (!f || !rt) continue;
     const [p, e] = info(rt); const code = g(r, 1), k = g(r, 3);
     const m = sku.has(k) ? sku.get(k) : or(k, "");
-    add({ tipo: "Recojo de adulterado", fecha: f, ruta: rt, edt: e, placa: placa(p), codigo: pyStr(or(code, "")), cliente: cli(code, g(r, 2)), sv: svof(code), zona: zof(code),
+    add({ tipo: "Recojo de adulterado", fecha: f, ruta: rt, edt: e, placa: placa(p), codigo: pyStr(or(code, "")), cliente: cli(code, g(r, 2)), sv: svof(code), zona: zof(code), tel: telof(code),
       obs: s(or(g(r, 9), "")), motivo: nil(m) ? "" : pyStr(m), cantidad: num(g(r, 5)) });
   }
 
