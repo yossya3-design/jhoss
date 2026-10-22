@@ -318,7 +318,8 @@ window.dash = (function () {
 .bx-conf.edit{flex-direction:column;align-items:stretch;gap:5px;min-width:190px}
 .bx-conf select{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:5px 8px;font:inherit;font-size:12px;color-scheme:dark}
 .bx-cbs{display:flex;gap:6px}
-.bx-estado{flex-basis:100%;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid}
+.bx-cli{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:150px}.bx-cli .bx-wal{gap:6px}
+.bx-estado{white-space:nowrap;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid}
 .bx-estado.ok{color:#7FD3A5;background:rgba(47,163,107,.12);border-color:rgba(47,163,107,.5)}.bx-estado.bad{color:#E8776F;background:rgba(201,74,67,.12);border-color:rgba(201,74,67,.5)}.bx-estado.warn{color:#E9C46A;background:rgba(217,166,46,.1);border-color:rgba(217,166,46,.5)}
 .bx-cdl{display:flex;flex-direction:column;gap:2px;font-size:10px;font-family:var(--f-mono);color:var(--k-mute);text-transform:uppercase;letter-spacing:.08em}
 .bx-cdl input{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:4px 8px;font:inherit;font-family:var(--f-text);font-size:12px;text-transform:none;letter-spacing:0;color-scheme:dark}.bx-cb{padding:4px 10px;font-size:12px}
@@ -1134,30 +1135,40 @@ window.dash = (function () {
     if (rec) pill.title = `Registrado por ${rec.by === 'dec' ? 'DEC' : 'administrador'} el ${limaTxt(rec.at)}`;
     box.replaceChildren(pill);
     if (canConf) { const b = el('button', 'bx-lnk bx-cbtn', rec ? 'Cambiar' : 'Confirmar'); b.type = 'button'; b.addEventListener('click', () => fillConf(box, r, true)); box.append(b); }
-    if (rec && rec.reprog === 'SI') {
-      const ln = el('div', 'bx-wal');
-      if (canConf) { const w = el('a', 'bx-wa', rec.wa ? 'Reenviar WhatsApp' : 'Enviar WhatsApp'); w.href = waLink(r, rec); w.target = '_blank'; w.rel = 'noopener';
-        if (!r.tel) w.title = 'Sin teléfono en BD CLIENTE: WhatsApp te pedirá elegir el contacto';
-        w.addEventListener('click', () => { confApi('POST', { id, wa: true }).then(() => { fillConf(box, r, false); updConfCount(); }).catch(() => {}); }); ln.append(w); }
-      if (rec.wa) ln.append(el('span', 'bx-cz', 'Enviado ' + limaTxt(rec.wa)));
-      if (rec.wa || rec.resp) {
-        if (canConf && (!rec.resp || box.dataset.resp === '1')) {
-          const sr = el('select', 'bx-resp'); [['', 'Respuesta del cliente…'], ['CONFIRMO', 'Cliente confirmó'], ['NO CONFIRMO', 'Cliente no confirmó'], ['SIN RESPUESTA', 'Sin respuesta']].forEach(([v, t]) => sr.append(new Option(t, v))); sr.value = rec.resp || '';
-          const gs = el('button', 'bx-btn bx-solid bx-cb', 'Guardar respuesta'); gs.type = 'button'; const gm = el('span', 'bx-cmsg', '');
-          gs.addEventListener('click', () => { if (!sr.value) { gm.textContent = 'Elige la respuesta'; return; } gs.disabled = true; gm.textContent = 'Guardando…';
-            confApi('POST', { id, resp: sr.value }).then(() => { box.dataset.resp = ''; fillConf(box, r, false); updConfCount(); }).catch((e) => { gs.disabled = false; gm.textContent = e.message; }); });
-          ln.append(sr, gs, gm); }
-        else if (rec.resp) { ln.append(el('span', 'bx-pill ' + (rec.resp === 'CONFIRMO' ? 'ok' : rec.resp === 'NO CONFIRMO' ? 'bad' : 'pend'), RESPT[rec.resp] + (rec.respAt ? ' · ' + limaTxt(rec.respAt) : '')));
-          if (canConf) { const cb = el('button', 'bx-lnk bx-cbtn', 'Cambiar respuesta'); cb.type = 'button'; cb.addEventListener('click', () => { box.dataset.resp = '1'; fillConf(box, r, false); }); ln.append(cb); } } }
-      box.append(ln);
-      const est = estadoConf(rec); const eb = el('div', 'bx-estado ' + est.cls, est.txt); box.append(eb); } }
+    refreshCli(id); }
+  const cliBoxes = new Map();
+  const refreshCli = (id) => { const o = cliBoxes.get(id); if (o && o.box.isConnected) fillCli(o.box, o.r); };
+  function cliNode(r) {
+    if (r.accion !== 'Reprogramación') return el('span', 'bx-cz', '—');
+    const box = el('div', 'bx-cli'); cliBoxes.set(confId(r), { box, r }); fillCli(box, r); return box; }
+  function fillCli(box, r) {
+    const id = confId(r), rec = confMap.get(id); box.replaceChildren();
+    if (!rec || rec.reprog !== 'SI') { box.append(el('span', 'bx-cz', rec ? 'No aplica' : '—')); return; }
+    const est = estadoConf(rec); box.append(el('div', 'bx-estado ' + est.cls, est.txt));
+    const ln = el('div', 'bx-wal');
+    if (canConf) { const w = el('a', 'bx-wa', rec.wa ? 'Reenviar' : 'Enviar WhatsApp'); w.href = waLink(r, rec); w.target = '_blank'; w.rel = 'noopener';
+      if (!r.tel) w.title = 'Sin teléfono en BD CLIENTE: WhatsApp te pedirá elegir el contacto';
+      w.addEventListener('click', () => { confApi('POST', { id, wa: true }).then(() => { fillCli(box, r); updConfCount(); }).catch(() => {}); }); ln.append(w); }
+    if (rec.wa && !rec.resp) ln.append(el('span', 'bx-cz', 'Enviado ' + limaTxt(rec.wa)));
+    box.append(ln);
+    if (rec.wa || rec.resp) {
+      if (canConf && (!rec.resp || box.dataset.resp === '1')) {
+        const fr = el('div', 'bx-wal');
+        const sr = el('select', 'bx-resp'); [['', 'Respuesta…'], ['CONFIRMO', 'Confirmó'], ['NO CONFIRMO', 'No confirmó'], ['SIN RESPUESTA', 'Sin respuesta']].forEach(([v, t]) => sr.append(new Option(t, v))); sr.value = rec.resp || '';
+        const gs = el('button', 'bx-btn bx-solid bx-cb', 'Guardar'); gs.type = 'button'; const gm = el('span', 'bx-cmsg', '');
+        gs.addEventListener('click', () => { if (!sr.value) { gm.textContent = 'Elige la respuesta'; return; } gs.disabled = true; gm.textContent = 'Guardando…';
+          confApi('POST', { id, resp: sr.value }).then(() => { box.dataset.resp = ''; fillCli(box, r); updConfCount(); }).catch((e) => { gs.disabled = false; gm.textContent = e.message; }); });
+        fr.append(sr, gs, gm); box.append(fr); }
+      else if (rec.resp && canConf) { const cb = el('button', 'bx-lnk bx-cbtn', 'Cambiar respuesta'); cb.type = 'button'; cb.title = 'Respuesta guardada ' + (rec.respAt ? limaTxt(rec.respAt) : '');
+        cb.addEventListener('click', () => { box.dataset.resp = '1'; fillCli(box, r); }); box.append(cb); } } }
+
   function estadoConf(c) {
     if (!c || c.reprog !== 'SI') return null;
-    if (c.resp === 'CONFIRMO' && c.freprog && c.autoriza && c.wa) return { k: 'VALIDADO', cls: 'ok', txt: '✓ Validado · listo para entregar' };
-    if (c.resp === 'NO CONFIRMO') return { k: 'RIESGO', cls: 'bad', txt: '✕ Riesgo de rechazo · el cliente no confirmó' };
-    if (c.resp === 'SIN RESPUESTA') return { k: 'RIESGO', cls: 'bad', txt: '! Riesgo de rechazo · sin respuesta del cliente' };
-    if (!c.wa) return { k: 'FALTA', cls: 'warn', txt: 'Falta: enviar WhatsApp al cliente' };
-    return { k: 'FALTA', cls: 'warn', txt: 'Falta: respuesta del cliente' }; }
+    if (c.resp === 'CONFIRMO' && c.freprog && c.autoriza && c.wa) return { k: 'VALIDADO', cls: 'ok', txt: '✓ Validado' };
+    if (c.resp === 'NO CONFIRMO') return { k: 'RIESGO', cls: 'bad', txt: '✕ No confirmó · riesgo de rechazo' };
+    if (c.resp === 'SIN RESPUESTA') return { k: 'RIESGO', cls: 'bad', txt: '! Sin respuesta · riesgo de rechazo' };
+    if (!c.wa) return { k: 'FALTA', cls: 'warn', txt: 'Falta enviar WhatsApp' };
+    return { k: 'FALTA', cls: 'warn', txt: 'Esperando respuesta' }; }
   const RESPT = { CONFIRMO: 'Cliente confirmó', 'NO CONFIRMO': 'Cliente no confirmó', 'SIN RESPUESTA': 'Sin respuesta' };
   const mananaIso = () => new Date(Date.now() - 5 * 3600e3 + 864e5).toISOString().slice(0, 10);
   const DLARGO = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -1343,8 +1354,8 @@ window.dash = (function () {
         window.__confRows = tr; window.__confAll = des; updConfCount(); const hasTel = tr.some((r) => r.tel);
         table($('d-tabla'), 'd', [
           { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' }, ...(hasTel ? [{ k: 'tel', h: 'Teléfono', node: telNode }] : []), { k: 'zona', h: 'Zona' }, { k: 'svc', h: 'Supervisor' },
-          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'conf', h: '¿Se reprograma? · Día · Autorizó', node: confNode }, { k: 'motivo', h: 'Motivo' }, { k: 'alertado', h: 'Alertado' },
-        ], tr.map((r) => ({ ...r, edtc: short(r.edt), svc: svName(r.sv || '—'), conf: r.accion === 'Reprogramación' ? ((confMap.get(confId(r)) || {}).reprog || 'PENDIENTE') : 'ZZ' })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'ca' ? fmt(d3.sum(rs, (r) => r.ca)) : c.k === 'hl' ? f2(d3.sum(rs, (r) => r.hl)) : '');
+          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'conf', h: '¿Se reprograma? · Día · Autorizó', node: confNode }, { k: 'clic', h: 'Confirmación del cliente', node: cliNode }, { k: 'motivo', h: 'Motivo' }, { k: 'alertado', h: 'Alertado' },
+        ], tr.map((r) => ({ ...r, edtc: short(r.edt), svc: svName(r.sv || '—'), conf: r.accion === 'Reprogramación' ? ((confMap.get(confId(r)) || {}).reprog || 'PENDIENTE') : 'ZZ', clic: ((estadoConf(confMap.get(confId(r))) || {}).k) || 'ZZ' })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'ca' ? fmt(d3.sum(rs, (r) => r.ca)) : c.k === 'hl' ? f2(d3.sum(rs, (r) => r.hl)) : '');
       }
 
       // ===== TT =====
