@@ -240,6 +240,12 @@ window.dash = (function () {
 .bx-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--cds-gap-sm);font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;color:#8C7A45;text-transform:uppercase;padding:var(--cds-pad-sm) var(--cds-pad-lg);border-top:1px solid var(--k-line);background:#0B0A08}
 @media (max-width:560px){.bx-logos img{width:56px;height:56px}}
 
+.bx-refresh{margin-top:12px;margin-left:auto;display:inline-flex;align-items:center;gap:8px;background:rgba(242,197,42,.08);color:var(--k-gold);border:1px solid var(--k-gold2);border-radius:999px;padding:7px 14px;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.bx-refresh:hover{background:rgba(242,197,42,.18)}.bx-refresh:disabled{cursor:default;opacity:.85}
+.bx-refresh svg{width:15px;height:15px;flex:0 0 auto}.bx-refresh.spin svg{animation:bxspin 1s linear infinite}
+@keyframes bxspin{to{transform:rotate(360deg)}}
+.bx-clock{display:flex;flex-direction:column;align-items:flex-end}
+@media (max-width:640px){.bx-clock{align-items:flex-start}.bx-refresh{margin-left:0}}
 .bx-foot-r{display:inline-flex;flex-wrap:wrap;align-items:center;gap:14px}
 .bx-lnk{background:none;border:0;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--k-gold);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .bx-lnk:disabled{opacity:.6;cursor:default}
@@ -264,7 +270,7 @@ window.dash = (function () {
       </div>
       <div class="bx-crestclock">
         <div class="bx-crest"><svg class="bx-ring" viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="bxOro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE97A"/><stop offset=".5" stop-color="#F2C52A"/><stop offset="1" stop-color="#B07E07"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="none" stroke="url(#bxOro)" stroke-width="2.5" stroke-opacity=".75"/><circle cx="60" cy="4" r="3" fill="#F2C52A"/></svg><img id="logo-cd" alt="Insignia CD Callao"></div>
-        <div class="bx-clock"><strong id="clk-h">--:--</strong><span id="clk-d"></span></div>
+        <div class="bx-clock"><strong id="clk-h">--:--</strong><span id="clk-d"></span><button type="button" class="bx-refresh" id="adm-ref" title="Vuelve a leer la bitácora de Drive"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="t">Actualizar datos ahora</span></button></div>
       </div>
     </div>
   </header>
@@ -538,7 +544,7 @@ window.dash = (function () {
 
 
   </div>
-  <div class="bx-foot" id="pie" data-source="registros"><span>—</span><span class="bx-foot-r"><span id="err" class="bx-err" hidden></span><button type="button" class="bx-lnk" id="adm-ref" hidden>Actualizar datos ahora</button><button type="button" class="bx-lnk" id="adm-btn">Acceso administrador</button><span>Transportes · CD Callao</span></span></div>
+  <div class="bx-foot" id="pie" data-source="registros"><span>—</span><span class="bx-foot-r"><span id="err" class="bx-err" hidden></span><button type="button" class="bx-lnk" id="adm-btn">Acceso administrador</button><span>Transportes · CD Callao</span></span></div>
   <div class="bx-tip" id="tip" hidden></div>
 </div>
 
@@ -902,7 +908,7 @@ window.dash = (function () {
     if (j.rows) { incRows = j.rows.filter((x) => x.fecha && x.placa); incState = 'ok'; renderInc(); prevInc(); }
     return j; };
   function setAdmin(t) { incTok = t || ''; incAdmin = !!incTok; try { if (incTok) sessionStorage.setItem(TK, incTok); else sessionStorage.removeItem(TK); } catch (e) { /* sin almacenamiento */ }
-    $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('adm-ref').hidden = !incAdmin; $('n-login').hidden = true; renderInc(); }
+    $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('n-login').hidden = true; renderInc(); }
   function renderInc() {
     const { lo, hi, edt, isDay } = incF;
     const sel = incRows.filter((r) => (!lo || r.fecha >= lo) && (!hi || r.fecha <= hi) && (!edt || r.edt === edt));
@@ -979,7 +985,8 @@ window.dash = (function () {
       else { $('n-lk').value = ''; setAdmin(j.token); $('n-msg').textContent = 'Sesión de administrador iniciada.'; $('n-f').value = ayer(); prevInc(); setTimeout(() => $('n-adm').scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); } }
     catch (err) { m.textContent = 'Sin conexión. Intenta otra vez.'; }
     $('n-lgo').disabled = false; });
-  $('adm-ref').addEventListener('click', async () => { const b = $('adm-ref'); b.disabled = true; b.textContent = 'Leyendo Excel…'; await window.__bxLoad(true); b.textContent = 'Actualizar datos ahora'; b.disabled = false; });
+  $('adm-ref').addEventListener('click', async () => { const b = $('adm-ref'), t = b.querySelector('.t'); if (b.disabled) return; b.disabled = true; b.classList.add('spin'); t.textContent = 'Leyendo el Excel…';
+    await window.__bxLoad(true); await loadInc(); b.classList.remove('spin'); t.textContent = 'Datos al día'; setTimeout(() => { t.textContent = 'Actualizar datos ahora'; b.disabled = false; }, 4000); });
   setAdmin(incTok);
 
 
@@ -1318,7 +1325,7 @@ window.dash = (function () {
     bar.hidden = true; busy = false;
   };
   window.__bxLoad(false);
-  setInterval(function () { window.__bxLoad(false); }, 10 * 60e3);
+  setInterval(function () { window.__bxLoad(false); }, 5 * 60e3);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) window.__bxLoad(false); });
 })();
 </script>

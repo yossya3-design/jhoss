@@ -1,4 +1,4 @@
-// Lectura programada del Excel: cada hora en punto (hora UTC; Lima = UTC-5).
+// Lectura programada del Excel cada 15 minutos, aunque nadie abra el tablero.
 import { refresh } from "../../src/source.mjs";
 
 export default async () => {
@@ -6,4 +6,4 @@ export default async () => {
   catch (e) { console.error(e.message); }
 };
 
-export const config = { schedule: "@hourly" };
+export const config = { schedule: "*/15 * * * *" };
