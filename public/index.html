@@ -252,6 +252,53 @@ window.dash = (function () {
 .bx-err{color:#E8776F;text-transform:none;letter-spacing:0}
 .bx-lform{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}
 .bx-lform input{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:7px 10px;font:inherit;min-width:180px}
+
+/* ---------- celular: solo tamaños, misma estructura ---------- */
+@media (max-width:600px){
+.bx-hero{padding:16px 14px 14px}
+.bx-hero-in{flex-direction:column;align-items:stretch;gap:14px}
+.bx-head{flex:0 0 auto;gap:6px}
+.bx-brand{gap:8px}
+.bx-ab{height:22px}.bx-t77{height:26px;padding:2px 7px;border-radius:5px}.bx-t77 img{height:21px}
+.bx-vsep{display:none}
+.bx-eyebrow{flex-basis:100%;font-size:9.5px;letter-spacing:.14em;gap:6px}
+.bx-title{font-size:2.5rem;line-height:.9}
+.bx-upd{font-size:11px}
+.bx-crestclock{width:100%;justify-content:flex-start;gap:16px}
+.bx-crest{width:96px}
+.bx-clock strong{font-size:2.1rem}
+.bx-clock span{font-size:11px}
+.bx-refresh{padding:6px 11px;font-size:10px;margin-top:8px}
+.bx-tabs{flex-wrap:nowrap;border-radius:12px;width:100%}
+.bx-tabs button{flex:1 1 0;min-width:0;padding:8px 4px;font-size:12px;line-height:1.15;white-space:normal;text-align:center;border-radius:9px}
+.bx-hub{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bx-hubt{padding:9px 8px;border-left-width:3px;gap:3px}
+.bx-hubt{min-width:0}
+.bx-hubt .k{font-size:.64rem;letter-spacing:0;line-height:1.12;overflow-wrap:anywhere;hyphens:auto}
+.bx-hubt .n{font-size:1.15rem;overflow-wrap:anywhere}
+.bx-hubt .s{font-size:10px;line-height:1.25}
+.bx-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bx-kpis>:last-child:nth-child(odd),.bx-kpis>.bx-mix,.bx-kpis>:nth-child(odd):has(+ .bx-mix){grid-column:1/-1}
+.bx-kpi{padding:10px}
+.bx-kpi .lab{font-size:9px;letter-spacing:.08em}
+.bx-kpi .val{font-size:1.85rem}
+.bx-kpi .note{font-size:11px;line-height:1.3}
+.bx-delta{font-size:9.5px;padding:1px 6px}
+.bx-grid{gap:10px}
+.bx-card{padding:14px}
+.bx-card h3{font-size:1.05rem}
+.bx-h2{font-size:1.15rem}
+.bx-edts{padding:7px 8px;gap:5px}
+.bx-edts button{padding:5px 10px;font-size:11px}
+.bx-filters{gap:6px}
+.bx-f select{max-width:none}
+.bx-stat .v{font-size:1.4rem}
+.bx-tw table{font-size:11px}
+.bx-tw td{padding:6px 8px}
+.bx-tw th button{padding:7px 8px}
+.bx-foot{padding:8px 14px}
+}
+@media (max-width:360px){.bx-title{font-size:2.15rem}.bx-crest{width:84px}.bx-clock strong{font-size:1.8rem}.bx-hubt .n{font-size:1.1rem}.bx-kpi .val{font-size:1.6rem}}
 </style>
 
 <div class="bx" id="tablero">
@@ -1058,7 +1105,7 @@ window.dash = (function () {
             const pd = d3.rollups(prev.filter((r) => r.tipo === 'Cliente desplanificado'), (v) => new Set(v.map((r) => r.fecha)).size, (r) => r.codigo).filter((d) => d[1] >= 2).length;
             return { label: 'Clientes recurrentes', value: fmt(rc), tone: 'red', delta: delta(rc, pd, hasP), lowerBetter: true, note: `desplanificados en 2 o más días · ${cd.length ? pct(rc / cd.length) : '—'} de ${fmt(cd.length)} clientes` }; })(),
         ]);
-        const mixTile = el('div', 'bx-kpi gray'); mixTile.append(el('span', 'lab', 'Reprogramación vs ZT'));
+        const mixTile = el('div', 'bx-kpi gray bx-mix'); mixTile.append(el('span', 'lab', 'Reprogramación vs ZT'));
         const mixRow = el('div', 'bx-mixrow'); const mixCh = el('div'); mixCh.id = 'd-ch-mix'; const mixLg = el('div', 'bx-legend'); mixLg.id = 'd-mix-lg';
         mixRow.append(mixCh, mixLg); mixTile.append(mixRow); $('d-kpis').append(mixTile);
         $('d-aviso').hidden = !sc.length;
