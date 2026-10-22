@@ -39,7 +39,7 @@ export function convert(buf) {
   const clientes = new Map(), supervisores = new Map(), zonas = new Map(), telefonos = new Map();
   const hc = header("BD CLIENTE").map((h) => s(or(h, "")).toLowerCase());
   const isv = hc.indexOf("supervisor name"), iz = hc.indexOf("sales zone");
-  const it = hc.findIndex((h) => /tel[eé]f|^telf|^tel\b|celular|^cel\b|phone|whats/.test(h));
+  const it = hc.findIndex((h) => /tel|fono|celular|^cel\b|m[oó]vil|phone|whats|contact|n[uú]mero|^nro|^n[°º]|^num/.test(h));
   for (const r of rows("BD CLIENTE", 2)) {
     if (nil(g(r, 0))) continue;
     const k = toInt(g(r, 0)); if (k === null) continue;
