@@ -926,7 +926,7 @@ window.dash = (function () {
 
   // ---------- pestañas ----------
   const TABS = { ventas: 'tab-ventas', almacen: 'tab-almacen', edt: 'tab-edt' };
-  function openTab(id, link) { if (!TABS[id]) return; state.tab = id;
+  function openTab(id, link) { if (!TABS[id]) return; if (window.__decOnly && id !== 'ventas') id = 'ventas'; state.tab = id;
     Object.entries(TABS).forEach(([sec, tab]) => { $(sec).hidden = sec !== id; $(tab).setAttribute('aria-selected', String(sec === id)); });
     $('f-sv-box').hidden = id !== 'ventas';
     if (link) dash.setLink(id); hideTip(); redraw(); }
@@ -990,7 +990,9 @@ window.dash = (function () {
     return j; };
   function setAdmin(t) { incTok = t || ''; role = incTok ? incTok.split('.')[0] : ''; incAdmin = role === 'admin'; canConf = role === 'admin' || role === 'dec'; try { if (incTok) sessionStorage.setItem(TK, incTok); else sessionStorage.removeItem(TK); } catch (e) { /* sin almacenamiento */ }
     $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('adm-btn').hidden = role === 'dec';
-    $('dec-btn').textContent = role === 'dec' ? 'Salir (DEC)' : 'Acceso DEC'; $('dec-btn').hidden = incAdmin; $('n-login').hidden = true; renderInc(); redraw(); }
+    $('dec-btn').textContent = role === 'dec' ? 'Salir (DEC)' : 'Acceso DEC'; $('dec-btn').hidden = incAdmin; $('n-login').hidden = true;
+    window.__decOnly = role === 'dec'; $('tab-almacen').hidden = window.__decOnly; $('tab-edt').hidden = window.__decOnly; if (window.__decOnly && state.tab !== 'ventas') openTab('ventas', true);
+    renderInc(); redraw(); }
   function renderInc() {
     const { lo, hi, edt, isDay } = incF;
     const sel = incRows.filter((r) => (!lo || r.fecha >= lo) && (!hi || r.fecha <= hi) && (!edt || r.edt === edt));
