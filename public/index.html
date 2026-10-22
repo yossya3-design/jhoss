@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reportes de delivery · CD Callao</title>
+<meta name="description" content="Reportes de delivery del CD Callao: Ventas, Almacén y EDT, actualizados desde la bitácora compartida.">
+<meta name="theme-color" content="#070707">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Big+Shoulders+Display:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<style>
+:root{--cds-radius:10px;--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:20px;--cds-pad-xl:32px;--cds-gap-sm:8px;--cds-gap-md:12px;--cds-gap-lg:20px;
+  --cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-dur-slow:400ms;--font-anthropic-sans:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:#050505;color:#F4F1E8}
+body{padding:12px;font-family:'Barlow','Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.4}
+@media (max-width:640px){body{padding:0}}
+.bx-loading{position:fixed;inset:auto 0 0 0;height:3px;background:linear-gradient(90deg,transparent,#F2C52A,transparent);background-size:40% 100%;background-repeat:no-repeat;animation:bxl 1.2s linear infinite;z-index:50}
+@keyframes bxl{from{background-position:-40% 0}to{background-position:140% 0}}
+</style>
+<script>
+window.dash = (function () {
+  var cbs = [], ds = { status: 'loading', data: [] };
+  function readP() { var o = {}; new URLSearchParams(location.search).forEach(function (v, k) { o[k] = v; }); return o; }
+  var P = readP();
+  function write() { var q = new URLSearchParams(); Object.keys(P).forEach(function (k) { if (P[k]) q.set(k, P[k]); });
+    var s = q.toString(); history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash); }
+  function fire() { cbs.forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); }
+  return {
+    onData: function (f) { cbs.push(f); try { f(); } catch (e) { console.error(e); } },
+    data: function () { return ds; },
+    params: function () { return Object.assign({}, P); },
+    setParams: function (o) { Object.keys(o).forEach(function (k) { var v = o[k]; if (v === null || v === undefined || v === '') delete P[k]; else P[k] = String(v); }); write(); fire(); },
+    resetParams: function () { P = {}; write(); fire(); },
+    setLink: function (id) { history.replaceState(null, '', location.pathname + location.search + '#' + id); },
+    _set: function (d) { ds = d; fire(); }
+  };
+})();
+</script>
+</head>
+<body>
+<div class="bx-loading" id="bx-loading"></div>
+<style>
+.bx{--k-bg:#070707;--k-panel:rgba(18,16,12,.92);--k-panel2:#12100C;--k-line:#3A3121;--k-fg:#F4F1E8;--k-mute:#A79F8C;--k-gold:#F2C52A;--k-gold2:#C8960F;--k-red:#C94A43;--k-green:#2FA36B;--k-blue:#D9A62E;--k-gray:#6E6758;
+  --f-disp:'Big Shoulders Display','Bahnschrift Condensed','Bahnschrift','Arial Narrow','Roboto Condensed',var(--font-anthropic-sans);
+  --f-text:'Barlow','Segoe UI',var(--font-anthropic-sans);--f-mono:'JetBrains Mono',Consolas,'Courier New',monospace;
+  position:relative;color:var(--k-fg);font-family:var(--f-text);border-radius:var(--cds-radius);overflow:hidden;background:var(--k-bg);
+  display:flex;flex-direction:column;font-variant-numeric:tabular-nums;border:1px solid #241F15}
+.bx-hero{position:relative;padding:var(--cds-pad-xl) var(--cds-pad-lg) var(--cds-pad-lg);background-color:#070707;background-size:cover;background-position:center;border-bottom:1px solid var(--k-line)}
+.bx-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,7,7,.92) 0%,rgba(7,7,7,.55) 60%,rgba(7,7,7,.75) 100%);pointer-events:none}
+.bx-hero>*{position:relative}
+.bx-hero-in{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--cds-gap-lg)}
+.bx-head{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 420px}
+.bx-brand{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.bx-ab{height:30px;width:auto;object-fit:contain}
+.bx-t77{display:inline-flex;align-items:center;justify-content:center;background:#FFFFFF;border-radius:6px;padding:3px 10px;height:34px}
+.bx-t77 img{height:28px;width:auto;object-fit:contain}
+.bx-vsep{width:1px;height:26px;background:rgba(242,197,42,.35)}
+.bx-lema{margin:0;font-family:var(--f-disp);font-stretch:condensed;font-weight:700;text-transform:uppercase;font-size:clamp(1.1rem,2.2vw,1.7rem);letter-spacing:.02em;color:#F4F1E8}
+.bx-lema b{color:var(--k-gold);font-weight:800}
+.bx-crestclock{display:flex;align-items:center;gap:22px;flex:0 0 auto;margin-left:auto}
+.bx-crest{position:relative;width:clamp(110px,13vw,170px);aspect-ratio:1/1;display:grid;place-items:center}
+.bx-crest::before{content:"";position:absolute;inset:-6%;border-radius:50%;background:conic-gradient(rgba(242,193,78,0),rgba(255,233,160,.85),rgba(242,193,78,0) 30%,rgba(242,193,78,0) 50%,rgba(255,233,160,.6),rgba(242,193,78,0) 80%);-webkit-mask:radial-gradient(closest-side,transparent 88%,#000 89%,#000 99%,transparent 100%);mask:radial-gradient(closest-side,transparent 88%,#000 89%,#000 99%,transparent 100%)}
+.bx-crest::after{content:"";position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle,rgba(255,206,90,.35),rgba(255,206,90,0) 70%);filter:blur(10px)}
+.bx-ring{position:absolute;inset:-2%;width:104%;height:104%;z-index:2;overflow:visible}
+.bx-crest img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 10px 22px rgba(0,0,0,.7))}
+.bx-clock{text-align:right;font-family:var(--f-mono);color:var(--k-mute);font-size:13px;letter-spacing:.08em}
+.bx-clock strong{display:block;font-family:var(--f-disp);font-stretch:condensed;font-size:clamp(2rem,3.6vw,3rem);font-weight:800;color:#F4F1E8;letter-spacing:.02em;line-height:1;white-space:nowrap}
+.bx-clock span{white-space:nowrap}
+@keyframes bxGiro{to{transform:rotate(360deg)}}
+@keyframes bxFlota{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media (prefers-reduced-motion:no-preference){.bx-crest::before{animation:bxGiro 9s linear infinite}.bx-ring{animation:bxGiro 14s linear infinite}.bx-crest img{animation:bxFlota 5s ease-in-out infinite}}
+@media (max-width:640px){.bx-crestclock{margin-left:0}.bx-clock{text-align:left}}
+.bx-eyebrow{font-family:var(--f-mono);font-size:var(--cds-font-size-caption);letter-spacing:.2em;text-transform:uppercase;color:var(--k-gold);display:flex;align-items:center;gap:10px}
+.bx-flag{display:inline-flex;width:22px;height:14px;border-radius:2px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
+.bx-flag i{flex:1;background:#C8102E}.bx-flag i:nth-child(2){background:#F4F1E8}
+.bx-title{font-family:var(--f-disp);font-stretch:condensed;font-weight:800;font-size:clamp(2.4rem,6.2vw,5.4rem);line-height:.92;letter-spacing:.01em;margin:0;text-transform:uppercase;
+  background:linear-gradient(180deg,#FFE97A 0%,#F2C52A 55%,#C8960F 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(242,197,42,.22))}
+.bx-rule{width:min(320px,60%);height:2px;background:linear-gradient(90deg,#C8960F,rgba(200,150,15,0))}
+.bx-sub{margin:0;color:var(--k-fg);font-size:var(--cds-font-size-body)}
+.bx-sub b{color:var(--k-gold);font-weight:600}
+.bx-upd{margin:4px 0 0;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--k-mute);display:inline-flex;align-items:center;gap:8px}
+.bx-upd::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--k-green);box-shadow:0 0 8px rgba(47,163,107,.8)}
+.bx-upd b{color:var(--k-fg);font-weight:500}
+.bx-btn[aria-pressed=true]{background:linear-gradient(180deg,#F2C52A,#C8960F);color:#14110A;border-color:#C8960F;font-weight:600}
+.bx-logos{display:flex;gap:var(--cds-gap-md);align-items:center}
+.bx-logos img{width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 4px 14px rgba(0,0,0,.6))}
+.bx-body{display:flex;flex-direction:column;gap:var(--cds-gap-lg);padding:var(--cds-pad-lg);
+  background:radial-gradient(ellipse at 10% 0%,rgba(242,197,42,.06),transparent 50%),repeating-linear-gradient(115deg,rgba(255,255,255,.015) 0 1px,transparent 1px 46px),var(--k-bg)}
+.bx-bar{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);justify-content:space-between;align-items:end}
+.bx-tabs{display:flex;gap:4px;padding:4px;background:var(--k-panel2);border:1px solid var(--k-line);border-radius:999px;flex-wrap:wrap}
+.bx-tabs button{background:transparent;border:0;color:var(--k-mute);font:inherit;font-weight:600;padding:8px 16px;border-radius:999px;cursor:pointer;white-space:nowrap;letter-spacing:.02em}
+.bx-tabs button[aria-selected=true]{background:linear-gradient(180deg,#F2C52A,#C8960F);color:#14110A}
+.bx-tabs button:hover:not([aria-selected=true]){color:var(--k-fg)}
+.bx :focus-visible{outline:2px solid var(--k-gold);outline-offset:2px}
+.bx-filters{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:end}
+.bx-f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.bx-f label{font-family:var(--f-mono);font-size:10px;color:var(--k-mute);letter-spacing:.12em;text-transform:uppercase}
+.bx-f select,.bx-f input,.bx-search{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:6px 10px;font:inherit;color-scheme:dark;min-width:0}
+.bx-f select{max-width:220px}
+.bx-btn{background:transparent;color:var(--k-gold);border:1px solid var(--k-gold2);border-radius:var(--cds-radius);padding:6px 14px;font:inherit;cursor:pointer}
+.bx-btn:hover{background:rgba(242,197,42,.12)}
+.bx-edts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;background:var(--k-panel2);border:1px solid var(--k-line);border-radius:var(--cds-radius)}
+.bx-edts .t{font-family:var(--f-mono);font-size:10px;color:var(--k-mute);letter-spacing:.12em;text-transform:uppercase;margin-right:6px}
+.bx-edts button{background:transparent;border:1px solid var(--k-line);color:var(--k-fg);font:inherit;font-size:var(--cds-font-size-caption);font-weight:600;padding:6px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.bx-edts button:hover{border-color:var(--k-gold2)}
+.bx-edts button[aria-pressed=true]{background:linear-gradient(180deg,#F2C52A,#C8960F);border-color:#C8960F;color:#14110A}
+.bx-period{font-family:var(--f-mono);font-size:11px;color:var(--k-mute);letter-spacing:.06em}
+.bx-period b{color:var(--k-gold);font-weight:500}
+.bx-page{display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
+.bx-take{margin:0;font-size:1.05rem;max-width:90ch;line-height:1.45}
+.bx-take b{color:var(--k-gold);font-weight:600}
+.bx-h2{font-family:var(--f-disp);font-stretch:condensed;font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:1.35rem;margin:0;color:var(--k-gold)}
+.bx-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:var(--cds-gap-md)}
+.bx-kpi{background:var(--k-panel);border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md);display:flex;flex-direction:column;gap:4px;border-top:3px solid var(--k-gold);min-width:0}
+.bx-kpi.red{border-top-color:var(--k-red)} .bx-kpi.blue{border-top-color:var(--k-blue)} .bx-kpi.green{border-top-color:var(--k-green)} .bx-kpi.gray{border-top-color:var(--k-gray)}
+.bx-kpi .lab{font-family:var(--f-mono);font-size:10px;color:var(--k-mute);text-transform:uppercase;letter-spacing:.12em}
+.bx-kpi .row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.bx-kpi .val{font-family:var(--f-disp);font-stretch:condensed;font-weight:800;font-size:2.6rem;line-height:1;color:var(--k-fg)}
+.bx-kpi .unit{color:var(--k-mute);font-size:.9rem}
+.bx-kpi .note{font-size:var(--cds-font-size-caption);color:var(--k-mute)}
+.bx-delta{font-family:var(--f-mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.bx-delta.good{background:rgba(47,163,107,.14);color:#5FCB94;border:1px solid rgba(47,163,107,.45)}.bx-delta.bad{background:rgba(201,74,67,.14);color:#E8776F;border:1px solid rgba(201,74,67,.45)}.bx-delta.flat{background:rgba(110,103,88,.25);color:var(--k-mute)}
+.bx-spark{height:38px;margin-top:4px}
+.bx-meter{height:6px;border-radius:3px;background:#2A251B;overflow:hidden;margin-top:4px}
+.bx-meter i{display:block;height:100%;border-radius:3px}
+.bx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,24rem),1fr));gap:var(--cds-gap-md)}
+.bx-wide{grid-column:1/-1}
+.bx-card{background:var(--k-panel);border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);display:flex;flex-direction:column;gap:var(--cds-gap-sm);min-width:0}
+.bx-card-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:var(--cds-gap-sm)}
+.bx-card h3{margin:0;font-family:var(--f-disp);font-stretch:condensed;font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:1.15rem;color:var(--k-fg)}
+.bx-card .sub{margin:2px 0 0;color:var(--k-mute);font-size:var(--cds-font-size-caption)}
+.bx-seg{display:inline-flex;border:1px solid var(--k-line);border-radius:999px;overflow:hidden;flex-wrap:wrap}
+.bx-seg button{background:transparent;border:0;color:var(--k-mute);font:inherit;font-size:var(--cds-font-size-caption);padding:5px 12px;cursor:pointer}
+.bx-seg button[aria-pressed=true]{background:rgba(242,197,42,.18);color:var(--k-gold);font-weight:600}
+.bx-chart{position:relative;min-height:240px;min-width:0}
+.bx-chart.sm{min-height:200px}
+.bx-legend{display:flex;flex-wrap:wrap;gap:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--k-mute)}
+.bx-legend span{display:inline-flex;align-items:center;gap:6px}
+.bx-legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.bx-legend i.line{height:3px;border-radius:2px;width:18px}
+.bx-legend i.dash{height:0;border-top:2px dashed var(--k-fg);border-radius:0;width:18px;background:none}
+.bx-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr));gap:var(--cds-gap-sm)}
+.bx-stat{border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:var(--cds-pad-sm) var(--cds-pad-md)}
+.bx-stat .k{font-family:var(--f-mono);font-size:10px;color:var(--k-mute);text-transform:uppercase;letter-spacing:.1em}
+.bx-stat .v{font-family:var(--f-disp);font-stretch:condensed;font-weight:800;font-size:1.7rem;line-height:1.1}
+.bx-stat .s{font-size:11px;color:var(--k-mute)}
+.bx-acc{display:flex;flex-direction:column;gap:6px;max-height:30rem;overflow:auto}
+.bx-acc details{border:1px solid var(--k-line);border-radius:var(--cds-radius);background:var(--k-panel2)}
+.bx-acc details[open]{border-color:var(--k-gold2)}
+.bx-acc summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1.6rem minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 12px;font-size:var(--cds-font-size-caption)}
+.bx-acc summary::-webkit-details-marker{display:none}
+.bx-acc summary .rk{font-family:var(--f-disp);font-weight:800;font-size:1.1rem;color:var(--k-gold)}
+.bx-acc summary .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bx-acc summary .nm small{display:block;font-weight:400;color:var(--k-mute)}
+.bx-acc summary .ct{white-space:nowrap;text-align:right;color:var(--k-mute)}
+.bx-acc summary .ct b{color:var(--k-fg);font-size:1rem}
+.bx-acc summary .ar{color:var(--k-gold);transition:transform .15s}
+.bx-acc details[open] .ar{transform:rotate(90deg)}
+.bx-acc .det{padding:0 12px 10px;overflow-x:auto}
+.bx-acc .det table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption)}
+.bx-acc .det th{color:var(--k-gold);text-align:left;font-weight:600;padding:5px 8px;border-bottom:1px solid var(--k-line)}
+.bx-acc .det td{padding:5px 8px;border-bottom:1px solid rgba(58,49,33,.5)}
+.bx-acc .det .n{text-align:right}
+.bx-toprow{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,290px);gap:var(--cds-gap-md);align-items:stretch}
+@media (max-width:760px){.bx-toprow{grid-template-columns:1fr}}
+.bx-mixrow{display:flex;align-items:center;gap:12px;margin-top:4px}
+.bx-mixrow #d-ch-mix{width:76px;height:76px;flex:none}
+.bx-mixrow .bx-legend{flex-direction:column;gap:4px}
+.bx-mini{padding:var(--cds-pad-md);gap:4px}
+.bx-mini h3{font-size:.95rem}
+.bx-switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:var(--cds-font-size-caption);color:var(--k-mute);user-select:none}
+.bx-switch input{position:absolute;opacity:0;width:1px;height:1px}
+.bx-switch .tr{width:40px;height:22px;border-radius:999px;background:#2A251B;border:1px solid var(--k-line);position:relative;transition:background .2s}
+.bx-switch .tr::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--k-mute);transition:transform .2s,background .2s}
+.bx-switch input:checked+.tr{background:rgba(217,166,46,.35);border-color:var(--k-gold2)}
+.bx-switch input:checked+.tr::after{transform:translateX(18px);background:var(--k-gold)}
+.bx-switch input:focus-visible+.tr{outline:2px solid var(--k-gold);outline-offset:2px}
+.bx-hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:var(--cds-gap-md)}
+.bx-hubt{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:var(--cds-pad-md) var(--cds-pad-lg);border-radius:var(--cds-radius);background:var(--k-panel);border:1px solid var(--k-line);border-left:4px solid var(--k-line);transition:border-color .15s,background .15s}
+.bx-hubt:hover{border-color:var(--k-gold2)}
+.bx-hubt[aria-selected=true]{background:linear-gradient(135deg,rgba(242,197,42,.16),rgba(18,16,12,.92) 60%);border-color:var(--k-gold2);border-left-color:var(--k-gold)}
+.bx-hubt .k{font-family:var(--f-disp);font-stretch:condensed;font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:1.05rem;color:var(--k-gold)}
+.bx-hubt .n{font-family:var(--f-disp);font-stretch:condensed;font-weight:800;font-size:2rem;line-height:1.05;color:var(--k-fg)}
+.bx-hubt .s{font-size:var(--cds-font-size-caption);color:var(--k-mute)}
+.bx-hubt:focus-visible{outline:2px solid var(--k-gold);outline-offset:2px}
+.bx-sub{display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
+.bx-piv{overflow-x:auto;border:1px solid var(--k-line);border-radius:var(--cds-radius)}
+.bx-piv table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+.bx-piv th{background:#1A1712;color:var(--k-gold);font-weight:600;padding:8px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--k-line)}
+.bx-piv th:first-child{text-align:left}
+.bx-piv td{padding:7px 12px;text-align:right;border-bottom:1px solid rgba(58,49,33,.6);white-space:nowrap}
+.bx-piv td:first-child{text-align:left;color:var(--k-fg)}
+.bx-piv td.tot,.bx-piv th.tot{border-left:1px solid var(--k-line);font-weight:700;color:var(--k-fg)}
+.bx-piv tr.tot td{background:linear-gradient(180deg,rgba(242,197,42,.22),rgba(200,150,15,.14));color:var(--k-fg);font-weight:700;border-top:1px solid var(--k-gold2)}
+.bx-piv tr.blank td:first-child{color:var(--k-mute);font-style:italic}
+.bx-pivs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,26rem),1fr));gap:var(--cds-gap-md)}
+.bx-pivs h4{margin:0 0 6px;font-size:var(--cds-font-size-caption);text-transform:uppercase;letter-spacing:.1em;color:var(--k-mute);font-family:var(--f-mono);font-weight:500}
+.bx-admin{border-color:var(--k-gold2);background:linear-gradient(135deg,rgba(242,197,42,.08),rgba(18,16,12,.94) 50%)}
+.bx-aform{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:12px}
+@media (max-width:640px){.bx-aform{grid-template-columns:1fr}}
+.bx-aform textarea{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:8px 10px;font-family:var(--f-mono);font-size:13px;text-transform:uppercase;resize:vertical;min-height:110px;color-scheme:dark}
+.bx-aform input[type=text]{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:7px 10px;font:inherit}
+.bx-prev{display:flex;flex-wrap:wrap;gap:6px}
+.bx-chip{font-family:var(--f-mono);font-size:12px;border:1px solid var(--k-line);border-radius:999px;padding:2px 9px}
+.bx-chip.ok{border-color:rgba(47,163,107,.6);color:#7FD3A5}.bx-chip.warn{border-color:rgba(217,166,46,.7);color:#E9C46A}.bx-chip.dup{border-color:rgba(201,74,67,.6);color:#E8776F}
+.bx-solid{background:linear-gradient(180deg,#F2C52A,#C8960F);color:#14110A;border-color:#C8960F;font-weight:600}
+.bx-btn:disabled{opacity:.5;cursor:default}
+.bx-del{color:#E8776F;border-color:rgba(201,74,67,.6);padding:2px 9px;font-size:12px}
+.bx-tools{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center}
+.bx-search{min-width:0;flex:1 1 12rem;max-width:20rem}
+.bx-count{font-size:var(--cds-font-size-caption);color:var(--k-mute)}
+.bx-tw{overflow:auto;max-height:26rem;border:1px solid var(--k-line);border-radius:var(--cds-radius)}
+.bx-tw table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption)}
+.bx-tw th{position:sticky;top:0;background:#1A1712;color:var(--k-gold);text-align:left;font-weight:600;padding:0;border-bottom:1px solid var(--k-line);white-space:nowrap;z-index:1}
+.bx-tw th button{all:unset;display:block;padding:8px 10px;cursor:pointer;width:100%;box-sizing:border-box}
+.bx-tw th.n button{text-align:right}
+.bx-tw td{padding:7px 10px;border-bottom:1px solid rgba(58,49,33,.6);vertical-align:top}
+.bx-tw tr:hover td{background:rgba(242,197,42,.05)}
+.bx-tw td.n{text-align:right;white-space:nowrap}
+.bx-tw tfoot td{position:sticky;bottom:0;background:#1A1712;color:var(--k-gold);font-weight:600;border-top:1px solid var(--k-line)}
+.bx-pill{display:inline-block;padding:1px 9px;border-radius:999px;font-weight:600;white-space:nowrap}
+.bx-pill{background:transparent!important;border:1px solid var(--k-line);color:var(--k-fg)!important;font-weight:500}
+.bx-pill::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--k-mute)}
+.bx-pill.zt::before{background:#C94A43} .bx-pill.rp::before{background:#D9A62E}
+.bx-pill.sc{background:rgba(110,103,88,.25);color:var(--k-mute)} .bx-pill.ok::before{background:#2FA36B} .bx-pill.pe::before{background:#D9A62E}
+.bx-note{font-size:var(--cds-font-size-caption);color:var(--k-gold);background:rgba(242,197,42,.08);border:1px dashed var(--k-gold2);border-radius:var(--cds-radius);padding:var(--cds-pad-sm) var(--cds-pad-md);margin:0}
+.bx-empty{color:var(--k-mute);font-size:var(--cds-font-size-caption);padding:var(--cds-pad-md) 0}
+.bx-tip{position:absolute;pointer-events:none;background:#1C1914;border:1px solid var(--k-line);border-radius:var(--cds-radius);box-shadow:0 6px 20px rgba(0,0,0,.5);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);color:var(--k-fg);z-index:5;max-width:280px}
+.bx-tip .h{color:var(--k-mute);margin-bottom:2px}
+.bx svg text{fill:var(--k-mute);font-family:var(--f-text);font-size:11px}
+.bx svg text.v{fill:var(--k-fg);font-weight:600}
+.bx svg text.big{fill:var(--k-fg);font-family:var(--f-disp);font-weight:800;font-size:26px}
+.bx svg text.goal{fill:var(--k-fg);font-weight:700}
+.bx [data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+.bx-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--cds-gap-sm);font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;color:#8C7A45;text-transform:uppercase;padding:var(--cds-pad-sm) var(--cds-pad-lg);border-top:1px solid var(--k-line);background:#0B0A08}
+@media (max-width:560px){.bx-logos img{width:56px;height:56px}}
+
+.bx-foot-r{display:inline-flex;flex-wrap:wrap;align-items:center;gap:14px}
+.bx-lnk{background:none;border:0;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--k-gold);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.bx-lnk:disabled{opacity:.6;cursor:default}
+.bx-err{color:#E8776F;text-transform:none;letter-spacing:0}
+.bx-lform{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}
+.bx-lform input{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:7px 10px;font:inherit;min-width:180px}
+</style>
+
+<div class="bx" id="tablero">
+  <header class="bx-hero" id="hero">
+    <div class="bx-hero-in">
+      <div class="bx-head">
+        <div class="bx-brand">
+          <img id="logo-ab" class="bx-ab" alt="AB InBev">
+          <span class="bx-t77"><img id="logo-t77" alt="Transportes 77"></span>
+          <span class="bx-vsep" aria-hidden="true"></span>
+          <span class="bx-eyebrow"><span class="bx-flag" aria-hidden="true"><i></i><i></i><i></i></span>CD Callao · Delivery · Ventas · Almacén · EDT</span>
+        </div>
+        <h1 class="bx-title">Reportes de delivery</h1>
+        <div class="bx-rule"></div>
+        <p class="bx-upd" id="upd" data-source="registros">Actualizado: —</p>
+      </div>
+      <div class="bx-crestclock">
+        <div class="bx-crest"><svg class="bx-ring" viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="bxOro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE97A"/><stop offset=".5" stop-color="#F2C52A"/><stop offset="1" stop-color="#B07E07"/></linearGradient></defs><circle cx="60" cy="60" r="56" fill="none" stroke="url(#bxOro)" stroke-width="2.5" stroke-opacity=".75"/><circle cx="60" cy="4" r="3" fill="#F2C52A"/></svg><img id="logo-cd" alt="Insignia CD Callao"></div>
+        <div class="bx-clock"><strong id="clk-h">--:--</strong><span id="clk-d"></span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="bx-body">
+    <div class="bx-bar">
+      <div class="bx-tabs" role="tablist" aria-label="Secciones">
+        <button role="tab" id="tab-ventas" aria-controls="ventas" aria-selected="true">Reporte para Ventas</button>
+        <button role="tab" id="tab-almacen" aria-controls="almacen" aria-selected="false">Reporte para Almacén</button>
+        <button role="tab" id="tab-edt" aria-controls="edt" aria-selected="false">Reporte por EDT</button>
+      </div>
+      <div class="bx-filters" id="filtros" data-source="registros">
+        <button class="bx-btn" id="f-hoy" type="button" aria-pressed="false">Hoy</button>
+        <div class="bx-f"><label for="f-mes">Mes</label><select id="f-mes"></select></div>
+        <div class="bx-f"><label for="f-desde">Desde</label><input id="f-desde" type="date" min="2020-01-01" max="2099-12-31"></div>
+        <div class="bx-f"><label for="f-hasta">Hasta</label><input id="f-hasta" type="date" min="2020-01-01" max="2099-12-31"></div>
+        <div class="bx-f" id="f-sv-box"><label for="f-sv">Supervisor de ventas</label><select id="f-sv"></select></div>
+        <button class="bx-btn" id="f-reset" type="button">Quitar filtros</button>
+      </div>
+    </div>
+    <div class="bx-edts" id="f-edts" role="group" aria-label="Filtrar por EDT" data-source="registros"><span class="t">EDT</span></div>
+    <div class="bx-period" id="periodo" data-source="registros">—</div>
+
+    <!-- ===================== RESUMEN ===================== -->
+
+    <!-- ===================== DESPLANIFICACIONES ===================== -->
+    <section class="bx-page" id="ventas" role="tabpanel" aria-labelledby="tab-ventas">
+      <div class="bx-hub" role="tablist" aria-label="Reportes de ventas">
+        <button type="button" role="tab" class="bx-hubt" data-vsub="des" aria-selected="true"><span class="k">Desplanificación</span><span class="n" id="hub-des">—</span><span class="s" id="hub-des-s">HL desplanificado</span></button>
+        <button type="button" role="tab" class="bx-hubt" data-vsub="rec" aria-selected="false"><span class="k">Reclamos de ventas</span><span class="n" id="hub-rec">—</span><span class="s" id="hub-rec-s">reclamos</span></button>
+        <button type="button" role="tab" class="bx-hubt" data-vsub="adu" aria-selected="false"><span class="k">Recojo de adulterado</span><span class="n" id="hub-adu">—</span><span class="s" id="hub-adu-s">unidades</span></button>
+      </div>
+      <div class="bx-sub" id="v-sub-des">
+      <p class="bx-take" id="d-take" data-source="registros" hidden>—</p>
+      <div class="bx-kpis" id="d-kpis" data-source="registros"></div>
+      <p class="bx-note" id="d-aviso" hidden>Hay clientes sin clasificar: falta llenar “Qué se hace” (ZT o Reprogramación) en la hoja DESPLANIFICACIÓN.</p>
+      <div class="bx-grid">
+        <div class="bx-card bx-wide" id="d-card-dia" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Impacto diario</h3><p class="sub">Barras por lo que se hizo con el pedido, línea de promedio móvil de 7 días y promedio del periodo</p></div>
+            <div class="bx-seg" role="group" aria-label="Medida"><button type="button" id="d-u-hl" aria-pressed="true">HL</button><button type="button" id="d-u-ca" aria-pressed="false">Cajas</button><button type="button" id="d-u-cl" aria-pressed="false">POCs</button></div>
+          </div>
+          <div class="bx-legend" id="d-lg"></div>
+          <div class="bx-chart" id="d-ch-dia"></div>
+        </div>
+        <div class="bx-card bx-wide" id="d-card-sv" data-source="registros">
+          <div><h3>Impacto por supervisor de ventas</h3><p class="sub">POCs, HL y cajas desplanificados de los clientes de cada supervisor, separados en reprogramación y ZT</p></div>
+          <div class="bx-tw" id="d-sv"></div>
+        </div>
+        <div class="bx-card bx-wide" id="d-card-cli" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Ranking de supervisores de ventas</h3><p class="sub" id="d-cli-sub">Reprogramación y ZT de los clientes de cada supervisor</p></div>
+            <div class="bx-seg" role="group" aria-label="Medida"><button type="button" data-pu="hl" aria-pressed="true">HL</button><button type="button" data-pu="poc" aria-pressed="false">POCs</button></div>
+          </div>
+          <p class="sub" style="margin:0">Haz clic en una barra para filtrar todo el reporte por ese supervisor.</p>
+          <div class="bx-chart" id="d-ch-svb"></div>
+        </div>
+        <div class="bx-card" id="d-card-tzt" data-source="registros">
+          <div><h3>Top 10 clientes en ZT</h3><p class="sub">Clientes con más HL rechazado en el periodo</p></div>
+          <div class="bx-chart sm" id="d-ch-tzt"></div>
+        </div>
+        <div class="bx-card" id="d-card-trp" data-source="registros">
+          <div><h3>Top 10 clientes en reprogramación</h3><p class="sub">Clientes con más HL reprogramado en el periodo</p></div>
+          <div class="bx-chart sm" id="d-ch-trp"></div>
+        </div>
+        <div class="bx-card bx-wide" id="d-card-rec" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Clientes más recurrentes</h3><p class="sub" id="d-rec-sub">Top 15 clientes desplanificados en más días: los de peor nivel de servicio</p></div>
+            <label class="bx-switch"><input type="checkbox" id="d-rec-tg"><span class="tr" aria-hidden="true"></span>Ver detalle</label>
+          </div>
+          <div id="d-rec-wrap" hidden>
+            <p class="sub" style="margin:0 0 6px">Haz clic en un cliente para ver cada desplanificación</p>
+            <div class="bx-acc" id="d-rec"></div>
+          </div>
+        </div>
+        <div class="bx-card bx-wide" id="d-card-tabla" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Clientes desplanificados</h3><p class="sub">Para ventas: a quién reprogramar y cuánto pesa cada cliente</p></div>
+            <div class="bx-seg" role="group" aria-label="Acción"><button type="button" data-acc="" aria-pressed="true">Todos</button><button type="button" data-acc="Reprogramación" aria-pressed="false">Reprogramación</button><button type="button" data-acc="ZT (rechazo)" aria-pressed="false">ZT</button><button type="button" data-acc="Sin clasificar" aria-pressed="false">Sin clasificar</button></div>
+          </div>
+          <div class="bx-tools"><input class="bx-search" id="d-q" type="search" placeholder="Buscar cliente, código o ruta" aria-label="Buscar cliente, código o ruta"><span class="bx-count" id="d-count"></span></div>
+          <div class="bx-tw" id="d-tabla"></div>
+        </div>
+        <div class="bx-card bx-wide" id="v-card-sem" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Resumen semana a semana</h3><p class="sub">Indicadores de ventas por semana (lunes a domingo). Más intenso = peor semana en esa columna</p></div>
+            <label class="bx-switch"><input type="checkbox" id="v-sem-tg"><span class="tr" aria-hidden="true"></span>Ver detalle</label>
+          </div>
+          <div class="bx-tw" id="v-sem" hidden></div>
+        </div>
+      </div>
+      </div>
+      <div class="bx-sub" id="v-sub-rec" hidden>
+      <div class="bx-kpis" id="v-rec-kpis" data-source="registros"></div>
+      <div class="bx-grid">
+        <div class="bx-card bx-wide" id="i-card-rec" data-source="registros">
+          <div><h3>Detalle de reclamos</h3><p class="sub">Status y días hasta la solución, según lo registrado en la bitácora</p></div>
+          <div class="bx-tw" id="i-rec"></div>
+        </div>
+      </div>
+      <h2 class="bx-h2">Recojo de adulterado</h2>
+      <div class="bx-kpis" id="v-adu-kpis" data-source="registros"></div>
+      <div class="bx-grid">
+      </div>
+      </div>
+      <div class="bx-sub" id="v-sub-adu" hidden>
+      <div class="bx-kpis" id="v-adu-kpis" data-source="registros"></div>
+      <div class="bx-grid">
+        <div class="bx-card" id="v-card-adu-mat" data-source="registros">
+          <div><h3>Unidades por material</h3><p class="sub">Qué productos se recogen como adulterado</p></div>
+          <div class="bx-chart sm" id="v-ch-adu"></div>
+        </div>
+        <div class="bx-card" id="i-card-adu" data-source="registros">
+          <div><h3>Detalle de recojos</h3><p class="sub">Cliente, material y unidades</p></div>
+          <div class="bx-tw" id="i-adu"></div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ===================== TT ===================== -->
+    <section class="bx-page" id="almacen" role="tabpanel" aria-labelledby="tab-almacen" hidden>
+      <div class="bx-hub" role="tablist" aria-label="Reportes de almacén">
+        <button type="button" role="tab" class="bx-hubt" data-asub="tt" aria-selected="true"><span class="k">Placas con TT</span><span class="n" id="hub-tt">—</span><span class="s" id="hub-tt-s">PH promedio por día</span></button>
+        <button type="button" role="tab" class="bx-hubt" data-asub="bit" aria-selected="false"><span class="k">Bitácora de desplanificaciones</span><span class="n" id="hub-bit">—</span><span class="s" id="hub-bit-s">viajes modificados</span></button>
+        <button type="button" role="tab" class="bx-hubt" data-asub="inc" aria-selected="false"><span class="k">Incumplimiento retorno TT</span><span class="n" id="hub-inc">—</span><span class="s" id="hub-inc-s">placas que incumplieron</span></button>
+      </div>
+      <div class="bx-sub" id="a-sub-tt">
+      <p class="bx-take" id="t-take" data-source="registros" hidden>—</p>
+      <div class="bx-kpis" id="t-kpis" data-source="registros"></div>
+      <div class="bx-grid">
+        <div class="bx-card bx-wide" id="t-card-dia" data-source="registros">
+          <div><h3>PH por día vs meta</h3><p class="sub">Pallets (PH) de las placas que traen TT. Meta: máximo 100 PH por día. Objetivo: reducir las paletas con TT</p></div>
+          <div class="bx-legend" id="t-lg"></div>
+          <div class="bx-chart" id="t-ch-dia"></div>
+        </div>
+        <div class="bx-card bx-wide" id="t-card-edt" data-source="registros">
+          <div><h3>Pareto por EDT</h3><p class="sub">PH acumulado y % acumulado</p></div>
+          <div class="bx-chart sm" id="t-ch-edt"></div>
+        </div>
+        <div class="bx-card bx-wide" id="t-card-heat" data-source="registros">
+          <div><h3>Mapa de calor: PH por EDT y día</h3><p class="sub">Qué empresario empuja cada día por encima de la meta</p></div>
+          <div class="bx-chart sm" id="t-ch-heat" style="overflow-x:auto"></div>
+        </div>
+        <div class="bx-card bx-wide" id="t-card-bk" data-source="registros">
+          <div><h3>Top 10 BK con TT</h3><p class="sub">PH acumulado y veces que trajo TT</p></div>
+          <div class="bx-chart sm" id="t-ch-bk"></div>
+        </div>
+      </div>
+      </div>
+      <div class="bx-sub" id="a-sub-bit" hidden>
+      <div class="bx-kpis" id="a-kpis" data-source="registros"></div>
+      <div class="bx-grid">
+        <div class="bx-card bx-wide" id="a-card-dia" data-source="registros">
+          <div><h3>Viajes modificados por día</h3><p class="sub">Desplanificación total, parcial y cambio de cabecera, con promedio móvil de 7 días</p></div>
+          <div class="bx-legend" id="a-lg"></div>
+          <div class="bx-chart" id="a-ch-dia"></div>
+        </div>
+        <div class="bx-card" id="d-card-mot" data-source="registros">
+          <div><h3>Viajes modificados por tipo</h3><p class="sub">Participación de cada tipo de modificación</p></div>
+          <div class="bx-chart sm" id="d-ch-mot"></div>
+        </div>
+        <div class="bx-card" id="a-card-edt" data-source="registros">
+          <div><h3>Viajes modificados por EDT</h3><p class="sub">Qué empresario tiene más viajes modificados</p></div>
+          <div class="bx-chart sm" id="a-ch-edt"></div>
+        </div>
+        <div class="bx-card bx-wide" id="a-card-tabla" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Detalle de viajes modificados</h3><p class="sub">Cada viaje con su ruta, placa, EDT y tipo de modificación</p></div>
+            <label class="bx-switch"><input type="checkbox" id="a-tb-tg"><span class="tr" aria-hidden="true"></span>Ver detalle</label>
+          </div>
+          <div class="bx-tw" id="a-tabla" hidden></div>
+        </div>
+        <div class="bx-card bx-wide" id="a-card-sem" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Resumen semana a semana</h3><p class="sub">Indicadores de almacén por semana (lunes a domingo)</p></div>
+            <label class="bx-switch"><input type="checkbox" id="a-sem-tg"><span class="tr" aria-hidden="true"></span>Ver detalle</label>
+          </div>
+          <div class="bx-tw" id="a-sem" hidden></div>
+        </div>
+      </div>
+      </div>
+      <div class="bx-sub" id="a-sub-inc" hidden>
+      <div class="bx-kpis" id="n-kpis"></div>
+      <div class="bx-grid">
+        <div class="bx-card bx-wide" id="n-card-dia">
+          <div><h3>Incumplimientos por día</h3><p class="sub">Placas que regresaron sin cumplir el retorno de TT autorizado, por empresario</p></div>
+          <div class="bx-legend" id="n-lg"></div>
+          <div class="bx-chart" id="n-ch-dia"></div>
+        </div>
+        <div class="bx-card" id="n-card-edt">
+          <div><h3>Impacto por EDT</h3><p class="sub">Incumplimientos, placas distintas, % de su flota y reincidentes</p></div>
+          <div class="bx-tw" id="n-tb-edt"></div>
+        </div>
+        <div class="bx-card" id="n-card-rei">
+          <div><h3>Placas reincidentes</h3><p class="sub">Placas con 2 o más incumplimientos en el periodo, para tomar acción</p></div>
+          <div class="bx-tw" id="n-tb-rei"></div>
+        </div>
+        <div class="bx-card bx-wide" id="n-card-det">
+          <div class="bx-card-h"><div><h3>Detalle de incumplimientos</h3><p class="sub" id="n-det-sub">Cada placa registrada</p></div>
+            <button class="bx-btn" type="button" id="n-dl" hidden>Descargar data acumulada (CSV)</button></div>
+          <div class="bx-tw" id="n-tb-det"></div>
+        </div>
+        <div class="bx-card bx-wide bx-admin" id="n-login" hidden>
+          <div class="bx-card-h"><div><h3 style="color:var(--k-gold)">Acceso administrador</h3><p class="sub">Para ingresar o eliminar placas de incumplimiento y descargar la data acumulada.</p></div>
+            <button class="bx-btn" type="button" id="n-lx">Cerrar</button></div>
+          <form class="bx-lform" id="n-lform" autocomplete="off">
+            <div class="bx-f"><label for="n-lu">Usuario</label><input type="text" id="n-lu" autocomplete="username" required></div>
+            <div class="bx-f"><label for="n-lk">Clave</label><input type="password" id="n-lk" autocomplete="current-password" required></div>
+            <button class="bx-btn bx-solid" type="submit" id="n-lgo">Ingresar</button><span class="bx-count" id="n-lmsg"></span>
+          </form>
+        </div>
+        <div class="bx-card bx-wide bx-admin" id="n-adm" hidden>
+          <div><h3 style="color:var(--k-gold)">Ingresar placas de incumplimiento</h3><p class="sub">Solo administrador. Se registra el día siguiente: elige la fecha del incumplimiento (por defecto, ayer) y escribe o pega las placas, una por línea o separadas por coma. La ruta y el EDT se completan solos.</p></div>
+          <div class="bx-aform">
+            <div class="bx-f"><label for="n-f">Fecha del incumplimiento</label><input type="date" id="n-f"></div>
+            <div class="bx-f"><label for="n-p">Placas</label><textarea id="n-p" rows="5" placeholder="BWD-880&#10;PED8S-777&#10;CHZ-792"></textarea></div>
+            <div class="bx-f"><label for="n-o">Observación (opcional)</label><input type="text" id="n-o" maxlength="140" placeholder="Ej. retornó con TT sin autorización"></div>
+            <div class="bx-f"><label>Validación</label><div class="bx-prev" id="n-prev"><span class="bx-empty">Escribe las placas para validarlas.</span></div></div>
+          </div>
+          <div class="bx-tools"><button class="bx-btn bx-solid" type="button" id="n-go" disabled>Registrar incumplimientos</button><span class="bx-count" id="n-msg"></span></div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ===================== EDT ===================== -->
+    <section class="bx-page" id="edt" role="tabpanel" aria-labelledby="tab-edt" hidden>
+      <h2 class="bx-h2">Rendimiento por empresario</h2>
+      <div class="bx-grid">
+        <div class="bx-card bx-wide" id="e-card-tb" data-source="registros">
+          <div><h3>Impacto por EDT</h3><p class="sub">Desplanificación (reprogramación y ZT), viajes modificados y placas con TT de cada empresario en el periodo</p></div>
+          <div class="bx-tw" id="e-tb"></div>
+        </div>
+        <div class="bx-card bx-wide" id="e-card-dia" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Impacto de la desplanificación por EDT</h3><p class="sub" id="e-dia-sub">Reprogramación y ZT de cada empresario, total del periodo y promedio por día</p></div>
+            <div class="bx-tools">
+                            <div class="bx-seg" role="group" aria-label="Medida"><button type="button" data-eu="hl" aria-pressed="true">HL</button><button type="button" data-eu="usd" aria-pressed="false">US$</button><button type="button" data-eu="poc" aria-pressed="false">POCs</button><button type="button" data-eu="ca" aria-pressed="false">Cajas</button></div>
+            </div>
+          </div>
+          <div class="bx-chart" id="e-ch-dia"></div>
+        </div>
+        <div class="bx-card bx-wide" id="e-card-heat" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Mapa de calor por EDT y día</h3><p class="sub" id="e-heat-sub">HL en ZT por empresario y día</p></div>
+            <div class="bx-seg" role="group" aria-label="Indicador del mapa"><button type="button" data-eh="zt" aria-pressed="true">ZT (HL)</button><button type="button" data-eh="rp" aria-pressed="false">Reprogramación (HL)</button><button type="button" data-eh="mod" aria-pressed="false">Viajes modificados</button><button type="button" data-eh="tt" aria-pressed="false">PH con TT</button></div>
+          </div>
+          <div class="bx-chart sm" id="e-ch-heat" style="overflow-x:auto"></div>
+        </div>
+        <div class="bx-card bx-wide" id="e-card-bkd" data-source="registros">
+          <div><h3>Top 10 BK en desplanificación</h3><p class="sub">Viajes desplanificados (total o parcial) y HL</p></div>
+          <div class="bx-chart sm" id="e-ch-bkd"></div>
+        </div>
+        <div class="bx-card bx-wide" id="e-card-bkt" data-source="registros">
+          <div><h3>Top 10 BK con TT</h3><p class="sub">PH acumulado y veces que trajo TT</p></div>
+          <div class="bx-chart sm" id="e-ch-bkt"></div>
+        </div>
+        <div class="bx-card bx-wide" id="e-card-piv" data-source="registros">
+          <div class="bx-card-h">
+            <div><h3>Resumen por acción y motivo</h3><p class="sub" id="e-piv-sub">Desplanificación por acción y por motivo</p></div>
+            <div class="bx-seg" role="group" aria-label="Medida del resumen"><button type="button" data-pv="ca" aria-pressed="false">Cajas</button><button type="button" data-pv="hl" aria-pressed="true">HL</button><button type="button" data-pv="poc" aria-pressed="false">POCs</button></div>
+          </div>
+          <div class="bx-pivs">
+            <div><h4 id="e-piv-h1">Suma de HL · por acción</h4><div class="bx-piv" id="e-piv-acc"></div></div>
+            <div><h4 id="e-piv-h2">Suma de HL · por motivo</h4><div class="bx-piv" id="e-piv-mot"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+  </div>
+  <div class="bx-foot" id="pie" data-source="registros"><span>—</span><span class="bx-foot-r"><span id="err" class="bx-err" hidden></span><button type="button" class="bx-lnk" id="adm-ref" hidden>Actualizar datos ahora</button><button type="button" class="bx-lnk" id="adm-btn">Acceso administrador</button><span>Transportes · CD Callao</span></span></div>
+  <div class="bx-tip" id="tip" hidden></div>
+</div>
+
+<script src="logos.js"></script>
+<script src="flota.js"></script>
+<script>
+(function () {
+  const USD_HL = 3.396; // costo en dólares por HL desplanificado, definido por Transportes
+  const usd = (hl) => hl * USD_HL; const fUsd = (v) => 'US$ ' + d3.format(',.0f')(v);
+  const META_PH = 100; // tope diario de paletas (PH) con TT, definido por Transportes: ≤100 cumple
+  const C = { zt: '#C94A43', rp: '#D9A62E', sc: '#5E584B', gold: '#F2C52A', ok: '#2FA36B', bad: '#C94A43', fg: '#F4F1E8', ma: '#F4F1E8', grid: '#2A251B' };
+  const ACC = [['Reprogramación', 'rp', C.rp], ['ZT (rechazo)', 'zt', C.zt], ['Sin clasificar', 'sc', C.sc]];
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const MES3 = ['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'];
+  const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const fmt = d3.format(','), f1 = d3.format(',.1f'), f2 = d3.format(',.2f'), pct = d3.format('.0%'), pct1 = d3.format('.1%');
+  const iso = d3.utcFormat('%Y-%m-%d');
+  const $ = (id) => document.getElementById(id);
+  const L = window.BX_LOGOS || {};
+  if (L.cd) $('logo-cd').src = L.cd; if (L.ab) $('logo-ab').src = L.ab; if (L.t77) $('logo-t77').src = L.t77;
+  const tick = () => { const n = new Date();
+    $('clk-h').textContent = n.toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: true });
+    $('clk-d').textContent = n.toLocaleDateString('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: 'numeric', month: 'long' }); };
+  tick(); setInterval(tick, 15000);
+  if (L.tapiz) $('hero').style.backgroundImage = `url("${L.tapiz}")`;
+
+  const short = (s) => (s || 'SIN EDT').replace(/ SOCIEDAD COMERCIAL| S\.?A\.?C\.?$| E\.?I\.?R\.?L\.?$| S\.R\.L\.?$/g, '').trim()
+    .toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase());
+  const ddmm = (s) => s.slice(8, 10) + '/' + s.slice(5, 7);
+  const dlabel = (s) => DIAS[new Date(s + 'T12:00:00Z').getUTCDay()] + ' ' + ddmm(s);
+  const dlong = (s) => `${+s.slice(8, 10)} ${MES3[+s.slice(5, 7) - 1]}`;
+  const tip = $('tip'), root = $('tablero');
+  const state = { pv: 'hl', tab: 'ventas', vsub: 'des', asub: 'tt', eAcc: '', eU: 'hl', eH: 'zt', mz: 'zona', unit: 'hl', acc: '', q: '', pAcc: '', pUnit: 'hl', pDay: '', sort: { d: ['fecha', -1], r: ['fecha', -1], a: ['fecha', -1], c: ['n', -1] } };
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const B = (t) => el('b', null, t);
+
+  function showTip(ev, head, lines) {
+    tip.replaceChildren(el('div', 'h', head));
+    lines.forEach(([c, t]) => { const d = el('div'); if (c) { const i = el('i'); i.style.cssText = `display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:${c}`; d.append(i); } d.append(document.createTextNode(t)); tip.append(d); });
+    tip.hidden = false;
+    const rb = root.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+    let x = ev.clientX - rb.left + 12, y = ev.clientY - rb.top - th - 10;
+    if (x + tw > rb.width - 8) x = ev.clientX - rb.left - tw - 12;
+    if (y < 8) y = ev.clientY - rb.top + 16;
+    tip.style.left = Math.max(8, x) + 'px'; tip.style.top = y + 'px';
+  }
+  const hideTip = () => { tip.hidden = true; };
+  const on = (sel, head, lines) => sel.on('mousemove', (ev) => showTip(ev, head, lines)).on('mouseleave', hideTip);
+  const legend = (box, items) => box.replaceChildren(...items.map(([c, t, kind]) => { const s = el('span'); const i = el('i', kind || ''); if (kind !== 'dash') i.style.background = c; s.append(i, document.createTextNode(t)); return s; }));
+  const empty = (box, msg) => box.replaceChildren(el('div', 'bx-empty', msg));
+  const svgIn = (box, H) => { box.replaceChildren(); const W = box.clientWidth || 320; return [d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`), W]; };
+  const ma = (vals, k = 7) => vals.map((_, i) => d3.mean(vals.slice(Math.max(0, i - k + 1), i + 1)));
+
+  // ---------- gráficos ----------
+  function sparkline(box, vals, color) {
+    if (!vals.length) { box.replaceChildren(); return; }
+    const [svg, W] = svgIn(box, 38);
+    const x = d3.scaleLinear([0, Math.max(1, vals.length - 1)], [2, W - 4]), y = d3.scaleLinear([0, d3.max(vals) || 1], [34, 4]);
+    const id = 'g' + Math.random().toString(36).slice(2, 8);
+    const g = svg.append('defs').append('linearGradient').attr('id', id).attr('x1', 0).attr('x2', 0).attr('y1', 0).attr('y2', 1);
+    [[0, .35], [1, 0]].forEach(([o, a]) => g.append('stop').attr('offset', o).attr('style', `stop-color:${color};stop-opacity:${a}`));
+    svg.append('path').attr('d', d3.area().x((d, i) => x(i)).y0(34).y1((d) => y(d))(vals)).attr('fill', `url(#${id})`);
+    svg.append('path').attr('d', d3.line().x((d, i) => x(i)).y((d) => y(d))(vals)).attr('fill', 'none').attr('stroke', color).attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
+    svg.append('circle').attr('cx', x(vals.length - 1)).attr('cy', y(vals[vals.length - 1])).attr('r', 3).attr('fill', color);
+  }
+
+  // barras diarias apiladas + promedio móvil + promedio/meta
+  function dayCombo(box, days, series, o) {
+    if (!days.length) return empty(box, 'Sin registros en el periodo filtrado.');
+    const H = o.h || 280, [svg, W] = svgIn(box, H), m = { t: 24, r: 12, b: 34, l: 44 };
+    const x = d3.scaleBand(days.map((d) => d.fecha), [m.l, W - m.r]).padding(days.length < 5 ? 0.5 : 0.25);
+    const bw = Math.min(x.bandwidth(), 54), off = (x.bandwidth() - bw) / 2;
+    const tot = days.map((d) => d3.sum(series, (s) => d[s.k] || 0));
+    const top = Math.max(d3.max(tot) || 1, o.goal ? o.goal * 1.15 : 0);
+    const y = d3.scaleLinear([0, top], [H - m.b, m.t]).nice();
+    y.ticks(5).forEach((t) => { svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(t)).attr('y2', y(t)).attr('stroke', C.grid);
+      svg.append('text').attr('x', m.l - 6).attr('y', y(t)).attr('text-anchor', 'end').attr('dominant-baseline', 'middle').text(o.tick(t)); });
+    const step = Math.ceil(days.length / Math.max(1, Math.floor((W - m.l) / 50)));
+    days.forEach((d, i) => {
+      let y0 = H - m.b;
+      series.forEach((s) => { const v = d[s.k]; if (!v) return; const h = (H - m.b) - y(v);
+        const rc = on(svg.append('rect').attr('x', x(d.fecha) + off).attr('y', y0 - h).attr('width', bw).attr('height', Math.max(h, 1)).attr('rx', 3).attr('fill', typeof s.c === 'function' ? s.c(d) : s.c).attr('opacity', o.sel && o.sel !== d.fecha ? 0.35 : 1), dlabel(d.fecha), o.tipLines(d, i));
+        if (o.onClick) rc.style('cursor', 'pointer').on('click', () => o.onClick(d)); y0 -= h; });
+      if (tot[i] && bw >= 22 && days.length <= 24) svg.append('text').attr('class', 'v').attr('x', x(d.fecha) + x.bandwidth() / 2).attr('y', y0 - 6).attr('text-anchor', 'middle').text(o.val(tot[i]));
+      if (i % step === 0) svg.append('text').attr('x', x(d.fecha) + x.bandwidth() / 2).attr('y', H - 12).attr('text-anchor', 'middle').text(days.length <= 8 ? dlabel(d.fecha) : ddmm(d.fecha));
+    });
+    if (o.ma && days.length > 2) {
+      const mv = ma(tot);
+      svg.append('path').attr('d', d3.line().x((d, i) => x(days[i].fecha) + x.bandwidth() / 2).y((d) => y(d))(mv)).attr('fill', 'none').attr('stroke', C.ma).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
+      svg.append('circle').attr('cx', x(days[days.length - 1].fecha) + x.bandwidth() / 2).attr('cy', y(mv[mv.length - 1])).attr('r', 4).attr('fill', C.ma);
+    }
+    const ref = (v, label) => { svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', C.fg).attr('stroke-width', 1.5).attr('stroke-dasharray', '6 5');
+      svg.append('text').attr('class', 'goal').attr('x', W - m.r).attr('y', y(v) - 6).attr('text-anchor', 'end').text(label); };
+    if (o.goal) ref(o.goal, `Meta máx. ${o.goal} PH`);
+    if (o.avg) ref(d3.mean(tot), `Promedio ${o.val(d3.mean(tot))}`);
+  }
+
+  function donut(box, parts, center, sub, H0) {
+    const total = d3.sum(parts, (p) => p.v);
+    if (!total) return empty(box, 'Sin registros en el periodo filtrado.');
+    const H = H0 || 200, [svg, W] = svgIn(box, H), r = Math.min(H / 2 - (H < 120 ? 2 : 6), 90), cx = H < 120 ? W / 2 : Math.min(W / 2, r + 10 + (W > 420 ? 40 : 0));
+    const g = svg.append('g').attr('transform', `translate(${cx},${H / 2})`);
+    const arcs = d3.pie().sort(null).value((p) => p.v)(parts.filter((p) => p.v));
+    arcs.forEach((a) => on(g.append('path').attr('d', d3.arc().innerRadius(r * 0.62).outerRadius(r).padAngle(0.015).cornerRadius(3)(a)).attr('fill', a.data.c), a.data.name, [[a.data.c, `${a.data.fmt(a.data.v)} · ${pct1(a.data.v / total)}`]]));
+    if (H < 120) { g.append('text').attr('class', 'v').attr('text-anchor', 'middle').attr('dominant-baseline', 'middle').attr('style', 'font-size:13px').text(center); }
+    else { g.append('text').attr('class', 'big').attr('text-anchor', 'middle').attr('y', 4).text(center); g.append('text').attr('text-anchor', 'middle').attr('y', 24).text(sub); }
+    if (W > 300 && H >= 120) {
+      const lx = cx + r + 24; let ly = H / 2 - (parts.length * 40) / 2 + 14;
+      parts.forEach((p) => { svg.append('rect').attr('x', lx).attr('y', ly - 10).attr('width', 10).attr('height', 10).attr('rx', 2).attr('fill', p.c);
+        svg.append('text').attr('x', lx + 16).attr('y', ly - 1).text(p.name);
+        svg.append('text').attr('class', 'v').attr('x', lx + 16).attr('y', ly + 15).text(`${p.fmt(p.v)} · ${total ? pct(p.v / total) : '—'}`); ly += 40; });
+    }
+  }
+
+  function pareto(box, items, f, unit, color, opts = {}) {
+    if (!items.length || !d3.sum(items, (d) => d.v)) return empty(box, 'Sin registros en el periodo filtrado.');
+    items = items.slice().sort((a, b) => b.v - a.v);
+    const tot = d3.sum(items, (d) => d.v); let acc = 0; items.forEach((d) => { acc += d.v; d.cum = acc / tot; });
+    if (opts.top) items = items.slice(0, opts.top);
+    const LL = opts.labelLen || 14;
+    const H = opts.h || 230, [svg, W] = svgIn(box, H), m = { t: 20, r: 40, b: 46, l: 44 };
+    const x = d3.scaleBand(items.map((d) => d.label), [m.l, W - m.r]).padding(0.3);
+    const y = d3.scaleLinear([0, d3.max(items, (d) => d.v)], [H - m.b, m.t]).nice(), y2 = d3.scaleLinear([0, 1], [H - m.b, m.t]);
+    y.ticks(4).forEach((t) => { svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(t)).attr('y2', y(t)).attr('stroke', C.grid);
+      svg.append('text').attr('x', m.l - 6).attr('y', y(t)).attr('text-anchor', 'end').attr('dominant-baseline', 'middle').text(f(t)); });
+    [0, .5, .8, 1].forEach((t) => svg.append('text').attr('x', W - m.r + 6).attr('y', y2(t)).attr('dominant-baseline', 'middle').text(pct(t)));
+    svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y2(.8)).attr('y2', y2(.8)).attr('stroke', C.fg).attr('stroke-opacity', .35).attr('stroke-dasharray', '4 4');
+    const bw = Math.min(x.bandwidth(), 60), off = (x.bandwidth() - bw) / 2;
+    items.forEach((d) => {
+      on(svg.append('rect').attr('x', x(d.label) + off).attr('y', y(d.v)).attr('width', bw).attr('height', H - m.b - y(d.v)).attr('rx', 3).attr('fill', color), d.label, [[color, `${f(d.v)} ${unit} · ${pct1(d.v / tot)}`], [null, `Acumulado: ${pct1(d.cum)}`], ...(d.extra || [])]);
+      const fit = Math.max(3, Math.min(LL, Math.floor((x.step() - 6) / 6.3))); const lab = d.label.length > fit ? d.label.slice(0, fit - 1) + '…' : d.label;
+      svg.append('text').attr('x', x(d.label) + x.bandwidth() / 2).attr('y', H - m.b + 16).attr('text-anchor', 'middle').text(lab);
+      if (x.step() >= 30) svg.append('text').attr('class', 'v').attr('x', x(d.label) + x.bandwidth() / 2).attr('y', H - m.b + 32).attr('text-anchor', 'middle').text(pct(d.v / tot));
+    });
+    svg.append('path').attr('d', d3.line().x((d) => x(d.label) + x.bandwidth() / 2).y((d) => y2(d.cum))(items)).attr('fill', 'none').attr('stroke', C.ma).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round');
+    items.forEach((d) => svg.append('circle').attr('cx', x(d.label) + x.bandwidth() / 2).attr('cy', y2(d.cum)).attr('r', 3.5).attr('fill', C.ma));
+  }
+
+  function heatmap(box, rows, cols, val, f, unit, colLabel, colLabel2) {
+    if (!rows.length || !cols.length) return empty(box, 'Sin registros en el periodo filtrado.');
+    const cell = 34, cw = Math.max(34, Math.min(70, ((box.clientWidth || 600) - 150) / cols.length));
+    const hy = colLabel2 ? 36 : 22, tmpW = 150, W = Math.max(box.clientWidth || 320, tmpW + cols.length * cw + 8), H = rows.length * cell + hy + 8;
+    box.replaceChildren();
+    const svg = d3.select(box).append('svg').attr('width', W > (box.clientWidth || 0) ? W : '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const all = []; rows.forEach((r) => cols.forEach((c) => all.push(val(r, c))));
+    const mx = d3.max(all) || 1;
+    const col = (v) => (v ? d3.interpolateRgb('#3A2A12', '#F2C52A')(Math.sqrt(v / mx)) : '#15130F');
+    const colR = (v) => (v > mx * 0.75 ? '#C94A43' : col(v));
+    cols.forEach((c, j) => { svg.append('text').attr('class', colLabel2 ? 'v' : '').attr('x', tmpW + j * cw + cw / 2).attr('y', 14).attr('text-anchor', 'middle').text(colLabel(c));
+      if (colLabel2) svg.append('text').attr('x', tmpW + j * cw + cw / 2).attr('y', 28).attr('text-anchor', 'middle').text(colLabel2(c)); });
+    rows.forEach((r, i) => {
+      const y = hy + i * cell;
+      svg.append('text').attr('x', tmpW - 8).attr('y', y + cell / 2).attr('text-anchor', 'end').attr('dominant-baseline', 'middle').text(r.length > 22 ? r.slice(0, 21) + '…' : r);
+      cols.forEach((c, j) => { const v = val(r, c);
+        on(svg.append('rect').attr('x', tmpW + j * cw + 2).attr('y', y + 2).attr('width', cw - 4).attr('height', cell - 4).attr('rx', 4).attr('fill', colR(v)), `${r} · ${colLabel2 ? colLabel2(c) + ' ' : ''}${colLabel(c)}`, [[null, `${f(v)} ${unit}`]]);
+        if (v && cw >= 38) svg.append('text').attr('class', 'v').attr('x', tmpW + j * cw + cw / 2).attr('y', y + cell / 2).attr('text-anchor', 'middle').attr('dominant-baseline', 'middle').attr('style', `fill:${v > mx * 0.5 && v <= mx * 0.75 ? '#14110A' : '#F4F1E8'}`).text(f(v)); });
+    });
+  }
+
+  function cumChart(box, days, goal) {
+    if (!days.length) return empty(box, 'Sin registros en el periodo filtrado.');
+    let a = 0; const pts = days.map((d, i) => { a += d.ph; return { fecha: d.fecha, real: a, meta: goal * (i + 1) }; });
+    const H = 230, [svg, W] = svgIn(box, H), m = { t: 16, r: 64, b: 30, l: 50 };
+    const x = d3.scalePoint(pts.map((p) => p.fecha), [m.l, W - m.r]).padding(0.2);
+    const y = d3.scaleLinear([0, d3.max(pts, (p) => Math.max(p.real, p.meta))], [H - m.b, m.t]).nice();
+    y.ticks(4).forEach((t) => { svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(t)).attr('y2', y(t)).attr('stroke', C.grid);
+      svg.append('text').attr('x', m.l - 6).attr('y', y(t)).attr('text-anchor', 'end').attr('dominant-baseline', 'middle').text(fmt(t)); });
+    svg.append('path').attr('d', d3.area().x((p) => x(p.fecha)).y0((p) => y(p.meta)).y1((p) => y(Math.max(p.real, p.meta)))(pts)).attr('fill', C.bad).attr('fill-opacity', .22);
+    svg.append('path').attr('d', d3.line().x((p) => x(p.fecha)).y((p) => y(p.meta))(pts)).attr('fill', 'none').attr('stroke', C.ok).attr('stroke-width', 2).attr('stroke-dasharray', '6 5');
+    svg.append('path').attr('d', d3.line().x((p) => x(p.fecha)).y((p) => y(p.real))(pts)).attr('fill', 'none').attr('stroke', C.bad).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round');
+    pts.forEach((p) => on(svg.append('circle').attr('cx', x(p.fecha)).attr('cy', y(p.real)).attr('r', 4).attr('fill', p.real > p.meta ? C.bad : C.ok), dlabel(p.fecha),
+      [[C.bad, `Acumulado real: ${fmt(p.real)} PH`], [C.ok, `Meta acumulada: ${fmt(p.meta)} PH`], [null, p.real > p.meta ? `Exceso: ${fmt(p.real - p.meta)} PH` : `Margen: ${fmt(p.meta - p.real)} PH`]]));
+    const last = pts[pts.length - 1];
+    svg.append('text').attr('class', 'v').attr('x', x(last.fecha) + 8).attr('y', y(last.real)).attr('dominant-baseline', 'middle').text(fmt(last.real));
+    svg.append('text').attr('x', x(last.fecha) + 8).attr('y', y(last.meta) + (Math.abs(y(last.real) - y(last.meta)) < 14 ? 14 : 0)).attr('dominant-baseline', 'middle').text(fmt(last.meta));
+    const step = Math.ceil(pts.length / Math.max(1, Math.floor((W - m.l) / 50)));
+    pts.forEach((p, i) => { if (i % step === 0) svg.append('text').attr('x', x(p.fecha)).attr('y', H - 10).attr('text-anchor', 'middle').text(ddmm(p.fecha)); });
+    return last;
+  }
+
+  const LP = ['#F2C52A', '#C94A43', '#2FA36B', '#E08A3C', '#B9AE96', '#8C6A3F', '#5E7F4E', '#7A2C28'];
+  function lineChart(box, dates, series, o) {
+    if (!dates.length || !series.length) return empty(box, 'Sin registros en el periodo filtrado.');
+    const H = o.h || 260, [svg, W] = svgIn(box, H);
+    const lab = (s) => `${s.name.length > 16 ? s.name.slice(0, 15) + '…' : s.name} ${o.f(s.vals[s.vals.length - 1])}`;
+    const tmp = svg.append('text').attr('style', 'font-weight:600'); let lw = 0; series.forEach((s) => { tmp.text(lab(s)); lw = Math.max(lw, tmp.node().getComputedTextLength()); }); tmp.remove();
+    const m = { t: 16, r: Math.min(W * 0.4, lw + 16), b: 34, l: 44 };
+    const x = d3.scalePoint(dates, [m.l, W - m.r]).padding(0.3);
+    const y = d3.scaleLinear([0, d3.max(series, (s) => d3.max(s.vals)) || 1], [H - m.b, m.t]).nice();
+    y.ticks(5).forEach((t) => { svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(t)).attr('y2', y(t)).attr('stroke', C.grid);
+      svg.append('text').attr('x', m.l - 6).attr('y', y(t)).attr('text-anchor', 'end').attr('dominant-baseline', 'middle').text(o.f(t)); });
+    const stepW = dates.length > 1 ? x.step() : W - m.l - m.r;
+    if (o.sel && dates.includes(o.sel)) svg.append('rect').attr('x', x(o.sel) - stepW / 2).attr('y', m.t).attr('width', stepW).attr('height', H - m.b - m.t).attr('fill', 'rgba(242,197,42,.10)');
+    series.forEach((s) => {
+      svg.append('path').attr('d', d3.line().x((d, i) => x(dates[i])).y((d) => y(d))(s.vals)).attr('fill', 'none').attr('stroke', s.c).attr('stroke-width', s.w || 2.2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round').attr('opacity', s.dim ? 0.55 : 1);
+      s.vals.forEach((v, i) => { if (v) svg.append('circle').attr('cx', x(dates[i])).attr('cy', y(v)).attr('r', 2.6).attr('fill', s.c); });
+    });
+    const ends = series.map((s) => ({ s, y: y(s.vals[s.vals.length - 1]) })).sort((a, b) => a.y - b.y);
+    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 13) ends[i].y = ends[i - 1].y + 13;
+    if (ends.length && ends[ends.length - 1].y > H - 8) { ends[ends.length - 1].y = H - 8; for (let i = ends.length - 2; i >= 0; i--) if (ends[i + 1].y - ends[i].y < 13) ends[i].y = ends[i + 1].y - 13; }
+    ends.forEach((e) => { e.y = Math.max(8, e.y); });
+    ends.forEach(({ s, y: yy }) => svg.append('text').attr('x', W - m.r + 8).attr('y', yy).attr('dominant-baseline', 'middle').attr('style', `fill:${s.c};font-weight:600`).text(lab(s)));
+    const step = Math.ceil(dates.length / Math.max(1, Math.floor((W - m.l - m.r) / 50)));
+    dates.forEach((d, i) => { if (i % step === 0) svg.append('text').attr('x', x(d)).attr('y', H - 12).attr('text-anchor', 'middle').text(dates.length <= 8 ? dlabel(d) : ddmm(d));
+      const hit = svg.append('rect').attr('x', x(d) - stepW / 2).attr('y', m.t).attr('width', stepW).attr('height', H - m.b - m.t).attr('fill', 'transparent')
+        .on('mousemove', (ev) => showTip(ev, dlabel(d), series.map((s) => [s.c, `${s.name}: ${o.f(s.vals[i])} ${o.unit}`, s.vals[i]]).sort((a, b) => b[2] - a[2]).filter((r) => r[2]).map(([c, t]) => [c, t]).concat(o.onClick ? [[null, 'Clic para filtrar este día']] : [])))
+        .on('mouseleave', hideTip);
+      if (o.onClick) hit.style('cursor', 'pointer').on('click', () => o.onClick(d)); });
+  }
+
+  function hbars(box, data, f, unit) {
+    if (!data.length || !d3.sum(data, (d) => d3.sum(d.parts, (p) => p.v))) return empty(box, 'Sin registros en el periodo filtrado.');
+    const row = 30, [svg, W] = svgIn(box, data.length * row + 6);
+    const tmp = svg.append('text'); let lw = 0; data.forEach((d) => { tmp.text(d.label); lw = Math.max(lw, tmp.node().getComputedTextLength()); }); tmp.remove();
+    lw = Math.min(lw, W * 0.42) + 10;
+    const max = d3.max(data, (d) => d3.sum(d.parts, (p) => p.v));
+    const end = d3.max(data, (d) => (d.end || f(d3.sum(d.parts, (p) => p.v))).length) * 7 + 12;
+    const x = d3.scaleLinear([0, max], [lw, W - end]);
+    data.forEach((d, i) => { const y = i * row + 3; let x0 = lw;
+      const tl = svg.append('text').attr('x', lw - 8).attr('y', y + row / 2 - 2).attr('text-anchor', 'end').attr('dominant-baseline', 'middle').text(d.label);
+      if (tl.node().getComputedTextLength() > lw - 10) { let t = d.label; while (t.length > 3 && tl.text(t + '…').node().getComputedTextLength() > lw - 10) t = t.slice(0, -1); }
+      d.parts.forEach((p) => { if (!p.v) return; const w = Math.max(x(p.v) - lw, 2);
+        const rr = on(svg.append('rect').attr('x', x0).attr('y', y + 5).attr('width', w).attr('height', row - 14).attr('rx', 3).attr('fill', p.c), d.label, d.tip || [[p.c, `${p.name}: ${f(p.v)} ${unit}`]]); if (d.onClick) rr.style('cursor', 'pointer').on('click', d.onClick); x0 += w; });
+      svg.append('text').attr('class', 'v').attr('x', x0 + 6).attr('y', y + row / 2 - 2).attr('dominant-baseline', 'middle').text(d.end || f(d3.sum(d.parts, (p) => p.v))); });
+  }
+
+  // tabla dinámica: filas x columnas de periodo, con totales
+  function pivot(box, data, rowOf, rowOrder, cols, colOf, val, f, opts = {}) {
+    if (!data.length) return empty(box, 'Sin registros en el periodo filtrado.');
+    const rowsK = rowOrder.filter((r) => data.some((d) => rowOf(d) === r));
+    const cell = (r, c) => val(data.filter((d) => rowOf(d) === r && (c == null || colOf(d) === c.k)));
+    const mx = d3.max(rowsK, (r) => d3.max(cols, (c) => cell(r, c))) || 1;
+    const t = el('table'); const hr = t.insertRow();
+    [opts.rowLabel || '', ...cols.map((c) => c.label), 'Total general'].forEach((h, i) => { const th = el('th', i === cols.length + 1 ? 'tot' : '', h); hr.append(th); });
+    rowsK.forEach((r) => { const tr = t.insertRow(); if (opts.blank && opts.blank(r)) tr.className = 'blank';
+      const td0 = tr.insertCell(); td0.textContent = opts.label ? opts.label(r) : r;
+      cols.forEach((c) => { const v = cell(r, c); const td = tr.insertCell(); td.textContent = v ? f(v) : ''; if (v && opts.heat !== false) td.style.background = `rgba(${opts.rgb || '201,74,67'},${(0.05 + 0.35 * v / mx).toFixed(2)})`; });
+      const tt = tr.insertCell(); tt.className = 'tot'; tt.textContent = f(cell(r, null)); });
+    const fr = t.insertRow(); fr.className = 'tot'; fr.insertCell().textContent = 'Total general';
+    cols.forEach((c) => { fr.insertCell().textContent = f(val(data.filter((d) => colOf(d) === c.k))); });
+    const ft = fr.insertCell(); ft.className = 'tot'; ft.textContent = f(val(data));
+    box.replaceChildren(t);
+  }
+  // columnas de periodo según el rango: meses, semanas o días
+  function periodCols(lo, hi) {
+    const a = new Date(lo + 'T00:00:00Z'), b = new Date(hi + 'T00:00:00Z');
+    const months = d3.utcMonth.range(d3.utcMonth.floor(a), d3.utcDay.offset(b, 1));
+    const M3 = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+    if (months.length > 1) return { by: 'mes', cols: months.map((m) => ({ k: iso(m).slice(0, 7), label: `${M3[m.getUTCMonth()]} ${String(m.getUTCFullYear()).slice(2)}` })), of: (r) => r.fecha.slice(0, 7) };
+    const n = d3.utcDay.count(a, b) + 1;
+    if (n > 10) { const wk = d3.utcMonday.range(d3.utcMonday.floor(a), d3.utcDay.offset(b, 1));
+      return { by: 'semana', cols: wk.map((w) => ({ k: iso(w), label: `Sem ${dlong(iso(w < a ? a : w))}` })), of: (r) => iso(d3.utcMonday.floor(new Date(r.fecha + 'T00:00:00Z'))) }; }
+    return { by: 'día', cols: d3.utcDay.range(a, d3.utcDay.offset(b, 1)).map((d) => ({ k: iso(d), label: dlabel(iso(d)) })), of: (r) => r.fecha };
+  }
+
+  function table(box, key, cols, rows, foot, maxRows) {
+    if (!rows.length) return empty(box, 'Sin registros con los filtros actuales.');
+    const [sk, sd] = state.sort[key]; const col = cols.find((c) => c.k === sk) || cols[0];
+    rows = rows.slice().sort((a, b) => { const va = a[col.k], vb = b[col.k]; return (typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb))) * sd; });
+    if (maxRows) rows = rows.slice(0, maxRows);
+    const t = el('table'); const th = t.createTHead().insertRow();
+    cols.forEach((c) => { const h = el('th', c.n ? 'n' : ''); h.setAttribute('aria-sort', c.k === sk ? (sd > 0 ? 'ascending' : 'descending') : 'none');
+      const b = el('button', null, c.h + (c.k === sk ? (sd > 0 ? ' ▲' : ' ▼') : '')); b.type = 'button';
+      b.addEventListener('click', () => { state.sort[key] = [c.k, c.k === sk ? -sd : (c.n ? -1 : 1)]; redraw(); }); h.append(b); th.append(h); });
+    const tb = t.createTBody();
+    rows.forEach((r) => { const tr = tb.insertRow(); cols.forEach((c) => { const td = tr.insertCell(); if (c.n) td.className = 'n';
+      if (c.bg) td.style.background = c.bg(r[c.k]);
+      if (c.pill) td.append(el('span', 'bx-pill ' + c.pill(r), r[c.k] || '—'));
+      else td.textContent = c.f ? c.f(r[c.k], r) : (r[c.k] === '' || r[c.k] == null ? '—' : String(r[c.k])); }); });
+    if (foot) { const tf = t.createTFoot().insertRow(); cols.forEach((c, i) => { const td = tf.insertCell(); if (c.n) td.className = 'n'; td.textContent = foot(c, i, rows); }); }
+    box.replaceChildren(t);
+  }
+
+  // tarjeta KPI con delta y sparkline
+  function kpis(box, cards) {
+    box.replaceChildren(...cards.map((k) => {
+      const c = el('div', 'bx-kpi ' + (k.tone || '')); c.append(el('span', 'lab', k.label));
+      const row = el('div', 'row'); row.append(el('span', 'val', k.value)); if (k.unit) row.append(el('span', 'unit', k.unit));
+      if (k.delta != null) { const dd = k.delta; let cls = 'flat', txt = '= sin cambio';
+        if (dd === 'na') txt = 'sin periodo previo';
+        else if (Math.abs(dd) >= 0.005) { const better = k.lowerBetter ? dd < 0 : dd > 0; cls = better ? 'good' : 'bad'; txt = (dd > 0 ? '▲ ' : '▼ ') + pct(Math.abs(dd)); }
+        const b = el('span', 'bx-delta ' + cls, txt); b.title = 'Contra el periodo anterior de igual duración'; row.append(b); }
+      c.append(row); if (k.note) c.append(el('span', 'note', k.note));
+      if (k.meter != null) { const m = el('div', 'bx-meter'); const i = el('i'); i.style.width = Math.min(100, k.meter * 100) + '%'; i.style.background = k.meterColor; m.append(i); c.append(m); }
+      if (k.spark) { const s = el('div', 'bx-spark'); c.append(s); requestAnimationFrame(() => sparkline(s, k.spark, k.sparkColor || C.gold)); }
+      return c; }));
+  }
+
+  // ---------- métricas ----------
+  const ucli = (v) => new Set(v.map((r) => r.codigo + '|' + r.fecha)).size;
+  function metrics(rows) {
+    const des = rows.filter((r) => r.tipo === 'Cliente desplanificado'), tts = rows.filter((r) => r.tipo === 'Placa con TT');
+    const phd = d3.rollups(tts, (v) => d3.sum(v, (r) => r.ph), (r) => r.fecha).map((d) => d[1]);
+    return { hl: d3.sum(des, (r) => r.hl), ca: d3.sum(des, (r) => r.ca), rp: ucli(des.filter((r) => r.accion === 'Reprogramación')), zt: ucli(des.filter((r) => r.accion === 'ZT (rechazo)')),
+      viajes: rows.filter((r) => r.tipo === 'Modificación de viaje').length, phAvg: phd.length ? d3.mean(phd) : 0, diasTT: phd.length, fuera: phd.filter((v) => v > META_PH).length, hayTT: phd.length > 0, hayDes: des.length > 0 };
+  }
+  const delta = (cur, prev, has) => (!has ? 'na' : prev === 0 ? (cur === 0 ? 0 : 'na') : (cur - prev) / prev);
+
+
+  const weeks = (rs) => d3.rollups(rs, (v) => v, (r) => iso(d3.utcMonday.floor(new Date(r.fecha + 'T00:00:00Z')))).sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([w, v]) => ({ w, sem: `${dlong(w)} – ${dlong(iso(d3.utcDay.offset(new Date(w + 'T00:00:00Z'), 6)))}`, v }));
+  const heatOf = (arr, k) => { const mx = d3.max(arr, (r) => r[k]) || 1; return (v) => (v ? `rgba(201,74,67,${(0.08 + 0.42 * v / mx).toFixed(2)})` : ''); };
+
+  // ---------- pestañas ----------
+  const TABS = { ventas: 'tab-ventas', almacen: 'tab-almacen', edt: 'tab-edt' };
+  function openTab(id, link) { if (!TABS[id]) return; state.tab = id;
+    Object.entries(TABS).forEach(([sec, tab]) => { $(sec).hidden = sec !== id; $(tab).setAttribute('aria-selected', String(sec === id)); });
+    $('f-sv-box').hidden = id !== 'ventas';
+    if (link) dash.setLink(id); hideTip(); redraw(); }
+  Object.entries(TABS).forEach(([sec, tab]) => $(tab).addEventListener('click', () => openTab(sec, true)));
+
+  // ---------- controles ----------
+  const fEdts = $('f-edts'), fMes = $('f-mes'), fD = $('f-desde'), fH = $('f-hasta');
+  const fSv = $('f-sv');
+  fSv.addEventListener('change', () => dash.setParams({ sv: fSv.value || null }));
+  document.querySelectorAll('[data-mz]').forEach((b) => b.addEventListener('click', () => { state.mz = b.dataset.mz; document.querySelectorAll('[data-mz]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); redraw(); }));
+  fEdts.addEventListener('click', (e) => { const b = e.target.closest('button[data-edt]'); if (b) dash.setParams({ edt: b.dataset.edt || null }); });
+  fMes.addEventListener('change', () => dash.setParams({ mes: fMes.value || null, desde: null, hasta: null }));
+  const dateCh = (inp, k) => inp.addEventListener('change', () => { if (!inp.value) dash.setParams({ [k]: null });
+    else if (inp.validity.valid && /^\d{4}-\d{2}-\d{2}$/.test(inp.value) && inp.value >= '2020-01-01') dash.setParams({ [k]: inp.value, mes: null }); });
+  dateCh(fD, 'desde'); dateCh(fH, 'hasta');
+  [fD, fH].forEach((inp) => inp.addEventListener('blur', () => { const p = dash.params(); inp.value = (inp === fD ? p.desde : p.hasta) || ''; }));
+  const hoyLima = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
+  $('f-hoy').addEventListener('click', () => { const t = hoyLima(); const p = dash.params(); if (p.desde === t && p.hasta === t) dash.setParams({ desde: null, hasta: null }); else dash.setParams({ desde: t, hasta: t, mes: null }); });
+  $('f-reset').addEventListener('click', () => { dash.resetParams(); dash.setParams({ edt: null, sv: null, mes: null, desde: null, hasta: null }); });
+  const units = { 'd-u-hl': 'hl', 'd-u-ca': 'ca', 'd-u-cl': 'cl' };
+  Object.keys(units).forEach((id) => $(id).addEventListener('click', () => { state.unit = units[id]; Object.keys(units).forEach((j) => $(j).setAttribute('aria-pressed', String(j === id))); redraw(); }));
+  document.querySelectorAll('[data-acc]').forEach((b) => b.addEventListener('click', () => { state.acc = b.dataset.acc; document.querySelectorAll('[data-acc]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); redraw(); }));
+  document.querySelectorAll('[data-pacc]').forEach((b) => b.addEventListener('click', () => { state.pAcc = b.dataset.pacc; document.querySelectorAll('[data-pacc]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); redraw(); }));
+  document.querySelectorAll('[data-pu]').forEach((b) => b.addEventListener('click', () => { state.pUnit = b.dataset.pu; document.querySelectorAll('[data-pu]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); redraw(); }));
+  $('d-rec-tg').addEventListener('change', (e) => { $('d-rec-wrap').hidden = !e.target.checked; });
+  [['v-sem-tg', 'v-sem'], ['a-sem-tg', 'a-sem'], ['a-tb-tg', 'a-tabla']].forEach(([t, w]) => $(t).addEventListener('change', (e) => { $(w).hidden = !e.target.checked; redraw(); }));
+  document.querySelectorAll('[data-vsub]').forEach((b) => b.addEventListener('click', () => { state.vsub = b.dataset.vsub;
+    document.querySelectorAll('[data-vsub]').forEach((x) => x.setAttribute('aria-selected', String(x === b))); ['des', 'rec', 'adu'].forEach((k) => { $('v-sub-' + k).hidden = k !== state.vsub; }); hideTip(); redraw(); }));
+  document.querySelectorAll('[data-asub]').forEach((b) => b.addEventListener('click', () => { state.asub = b.dataset.asub;
+    document.querySelectorAll('[data-asub]').forEach((x) => x.setAttribute('aria-selected', String(x === b))); ['tt', 'bit', 'inc'].forEach((k) => { $('a-sub-' + k).hidden = k !== state.asub; }); hideTip(); redraw(); }));
+  const segBind = (attr, key) => document.querySelectorAll(`[${attr}]`).forEach((b) => b.addEventListener('click', () => { state[key] = b.getAttribute(attr); document.querySelectorAll(`[${attr}]`).forEach((x) => x.setAttribute('aria-pressed', String(x === b))); redraw(); }));
+  segBind('data-eu', 'eU'); segBind('data-pv', 'pv'); segBind('data-eh', 'eH');
+  $('d-q').addEventListener('input', (e) => { state.q = e.target.value.trim().toLowerCase(); redraw(); });
+
+  let redraw = () => {};
+
+  // ===================== INCUMPLIMIENTO RETORNO TT =====================
+  const FLOTA = window.BX_FLOTA || [];
+  const flotaEdt = d3.rollup(FLOTA, (v) => v.length, (r) => r[2]);
+  const byPlaca = new Map();
+  FLOTA.forEach(([placa, ruta, edt]) => { const o = { placa, ruta, edt }; [placa, placa.replace(/^PE/, ''), placa.replace('-', ''), placa.replace(/^PE/, '').replace('-', '')].forEach((k) => byPlaca.set(k, o)); });
+  const normPlaca = (t) => { const s0 = t.toUpperCase().replace(/\s+/g, ''); if (!s0) return null; const f = byPlaca.get(s0); if (f) return { ...f, ok: true };
+    const p2 = /^[A-Z0-9]{3}-?[0-9]{3}$/.test(s0) ? 'PE' + s0.replace(/^(.{3})-?/, '$1-') : s0; const g = byPlaca.get(p2); return g ? { ...g, ok: true } : { placa: p2, ruta: '', edt: 'SIN EDT', ok: false }; };
+  const limaHoy = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
+  const ayer = () => iso(d3.utcDay.offset(new Date(limaHoy() + 'T00:00:00Z'), -1));
+  let incF = { lo: '', hi: '', edt: '', isDay: false }, incRows = [], incAdmin = false, incState = 'loading';
+  const TK = 'bx_admin_token'; let incTok = ''; try { incTok = sessionStorage.getItem(TK) || ''; } catch (e) { incTok = ''; }
+  const tokOk = (t) => { const p = (t || '').split('.'); return p.length === 3 && +p[1] > Date.now(); };
+  if (!tokOk(incTok)) incTok = ''; incAdmin = !!incTok;
+  const incApi = async (method, body, id) => { const r = await fetch('/api/incumplimientos' + (id ? '?id=' + encodeURIComponent(id) : ''), { method, cache: 'no-store',
+      headers: { 'content-type': 'application/json', ...(incTok ? { authorization: 'Bearer ' + incTok } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 401) { setAdmin(''); throw new Error(j.error || 'Sesión vencida'); }
+    if (!r.ok) throw new Error(j.error || 'Error ' + r.status);
+    if (j.rows) { incRows = j.rows.filter((x) => x.fecha && x.placa); incState = 'ok'; renderInc(); prevInc(); }
+    return j; };
+  function setAdmin(t) { incTok = t || ''; incAdmin = !!incTok; try { if (incTok) sessionStorage.setItem(TK, incTok); else sessionStorage.removeItem(TK); } catch (e) { /* sin almacenamiento */ }
+    $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('adm-ref').hidden = !incAdmin; $('n-login').hidden = true; renderInc(); }
+  function renderInc() {
+    const { lo, hi, edt, isDay } = incF;
+    const sel = incRows.filter((r) => (!lo || r.fecha >= lo) && (!hi || r.fecha <= hi) && (!edt || r.edt === edt));
+    const byP = d3.rollups(sel, (v) => v, (r) => r.placa).map(([pl, v]) => ({ placa: pl, ruta: v[0].ruta, edt: v[0].edt, n: v.length, fechas: v.map((r) => r.fecha).sort() })).sort((a, b) => b.n - a.n || a.placa.localeCompare(b.placa));
+    const rei = byP.filter((x) => x.n >= 2);
+    $('hub-inc').textContent = incState === 'ok' ? fmt(sel.length) : '—';
+    $('hub-inc-s').textContent = incState === 'ok' ? `incumplimientos · ${fmt(rei.length)} placa(s) reincidente(s)` : incState === 'off' ? 'No se pudo cargar el registro' : 'Cargando registro…';
+    $('n-adm').hidden = !incAdmin; $('n-dl').hidden = !incAdmin;
+    if (state.tab !== 'almacen' || state.asub !== 'inc') return;
+    ['n-card-rei'].forEach((id) => { $(id).hidden = isDay; });
+    const pend = ayer();
+    kpis($('n-kpis'), [
+      { label: 'Incumplimientos', value: fmt(sel.length), tone: sel.length ? 'red' : 'green', note: `${fmt(new Set(sel.map((r) => r.fecha)).size)} día(s) con registro` },
+      { label: 'Placas que incumplen', value: fmt(byP.length), tone: 'blue', note: `${fmt(new Set(sel.map((r) => r.edt)).size)} EDT involucrado(s)` },
+      { label: 'Placas reincidentes', value: fmt(rei.length), tone: rei.length ? 'red' : 'green', note: rei.length ? 'Con 2 o más incumplimientos' : 'Ninguna placa repite' },
+      { label: `Registro del ${dlabel(pend)}`, value: incRows.some((r) => r.fecha === pend) ? fmt(incRows.filter((r) => r.fecha === pend).length) : 'Pendiente', tone: incRows.some((r) => r.fecha === pend) ? 'green' : 'gray', note: 'Se ingresa al día siguiente' },
+    ]);
+    const edts = d3.rollups(sel, (v) => v.length, (r) => r.edt).sort((a, b) => b[1] - a[1]).map((d) => d[0]);
+    const colE = (e) => LP[Math.max(0, edts.indexOf(e)) % LP.length];
+    legend($('n-lg'), edts.map((e) => [colE(e), short(e)]));
+    const days = d3.rollups(sel, (v) => v, (r) => r.fecha).sort((a, b) => a[0].localeCompare(b[0])).map(([fecha, v]) => { const o = { fecha, v }; edts.forEach((e, i) => { o['e' + i] = v.filter((r) => r.edt === e).length; }); return o; });
+    if (incState !== 'ok') empty($('n-ch-dia'), incState === 'off' ? 'No se pudo cargar el registro de incumplimientos. Vuelve a intentar en unos minutos.' : 'Cargando registro…');
+    else dayCombo($('n-ch-dia'), days, edts.map((e, i) => ({ k: 'e' + i, c: colE(e) })), { h: 240, tick: fmt, val: fmt,
+      tipLines: (d) => edts.map((e, i) => [colE(e), e, d['e' + i]]).filter((x) => x[2]).map(([c, e, n]) => [c, `${short(e)}: ${n} · ${d.v.filter((r) => r.edt === e).map((r) => r.placa).join(', ')}`]) });
+    const eRows = d3.rollups(sel, (v) => v, (r) => r.edt).map(([e, v]) => { const pl = new Set(v.map((r) => r.placa)).size, fl = flotaEdt.get(e) || 0;
+      return { edt: short(e), n: v.length, pl, fl, pf: fl ? pl / fl : -1, rei: d3.rollups(v, (w) => w.length, (r) => r.placa).filter((z) => z[1] >= 2).length }; });
+    state.sort.ne = state.sort.ne || ['n', -1];
+    table($('n-tb-edt'), 'ne', [{ k: 'edt', h: 'EDT' }, { k: 'n', h: 'Incumpl.', n: 1, f: fmt }, { k: 'pl', h: 'Placas', n: 1, f: (v, r) => `${v}${r.fl ? ' / ' + r.fl : ''}` },
+      { k: 'pf', h: '% de su flota', n: 1, f: (v) => (v < 0 ? '—' : pct(v)), bg: (v) => (v < 0 ? '' : v >= 0.3 ? 'rgba(201,74,67,.4)' : v >= 0.15 ? 'rgba(217,166,46,.28)' : 'rgba(47,163,107,.22)') },
+      { k: 'rei', h: 'Reincid.', n: 1, f: fmt }], eRows, (c, i, rs) => i === 0 ? 'Total' : c.k === 'n' ? fmt(d3.sum(rs, (r) => r.n)) : c.k === 'rei' ? fmt(d3.sum(rs, (r) => r.rei)) : c.k === 'pl' ? fmt(d3.sum(rs, (r) => r.pl)) : '');
+    state.sort.nr = state.sort.nr || ['n', -1];
+    table($('n-tb-rei'), 'nr', [{ k: 'placa', h: 'Placa' }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'n', h: 'Veces', n: 1, f: fmt, bg: () => 'rgba(201,74,67,.3)' }, { k: 'fs', h: 'Fechas' }],
+      rei.map((x) => ({ ...x, edtc: short(x.edt), fs: x.fechas.map(ddmm).join(', ') })));
+    $('n-det-sub').textContent = `${fmt(sel.length)} registro(s) · más recientes primero`;
+    const det = sel.slice().sort((a, b) => b.fecha.localeCompare(a.fecha) || a.placa.localeCompare(b.placa));
+    const box = $('n-tb-det');
+    if (!det.length) empty(box, incState === 'ok' ? 'Sin incumplimientos registrados en el periodo.' : '—');
+    else { const t = el('table'); const hr = t.insertRow(); ['Fecha', 'Placa', 'Ruta', 'EDT', 'Observación', ...(incAdmin ? [''] : [])].forEach((h) => hr.append(el('th', null, h)));
+      det.forEach((r) => { const tr = t.insertRow(); [dlabel(r.fecha), r.placa, r.ruta || '—', short(r.edt), r.obs || '—'].forEach((v) => { tr.insertCell().textContent = v; });
+        if (incAdmin) { const b = el('button', 'bx-btn bx-del', 'Eliminar'); b.type = 'button'; b.addEventListener('click', async () => { b.disabled = true; if (!window.confirm(`¿Eliminar ${r.placa} del ${dlabel(r.fecha)}?`)) { b.disabled = false; return; } try { await incApi('DELETE', null, r.id); } catch (err) { b.disabled = false; $('n-msg').textContent = err.message; } }); tr.insertCell().append(b); } });
+      box.replaceChildren(t); }
+    $('n-adm').hidden = !incAdmin; $('n-dl').hidden = !incAdmin;
+  }
+  let parsedInc = [];
+  const prevInc = () => { const f = $('n-f').value; const seen = new Set();
+    parsedInc = $('n-p').value.split(/[\n,;]+/).map(normPlaca).filter(Boolean).filter((x) => (seen.has(x.placa) ? false : seen.add(x.placa))).map((x) => ({ ...x, dup: incRows.some((r) => r.fecha === f && r.placa === x.placa) }));
+    const pv = $('n-prev'); if (!parsedInc.length) pv.replaceChildren(el('span', 'bx-empty', 'Escribe las placas para validarlas.'));
+    else pv.replaceChildren(...parsedInc.map((x) => el('span', 'bx-chip ' + (x.dup ? 'dup' : x.ok ? 'ok' : 'warn'), `${x.placa}${x.ruta ? ' · ' + x.ruta : ''}${x.dup ? ' · ya registrada' : x.ok ? '' : ' · no está en la flota'}`)));
+    $('n-go').disabled = !f || !parsedInc.some((x) => !x.dup); };
+  ['n-p', 'n-f'].forEach((id) => $(id).addEventListener('input', prevInc));
+  $('n-f').value = ayer(); $('n-f').max = limaHoy();
+  $('n-go').addEventListener('click', async () => {
+    const f = $('n-f').value, obs = $('n-o').value.trim(), todo = parsedInc.filter((x) => !x.dup); if (!f || !todo.length || !incAdmin) return;
+    $('n-go').disabled = true; const msg = $('n-msg'); msg.textContent = 'Registrando…';
+    try { const j = await incApi('POST', { fecha: f, obs, items: todo.map((x) => ({ placa: x.placa, ruta: x.ruta, edt: x.edt })) });
+      msg.textContent = `Se registraron ${j.added} placa(s) del ${dlabel(f)}.`; $('n-p').value = ''; $('n-o').value = ''; prevInc(); }
+    catch (e) { msg.textContent = 'No se pudo registrar: ' + e.message; $('n-go').disabled = false; }
+  });
+  $('n-dl').addEventListener('click', async () => {
+    const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = ['FECHA,PLACA,RUTA,EDT,OBSERVACION,REGISTRADO'].concat(incRows.slice().sort((a, b) => a.fecha.localeCompare(b.fecha)).map((r) => [r.fecha, r.placa, r.ruta, r.edt, r.obs, r.at].map(esc).join(','))).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })); a.download = `incumplimiento_retorno_tt_${limaHoy()}.csv`; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  });
+  const loadInc = () => incApi('GET').catch(() => { if (incState !== 'ok') { incState = 'off'; renderInc(); } });
+  loadInc(); setInterval(loadInc, 5 * 60e3);
+  const showLogin = () => { $('tab-almacen').click(); const sb = document.querySelector('[data-asub="inc"]'); if (sb) sb.click();
+    $('n-login').hidden = false; $('n-lmsg').textContent = ''; setTimeout(() => { $('n-lu').focus(); $('n-login').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60); };
+  $('adm-btn').addEventListener('click', () => { if (incAdmin) setAdmin(''); else showLogin(); });
+  $('n-lx').addEventListener('click', () => { $('n-login').hidden = true; });
+  $('n-lform').addEventListener('submit', async (e) => { e.preventDefault(); const m = $('n-lmsg'); m.textContent = 'Verificando…'; $('n-lgo').disabled = true;
+    try { const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ usuario: $('n-lu').value, clave: $('n-lk').value }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.token) { m.textContent = j.error || 'No se pudo ingresar'; }
+      else { $('n-lk').value = ''; setAdmin(j.token); $('n-msg').textContent = 'Sesión de administrador iniciada.'; $('n-f').value = ayer(); prevInc(); setTimeout(() => $('n-adm').scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); } }
+    catch (err) { m.textContent = 'Sin conexión. Intenta otra vez.'; }
+    $('n-lgo').disabled = false; });
+  $('adm-ref').addEventListener('click', async () => { const b = $('adm-ref'); b.disabled = true; b.textContent = 'Leyendo Excel…'; await window.__bxLoad(true); b.textContent = 'Actualizar datos ahora'; b.disabled = false; });
+  setAdmin(incTok);
+
+
+  dash.onData(() => {
+    const ds = dash.data('registros'); const ok = ds.status === 'ok'; const raw = ok ? ds.data : [];
+    const metaRow = raw.find((r) => r.tipo === '_meta'); const all = raw.filter((r) => r.tipo !== '_meta');
+    const upd = $('upd'); upd.replaceChildren('Actualizado: ', B(metaRow && metaRow.act ? `${metaRow.act.slice(8, 10)}/${metaRow.act.slice(5, 7)}/${metaRow.act.slice(0, 4)} · ${metaRow.act.slice(11, 16)} h` : '—'));
+    const P = dash.params(); const edt = P.edt || '', sv = P.sv || '', mes = P.mes || '', desde = P.desde || '', hasta = P.hasta || '';
+    const CLI_T = ['Cliente desplanificado', 'Reclamo de ventas', 'Recojo de adulterado'];
+    const edts = [...new Set(all.map((r) => r.edt))].sort();
+    fEdts.replaceChildren(el('span', 't', 'EDT'), ...[['', 'Todos'], ...edts.map((e) => [e, short(e)])].map(([v, t]) => {
+      const b = el('button', null, t); b.type = 'button'; b.dataset.edt = v; b.setAttribute('aria-pressed', String(v === edt)); return b; }));
+    const svs = d3.rollups(all.filter((r) => r.tipo === 'Cliente desplanificado'), (v) => d3.sum(v, (r) => r.hl), (r) => r.sv || 'SIN SUPERVISOR').sort((a, b) => b[1] - a[1]).map((d) => d[0]);
+    const svName = (n) => n.toLowerCase().replace(/(^|\s)\S/g, (m) => m.toUpperCase());
+    fSv.replaceChildren(new Option('Todos los supervisores', ''), ...svs.map((n) => new Option(svName(n), n))); fSv.value = sv;
+    $('f-sv-box').hidden = state.tab !== 'ventas';
+    const meses = [...new Set(all.map((r) => r.fecha.slice(0, 7)))].sort().reverse();
+    fMes.replaceChildren(new Option('Todos los meses', ''), ...meses.map((m) => new Option(MESES[+m.slice(5, 7) - 1] + ' ' + m.slice(0, 4), m))); fMes.value = mes;
+    const fechas = all.map((r) => r.fecha).sort(); const dMin = fechas[0] || '', dMax = fechas[fechas.length - 1] || '';
+    if (fechas.length) [fD, fH].forEach((inp) => { inp.min = dMin; inp.max = dMax; });
+    if (document.activeElement !== fD) fD.value = desde; if (document.activeElement !== fH) fH.value = hasta;
+
+    // periodo actual y anterior
+    let lo = desde || (mes ? mes + '-01' : dMin), hi = hasta || (mes ? iso(d3.utcDay.offset(d3.utcMonth.offset(new Date(mes + '-01T00:00:00Z'), 1), -1)) : dMax);
+    if (mes && hi > dMax && dMax >= lo) hi = dMax;
+    const nDays = lo && hi ? d3.utcDay.count(new Date(lo + 'T00:00:00Z'), new Date(hi + 'T00:00:00Z')) + 1 : 0;
+    const pHi = lo ? iso(d3.utcDay.offset(new Date(lo + 'T00:00:00Z'), -1)) : '', pLo = lo ? iso(d3.utcDay.offset(new Date(lo + 'T00:00:00Z'), -nDays)) : '';
+    const byEdt = all.filter((r) => (!edt || r.edt === edt) && (!sv || !CLI_T.includes(r.tipo) || (r.sv || 'SIN SUPERVISOR') === sv));
+    const rows = byEdt.filter((r) => r.fecha >= lo && r.fecha <= hi);
+    const prev = byEdt.filter((r) => r.fecha >= pLo && r.fecha <= pHi);
+    const hasPrev = !!pLo && pLo >= dMin;
+    const M = metrics(rows), MP = metrics(prev);
+    const isDay = !!lo && lo === hi; $('f-hoy').setAttribute('aria-pressed', String(isDay && lo === hoyLima()));
+    incF = { lo, hi, edt, isDay }; renderInc();
+    const per = $('periodo'); per.replaceChildren();
+    if (ok && isDay) { per.append('Día: ', B(dlabel(lo) + '/' + lo.slice(0, 4)), ' · comparado con el día anterior', edt ? ' · EDT: ' : '', edt ? B(short(edt)) : '', sv ? ' · Supervisor: ' : '', sv ? B(svName(sv)) : '');
+      if (!all.some((r) => r.fecha === lo)) { const lb = el('button', 'bx-btn', 'Ver último día con registro'); lb.type = 'button'; lb.style.marginLeft = '10px'; lb.addEventListener('click', () => dash.setParams({ desde: dMax, hasta: dMax, mes: null }));
+        per.append(' · ', el('span', null, `Aún no hay registros de este día en la bitácora (último registro: ${ddmm(dMax)})`), lb); } }
+    else if (ok && lo) per.append('Periodo: ', B(`${dlong(lo)} – ${dlong(hi)} ${hi.slice(0, 4)}`), ` (${nDays} días) · comparado con `, hasPrev ? B(`${dlong(pLo)} – ${dlong(pHi)}`) : 'sin periodo anterior en la bitácora', edt ? ' · EDT: ' : '', edt ? B(short(edt)) : '', sv ? ' · Supervisor: ' : '', sv ? B(svName(sv)) : '');
+    else per.textContent = '—';
+
+    const by = (t) => rows.filter((r) => r.tipo === t);
+    const des = by('Cliente desplanificado'), mods = by('Modificación de viaje'), tts = by('Placa con TT'), recs = by('Reclamo de ventas'), adus = by('Recojo de adulterado');
+    const dayList = [...new Set(rows.map((r) => r.fecha))].sort();
+    const dser = (fn) => dayList.map((f) => fn(rows.filter((r) => r.fecha === f)));
+    const phDays = d3.rollups(tts, (v) => ({ ph: d3.sum(v, (r) => r.ph), n: v.length }), (r) => r.fecha).sort((a, b) => a[0].localeCompare(b[0])).map(([fecha, o]) => ({ fecha, ...o }));
+
+    redraw = () => {
+      renderInc();
+      ['d-card-tzt', 'd-card-trp', 'd-card-rec', 'v-card-sem', 't-card-bk', 't-card-edt', 'a-card-sem', 'e-card-bkd', 'e-card-bkt'].forEach((id) => { const c = $(id); if (c) c.hidden = isDay; });
+      if (ok) { $('hub-des').textContent = f1(M.hl) + ' HL'; $('hub-des-s').textContent = `${fmt(M.rp)} POCs reprog. · ${fmt(M.zt)} POCs ZT`;
+        $('hub-rec').textContent = fmt(recs.length); $('hub-rec-s').textContent = `${fmt(recs.filter((r) => r.status !== 'SOLUCIONADO').length)} pendiente(s)`;
+        $('hub-tt').textContent = M.hayTT ? fmt(Math.round(M.phAvg)) + ' PH' : '—'; $('hub-tt-s').textContent = M.hayTT ? `por día · ${M.diasTT - M.fuera} de ${M.diasTT} días dentro de la meta` : 'Sin registros';
+        $('hub-bit').textContent = fmt(mods.length); $('hub-bit-s').textContent = `viajes modificados · ${mods.filter((r) => r.motivo === 'DESPLANIFICACIÓN TOTAL').length} desplan. totales`;
+        $('hub-adu').textContent = fmt(d3.sum(adus, (r) => r.cantidad)) + ' unid.'; $('hub-adu-s').textContent = `${fmt(new Set(adus.map((r) => r.codigo)).size)} cliente(s)`; }
+      if (!ok) { ['d-take', 't-take'].forEach((id) => { $(id).textContent = ds.status === 'error' ? 'No se pudieron cargar los datos de la bitácora.' : '—'; }); return; }
+
+      // ===== DESPLANIFICACIONES =====
+      if (state.tab === 'ventas') {
+        const g = (n) => des.filter((r) => r.accion === n);
+        const rp = g('Reprogramación'), zt = g('ZT (rechazo)'), sc = g('Sin clasificar');
+        const hasP = hasPrev && MP.hayDes;
+        kpis($('d-kpis'), [
+          { label: 'Clientes a reprogramar', value: fmt(M.rp), tone: 'blue', delta: delta(M.rp, MP.rp, hasP), lowerBetter: true, note: `${f1(d3.sum(rp, (r) => r.hl))} HL · ${fmt(d3.sum(rp, (r) => r.ca))} cajas` },
+          { label: 'Clientes en ZT (rechazo)', value: fmt(M.zt), tone: 'red', delta: delta(M.zt, MP.zt, hasP), lowerBetter: true, note: `${f1(d3.sum(zt, (r) => r.hl))} HL · ${fmt(d3.sum(zt, (r) => r.ca))} cajas` },
+          { label: 'HL desplanificado', value: f1(M.hl), delta: delta(M.hl, MP.hl, hasP), lowerBetter: true, note: `${f1(des.length ? M.hl / new Set(des.map((r) => r.fecha)).size : 0)} HL promedio por día` },
+          { label: 'Cajas desplanificadas', value: fmt(M.ca), tone: 'gray', delta: delta(M.ca, MP.ca, hasP), lowerBetter: true, note: `${fmt(new Set(des.map((r) => r.ruta + r.fecha)).size)} viaje(s) afectados` },
+          (() => { const cd = d3.rollups(des, (v) => new Set(v.map((r) => r.fecha)).size, (r) => r.codigo); const rc = cd.filter((d) => d[1] >= 2).length;
+            const pd = d3.rollups(prev.filter((r) => r.tipo === 'Cliente desplanificado'), (v) => new Set(v.map((r) => r.fecha)).size, (r) => r.codigo).filter((d) => d[1] >= 2).length;
+            return { label: 'Clientes recurrentes', value: fmt(rc), tone: 'red', delta: delta(rc, pd, hasP), lowerBetter: true, note: `desplanificados en 2 o más días · ${cd.length ? pct(rc / cd.length) : '—'} de ${fmt(cd.length)} clientes` }; })(),
+        ]);
+        const mixTile = el('div', 'bx-kpi gray'); mixTile.append(el('span', 'lab', 'Reprogramación vs ZT'));
+        const mixRow = el('div', 'bx-mixrow'); const mixCh = el('div'); mixCh.id = 'd-ch-mix'; const mixLg = el('div', 'bx-legend'); mixLg.id = 'd-mix-lg';
+        mixRow.append(mixCh, mixLg); mixTile.append(mixRow); $('d-kpis').append(mixTile);
+        $('d-aviso').hidden = !sc.length;
+        const take = $('d-take'); take.replaceChildren();
+        if (!des.length) take.textContent = 'No hay clientes desplanificados en el periodo y EDT elegidos.';
+        else { const days = d3.rollups(des, (v) => d3.sum(v, (r) => r.hl), (r) => r.fecha).sort((a, b) => b[1] - a[1]);
+          const shareRp = d3.sum(rp, (r) => r.hl) / (M.hl || 1);
+          take.append(B(pct(shareRp)), ' del HL desplanificado se reprograma y ', B(pct(d3.sum(zt, (r) => r.hl) / (M.hl || 1))), ' termina en ZT. El día de mayor impacto fue el ', B(dlabel(days[0][0])), ` con ${f1(days[0][1])} HL.`); }
+        const U = { hl: ['hl', f1, 'HL'], ca: ['ca', fmt, 'cajas'], cl: [null, fmt, 'POCs'], usd: ['usd', (v) => '$' + d3.format('.3~s')(v).replace('G', 'B'), 'US$'] }[state.unit];
+        legend($('d-lg'), [...ACC.filter(([n]) => n !== 'Sin clasificar' || sc.length).map(([n, , c]) => [c, n]), [C.ma, 'Promedio móvil 7 días', 'line'], [null, 'Promedio del periodo', 'dash']]);
+        const days = d3.rollups(des, (v) => v, (r) => r.fecha).sort((a, b) => a[0].localeCompare(b[0])).map(([fecha, v]) => { const o = { fecha, v };
+          ACC.forEach(([n, k]) => { const w = v.filter((r) => r.accion === n); o[k] = U[0] === 'usd' ? usd(d3.sum(w, (r) => r.hl)) : U[0] ? d3.sum(w, (r) => r[U[0]]) : ucli(w); }); return o; });
+        dayCombo($('d-ch-dia'), days, ACC.map(([n, k, c]) => ({ k, c })), { ma: true, avg: true, tick: U[1], val: U[1],
+          tipLines: (d) => [...ACC.filter(([, k]) => d[k]).map(([n, k, c]) => [c, `${n}: ${U[1](d[k])} ${U[2]}`]), [null, `Total: ${f1(d3.sum(d.v, (r) => r.hl))} HL · ${fmt(d3.sum(d.v, (r) => r.ca))} cajas · ${fmt(ucli(d.v))} POCs`]] });
+        donut($('d-ch-mix'), ACC.map(([n, , c]) => ({ name: n, c, v: d3.sum(g(n), (r) => r.hl), fmt: (v) => f1(v) + ' HL' })).filter((p) => p.v || p.name !== 'Sin clasificar'),
+          M.hl ? pct(d3.sum(rp, (r) => r.hl) / M.hl) : '—', '', 76);
+        legend($('d-mix-lg'), ACC.filter(([n]) => n !== 'Sin clasificar' || sc.length).map(([n, , c]) => { const v = d3.sum(g(n), (r) => r.hl); return [c, `${n === 'ZT (rechazo)' ? 'ZT' : n === 'Reprogramación' ? 'Reprog.' : n} ${M.hl ? pct(v / M.hl) : '—'} · ${f1(v)} HL`]; }));
+        // impacto por supervisor
+        const svRows = d3.rollups(des, (v) => { const r2 = v.filter((r) => r.accion === 'Reprogramación'), z2 = v.filter((r) => r.accion === 'ZT (rechazo)'); const hl = d3.sum(v, (r) => r.hl);
+          const mt = d3.rollups(v.filter((r) => r.motivo), (w) => ucli(w), (r) => r.motivo).sort((a, b) => b[1] - a[1]);
+          return { usd: usd(hl), mot: mt.length ? mt.map(([m, n]) => `${m.charAt(0) + m.slice(1).toLowerCase()} (${n})`).slice(0, 2).join(', ') : 'Sin motivo registrado', zonas: [...new Set(v.map((r) => r.zona))].length, sv: v[0].sv || 'SIN SUPERVISOR', poc: ucli(v), hl, ca: d3.sum(v, (r) => r.ca), rpoc: ucli(r2), rhl: d3.sum(r2, (r) => r.hl), zpoc: ucli(z2), zhl: d3.sum(z2, (r) => r.hl), pz: hl ? d3.sum(z2, (r) => r.hl) / hl : 0 }; }, (r) => r.sv || 'SIN SUPERVISOR').map((d) => d[1]);
+        state.sort.sv = state.sort.sv || ['hl', -1];
+        const mxs = d3.max(svRows, (r) => r.hl) || 1;
+        table($('d-sv'), 'sv', [
+          { k: 'sv', h: 'Supervisor de ventas', f: (v) => svName(v) }, { k: 'poc', h: 'POCs', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f1, bg: (v) => `rgba(217,166,46,${(0.06 + 0.34 * v / mxs).toFixed(2)})` }, { k: 'ca', h: 'Cajas', n: 1, f: fmt },
+          { k: 'rpoc', h: 'Reprog. POCs', n: 1, f: fmt }, { k: 'rhl', h: 'Reprog. HL', n: 1, f: f1 }, { k: 'zpoc', h: 'ZT POCs', n: 1, f: fmt }, { k: 'zhl', h: 'ZT HL', n: 1, f: f1 },
+          { k: 'pz', h: '% ZT (HL)', n: 1, f: pct, bg: (v) => (v >= 0.3 ? 'rgba(201,74,67,.45)' : v >= 0.15 ? 'rgba(217,166,46,.30)' : 'rgba(47,163,107,.25)') },
+          { k: 'mot', h: 'Motivo principal (POCs)' },
+        ], svRows, (c, i, rs) => i === 0 ? 'Total' : c.k === 'pz' ? (M.hl ? pct(d3.sum(rs, (r) => r.zhl) / d3.sum(rs, (r) => r.hl)) : '—') : c.k === 'mot' ? '' : c.k === 'usd' ? fUsd(d3.sum(rs, (r) => r.usd)) : ['poc', 'ca', 'rpoc', 'zpoc'].includes(c.k) ? fmt(d3.sum(rs, (r) => r[c.k])) : f1(d3.sum(rs, (r) => r[c.k])));
+
+        // pareto por cliente (diario)
+        const pBase = des.filter((r) => !state.pAcc || r.accion === state.pAcc);
+        const pCol = state.pAcc === 'ZT (rechazo)' ? C.zt : C.rp;
+        const PU = state.pUnit === 'poc' ? ['POCs', fmt] : ['HL', f1];
+        if (state.pDay && !pBase.some((r) => r.fecha === state.pDay)) state.pDay = '';
+        const evo = d3.rollups(pBase, (v) => v, (r) => r.fecha).sort((a, b) => a[0].localeCompare(b[0])).map(([fecha, v]) => ({ fecha, v, val: state.pUnit === 'poc' ? ucli(v) : d3.sum(v, (r) => r.hl) }));
+        const UV = { hl: [(v) => d3.sum(v, (r) => r.hl), f1, 'HL'], usd: [(v) => usd(d3.sum(v, (r) => r.hl)), fUsd, ''], poc: [(v) => ucli(v), fmt, 'POCs'] }[state.pUnit] || [(v) => d3.sum(v, (r) => r.hl), f1, 'HL'];
+        const svTot = d3.rollups(des, (v) => v, (r) => r.sv || 'SIN SUPERVISOR').map(([n, v]) => ({ n, v, t: UV[0](v) })).sort((a, b) => b.t - a.t);
+        hbars($('d-ch-svb'), svTot.map((o) => ({ label: svName(o.n), onClick: () => dash.setParams({ sv: o.n === sv ? null : o.n }),
+          parts: ACC.map(([n, , c]) => ({ name: n, c, v: UV[0](o.v.filter((r) => r.accion === n)) })),
+          end: `${UV[1](o.t)}${UV[2] ? ' ' + UV[2] : ''}`,
+          tip: [...ACC.map(([n, , c]) => { const w = o.v.filter((r) => r.accion === n); return [c, `${n}: ${f1(d3.sum(w, (r) => r.hl))} HL · ${fmt(ucli(w))} POCs`, w.length]; }).filter((x) => x[2]).map(([c, t]) => [c, t]),
+            [null, `Zonas: ${[...new Set(o.v.map((r) => r.zona))].slice(0, 6).join(', ')}`], [null, 'Clic para filtrar por este supervisor']] })), UV[1], UV[2]);
+        const pRows = pBase.filter((r) => !state.pDay || r.fecha === state.pDay);
+        const cli = d3.rollups(pRows, (v) => ({ hl: d3.sum(v, (r) => r.hl), ca: d3.sum(v, (r) => r.ca), dias: new Set(v.map((r) => r.fecha)).size, zt: v.filter((r) => r.accion === 'ZT (rechazo)').length, n: v[0].cliente || v[0].codigo }), (r) => r.codigo)
+          .map(([cod, o]) => ({ label: o.n, v: state.pUnit === 'poc' ? o.dias : o.hl, extra: [[null, `Código ${cod} · ${f1(o.hl)} HL · ${fmt(o.ca)} cajas`], [null, `Desplanificado en ${o.dias} día(s)${o.zt ? ` · ${o.zt} línea(s) en ZT` : ''}`]] }));
+        const totC = d3.sum(cli, (d) => d.v); let ac = 0, n80 = 0; cli.slice().sort((a, b) => b.v - a.v).forEach((d) => { if (ac < 0.8 * totC) { ac += d.v; n80++; } });
+        const qual = (state.pAcc ? ` (${state.pAcc === 'ZT (rechazo)' ? 'ZT' : 'reprogramación'})` : '') + (state.pDay ? ` del ${dlabel(state.pDay)}` : ' del periodo');
+        const _sub80 = cli.length ? `${fmt(n80)} de ${fmt(cli.length)} clientes (${pct(n80 / cli.length)}) concentran el 80% ${state.pUnit === 'poc' ? 'de las veces desplanificadas' : 'del HL desplanificado'}${qual}.` : 'Sin clientes con los filtros elegidos';
+        $('d-cli-sub').textContent = svTot.length ? `El de mayor impacto es ${svName(svTot[0].n)}: ${f1(d3.sum(svTot[0].v, (r) => r.hl))} HL · ${fmt(ucli(svTot[0].v))} POCs` : 'Sin desplanificaciones en el periodo';
+        const topCli = (acc) => d3.rollups(des.filter((r) => r.accion === acc), (v) => ({ hl: d3.sum(v, (r) => r.hl), ca: d3.sum(v, (r) => r.ca), d: new Set(v.map((r) => r.fecha)).size, n: v[0].cliente || v[0].codigo, sv: v[0].sv, zona: v[0].zona, cod: v[0].codigo,
+            mot: d3.rollups(v, (w) => w.length, (r) => (r.motivo ? r.motivo.charAt(0) + r.motivo.slice(1).toLowerCase() : 'Sin motivo registrado')).sort((a, b) => b[1] - a[1]).map(([m, n]) => (n > 1 ? `${m} (${n})` : m)).join(', ') }), (r) => r.codigo)
+          .map((d) => d[1]).sort((a, b) => b.hl - a.hl).slice(0, 10).map((o) => ({ label: o.n.length > 26 ? o.n.slice(0, 25) + '…' : o.n, parts: [{ name: 'HL', c: acc === 'ZT (rechazo)' ? C.zt : C.rp, v: o.hl }],
+            end: `${f1(o.hl)} HL · ${o.d}d`, tip: [[acc === 'ZT (rechazo)' ? C.zt : C.rp, `${f1(o.hl)} HL · ${fmt(o.ca)} cajas`], [null, `Código ${o.cod} · Zona (BDR) ${o.zona || '—'}`], [null, `Supervisor: ${svName(o.sv || '—')}`], [null, `Motivo: ${o.mot}`], [null, `${o.d} día(s) en ${acc === 'ZT (rechazo)' ? 'ZT' : 'reprogramación'}`]] }));
+        hbars($('d-ch-tzt'), topCli('ZT (rechazo)'), f1, 'HL'); hbars($('d-ch-trp'), topCli('Reprogramación'), f1, 'HL');
+        const rec = d3.rollups(pRows, (v) => ({ codigo: v[0].codigo, cliente: v[0].cliente || v[0].codigo, sv: v[0].sv, n: new Set(v.map((r) => r.fecha)).size, hl: d3.sum(v, (r) => r.hl), ca: d3.sum(v, (r) => r.ca), v }), (r) => r.codigo)
+          .map((d) => d[1]).sort((a, b) => b.n - a.n || b.hl - a.hl).slice(0, 15);
+        $('d-rec-sub').textContent = `Top 15 clientes${qual}, ordenados por días desplanificados y HL`;
+        const box = $('d-rec');
+        const open = new Set([...box.querySelectorAll('details[open]')].map((d) => d.dataset.k));
+        if (!rec.length) empty(box, 'Sin clientes desplanificados en el periodo filtrado.');
+        else box.replaceChildren(...rec.map((c, i) => {
+          const d = el('details'); d.dataset.k = c.codigo; if (open.has(c.codigo)) d.open = true;
+          const sm = el('summary'); const nm = el('span', 'nm', c.cliente); nm.append(el('small', null, `Código ${c.codigo} · ${c.sv || '—'}`));
+          const ct = el('span', 'ct'); ct.append(B(`${c.n}×`), ` · ${f1(c.hl)} HL · ${fmt(c.ca)} cajas`);
+          sm.append(el('span', 'rk', String(i + 1)), nm, ct, el('span', 'ar', '›')); d.append(sm);
+          const det = el('div', 'det'); const t = el('table'); const hr = t.insertRow();
+          [['Fecha', ''], ['Ruta', ''], ['EDT', ''], ['Cajas', 'n'], ['HL', 'n'], ['Qué se hace', '']].forEach(([h, k]) => hr.append(el('th', k, h)));
+          c.v.slice().sort((a, b) => b.fecha.localeCompare(a.fecha)).forEach((r) => { const tr = t.insertRow();
+            [[dlabel(r.fecha), ''], [r.ruta, ''], [short(r.edt), ''], [fmt(r.ca), 'n'], [f2(r.hl), 'n']].forEach(([v, k]) => { const td = tr.insertCell(); td.textContent = v; if (k) td.className = k; });
+            const td = tr.insertCell(); td.append(el('span', 'bx-pill ' + (ACC.find((a) => a[0] === r.accion) || ACC[2])[1], r.accion)); });
+          det.append(t); d.append(det); return d; }));
+        let tr = des.filter((r) => !state.acc || r.accion === state.acc);
+        if (state.q) tr = tr.filter((r) => (r.cliente + ' ' + r.codigo + ' ' + r.ruta).toLowerCase().includes(state.q));
+        $('d-count').textContent = `${fmt(tr.length)} línea(s) · ${f1(d3.sum(tr, (r) => r.hl))} HL · ${fmt(d3.sum(tr, (r) => r.ca))} cajas`;
+        table($('d-tabla'), 'd', [
+          { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' }, { k: 'zona', h: 'Zona' }, { k: 'svc', h: 'Supervisor' },
+          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'motivo', h: 'Motivo' },
+        ], tr.map((r) => ({ ...r, edtc: short(r.edt), svc: svName(r.sv || '—') })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'ca' ? fmt(d3.sum(rs, (r) => r.ca)) : c.k === 'hl' ? f2(d3.sum(rs, (r) => r.hl)) : '');
+      }
+
+      // ===== TT =====
+      if (state.tab === 'almacen') {
+        const last = phDays[phDays.length - 1]; const vals = phDays.map((d) => d.ph);
+        const dentro = vals.filter((v) => v <= META_PH).length; const hasP = hasPrev && MP.hayTT;
+        const mxd = phDays.slice().sort((a, b) => b.ph - a.ph)[0];
+        kpis($('t-kpis'), [
+          last ? { label: 'PH del ' + dlabel(last.fecha), value: fmt(last.ph), unit: `/ ${META_PH} máx.`, tone: last.ph > META_PH ? 'red' : 'green',
+            note: last.ph > META_PH ? `Excede la meta en ${fmt(last.ph - META_PH)} PH (${pct(last.ph / META_PH)})` : `Dentro de la meta · margen de ${fmt(META_PH - last.ph)} PH`, meter: last.ph / META_PH, meterColor: last.ph > META_PH ? C.bad : C.ok }
+            : { label: 'PH último día', value: '—', note: 'Sin registros' },
+          { label: 'Días dentro de meta', value: vals.length ? pct(dentro / vals.length) : '—', tone: dentro === vals.length ? 'green' : 'red', note: vals.length ? `${dentro} de ${vals.length} días con ≤ ${META_PH} PH` : 'Sin registros',
+            delta: delta(vals.length ? dentro / vals.length : 0, MP.diasTT ? (MP.diasTT - MP.fuera) / MP.diasTT : 0, hasP) },
+          { label: 'Promedio PH por día', value: vals.length ? fmt(Math.round(d3.mean(vals))) : '—', tone: d3.mean(vals) > META_PH ? 'red' : 'green', delta: delta(M.phAvg, MP.phAvg, hasP), lowerBetter: true, spark: vals, sparkColor: C.gold },
+          { label: 'Placas con TT', value: fmt(tts.length), tone: 'gray', note: `${fmt(new Set(tts.map((r) => r.ruta)).size)} BK distintos · máx. ${mxd ? fmt(mxd.ph) + ' PH el ' + ddmm(mxd.fecha) : '—'}` },
+        ]);
+        const take = $('t-take'); take.replaceChildren();
+        if (!vals.length) take.textContent = 'No hay placas con TT registradas en el periodo y EDT elegidos.';
+        else take.append('Las placas con TT se mantuvieron dentro de la meta de ', B(`${META_PH} PH`), ' en ', B(`${dentro} de ${vals.length} días`), '. Promedio de ', B(`${fmt(Math.round(d3.mean(vals)))} PH por día`),
+          vals.length - dentro ? `; ${vals.length - dentro} día(s) la superaron, el máximo fue ${fmt(mxd.ph)} PH el ${dlabel(mxd.fecha)}.` : '.');
+        legend($('t-lg'), [[C.ok, `Dentro de meta (≤ ${META_PH} PH)`], [C.bad, `Sobre la meta (> ${META_PH} PH)`], [C.ma, 'Promedio móvil 7 días', 'line'], [null, `Meta máx. ${META_PH} PH`, 'dash']]);
+        dayCombo($('t-ch-dia'), phDays, [{ k: 'ph', c: (d) => (d.ph > META_PH ? C.bad : C.ok) }], { goal: META_PH, ma: true, tick: fmt, val: fmt,
+          tipLines: (d) => [[d.ph > META_PH ? C.bad : C.ok, `${fmt(d.ph)} PH · ${pct(d.ph / META_PH)} de la meta`], [null, d.ph > META_PH ? `Excede en ${fmt(d.ph - META_PH)} PH` : `Margen ${fmt(META_PH - d.ph)} PH`], [null, `${d.n} placa(s) con TT`]] });
+        pareto($('t-ch-edt'), d3.rollups(tts, (v) => d3.sum(v, (r) => r.ph), (r) => r.edt).map(([e, v]) => ({ label: short(e), v })), fmt, 'PH', C.gold);
+        const eRows = d3.rollups(tts, (v) => d3.sum(v, (r) => r.ph), (r) => r.edt).sort((a, b) => b[1] - a[1]).map((d) => d[0]);
+        const hm = d3.rollup(tts, (v) => d3.sum(v, (r) => r.ph), (r) => r.edt, (r) => r.fecha);
+        heatmap($('t-ch-heat'), eRows.map(short), phDays.map((d) => d.fecha), (r, c) => (hm.get(eRows[eRows.map(short).indexOf(r)]) || new Map()).get(c) || 0, fmt, 'PH', ddmm, (c) => DIAS[new Date(c + 'T12:00:00Z').getUTCDay()]);
+        const bb = d3.rollups(tts, (v) => ({ ph: d3.sum(v, (r) => r.ph), n: v.length, placa: v[0].placa, edt: v[0].edt }), (r) => r.ruta).sort((a, b) => b[1].ph - a[1].ph || b[1].n - a[1].n).slice(0, 10)
+          .map(([ruta, o]) => ({ label: `${ruta} · ${o.placa || '—'}`, parts: [{ name: 'PH', c: C.zt, v: o.ph }], end: `${fmt(o.ph)} PH · ${o.n}×`, tip: [[C.zt, short(o.edt)], [null, `${fmt(o.ph)} PH en ${o.n} vez/veces`]] }));
+        hbars($('t-ch-bk'), bb, fmt, 'PH');
+        // ---- bitácora de viajes
+        const TIP = [['DESPLANIFICACIÓN TOTAL', 'tot', C.zt, 'Desplan. total'], ['DESPLANIFICACIÓN PARCIAL', 'par', C.rp, 'Desplan. parcial'], ['CAMBIO DE CABECERA', 'cab', C.sc, 'Cambio de cabecera']];
+        const pm = prev.filter((r) => r.tipo === 'Modificación de viaje'); const hasPM = hasPrev && pm.length > 0;
+        const cnt = (arr, n) => arr.filter((r) => r.motivo === n).length;
+        const mDays = d3.rollups(mods, (v) => v, (r) => r.fecha).sort((a, b) => a[0].localeCompare(b[0])).map(([fecha, v]) => { const o = { fecha, n: v.length }; TIP.forEach(([n, k]) => { o[k] = cnt(v, n); }); return o; });
+        kpis($('a-kpis'), [
+          { label: 'Viajes modificados', value: fmt(mods.length), delta: delta(mods.length, pm.length, hasPM), lowerBetter: true, note: mDays.length ? `${d3.format('.1f')(mods.length / mDays.length)} por día con registro` : 'Sin registros', spark: mDays.map((d) => d.n) },
+          ...TIP.map(([n, k, c, lab]) => ({ label: lab, value: fmt(cnt(mods, n)), tone: k === 'tot' ? 'red' : k === 'par' ? 'blue' : 'gray', delta: delta(cnt(mods, n), cnt(pm, n), hasPM), lowerBetter: true,
+            note: mods.length ? `${pct(cnt(mods, n) / mods.length)} de los viajes modificados` : '—' })),
+        ]);
+        legend($('a-lg'), [...TIP.map(([, , c, lab]) => [c, lab]), [C.ma, 'Promedio móvil 7 días', 'line']]);
+        dayCombo($('a-ch-dia'), mDays, TIP.map(([, k, c]) => ({ k, c })), { ma: true, tick: fmt, val: fmt, tipLines: (d) => [...TIP.filter(([, k]) => d[k]).map(([, k, c, lab]) => [c, `${lab}: ${d[k]}`]), [null, `Total: ${d.n} viaje(s)`]] });
+        hbars($('a-ch-edt'), d3.rollups(mods, (v) => v, (r) => r.edt).map(([e, v]) => ({ label: short(e), parts: TIP.map(([n, , c, lab]) => ({ name: lab, c, v: cnt(v, n) })) }))
+          .sort((a, b) => d3.sum(b.parts, (p) => p.v) - d3.sum(a.parts, (p) => p.v)), fmt, 'viajes');
+        const MOT = TIP.map(([n, , c]) => [n, c]);
+        hbars($('d-ch-mot'), MOT.map(([n, c]) => ({ label: n.charAt(0) + n.slice(1).toLowerCase(), parts: [{ name: 'Viajes', c, v: mods.filter((r) => r.motivo === n).length }],
+          end: `${fmt(mods.filter((r) => r.motivo === n).length)} · ${mods.length ? pct(mods.filter((r) => r.motivo === n).length / mods.length) : '—'}` })).filter((d) => d.parts[0].v), fmt, 'viajes');
+        if (!$('a-tabla').hidden) {
+          state.sort.m = state.sort.m || ['fecha', -1];
+          table($('a-tabla'), 'm', [{ k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'placa', h: 'Placa' }, { k: 'edtc', h: 'EDT' }, { k: 'nviaje', h: '# Viaje', n: 1 }, { k: 'viaje', h: 'Transporte' },
+            { k: 'motivo', h: 'Tipo', pill: (r) => (r.motivo === 'DESPLANIFICACIÓN TOTAL' ? 'zt' : r.motivo === 'DESPLANIFICACIÓN PARCIAL' ? 'rp' : 'sc') }, { k: 'ruta2', h: 'Pasa a BK' }],
+            mods.map((r) => ({ ...r, edtc: short(r.edt) })));
+        }
+        if (!$('a-sem').hidden) {
+          const wk = weeks(rows).map(({ w, sem, v }) => { const m = metrics(v); const mv = v.filter((r) => r.tipo === 'Modificación de viaje');
+            return { w, sem, ph: m.hayTT ? Math.round(m.phAvg) : null, fueraN: m.diasTT ? m.fuera / m.diasTT : 0, fuera: m.hayTT ? `${m.fuera}/${m.diasTT}` : '—', tt: v.filter((r) => r.tipo === 'Placa con TT').length,
+              viajes: mv.length, tot: cnt(mv, TIP[0][0]), cab: cnt(mv, TIP[2][0]) }; });
+          state.sort.aw = state.sort.aw || ['w', 1];
+          table($('a-sem'), 'aw', [
+            { k: 'w', h: 'Semana', f: (v, r) => r.sem }, { k: 'ph', h: 'PH TT prom./día', n: 1, f: (v) => (v == null ? '—' : fmt(v)), bg: (v) => (v == null ? '' : v > META_PH ? 'rgba(201,74,67,.35)' : 'rgba(47,163,107,.22)') },
+            { k: 'fueraN', h: 'Días sobre meta', n: 1, f: (v, r) => r.fuera, bg: (v) => (v ? `rgba(201,74,67,${(0.1 + 0.4 * v).toFixed(2)})` : '') }, { k: 'tt', h: 'Placas con TT', n: 1, f: fmt, bg: heatOf(wk, 'tt') },
+            { k: 'viajes', h: 'Viajes modif.', n: 1, f: fmt, bg: heatOf(wk, 'viajes') }, { k: 'tot', h: 'Desplan. total', n: 1, f: fmt, bg: heatOf(wk, 'tot') }, { k: 'cab', h: 'Cambio cabecera', n: 1, f: fmt },
+          ], wk, (c, i, rs) => i === 0 ? 'Total' : c.k === 'ph' ? (M.hayTT ? fmt(Math.round(M.phAvg)) : '—') : c.k === 'fueraN' ? `${M.fuera}/${M.diasTT}` : c.k === 'w' ? '' : fmt(d3.sum(rs, (r) => r[c.k])));
+        }
+      }
+
+      // ===== INFORMATIVO =====
+      if (state.tab === 'ventas') {
+        const pend = recs.filter((r) => r.status !== 'SOLUCIONADO');
+        const dSol = recs.filter((r) => r.sol).map((r) => d3.utcDay.count(new Date(r.fecha + 'T00:00:00Z'), new Date(r.sol + 'T00:00:00Z')));
+        const precs = prev.filter((r) => r.tipo === 'Reclamo de ventas');
+        kpis($('v-rec-kpis'), [
+          { label: 'Reclamos registrados', value: fmt(recs.length), delta: hasPrev && precs.length ? delta(recs.length, precs.length, true) : 'na', lowerBetter: true, note: `${fmt(new Set(recs.map((r) => r.codigo)).size)} cliente(s)` },
+          { label: 'Solucionados', value: fmt(recs.length - pend.length), tone: 'green', note: recs.length ? `${pct((recs.length - pend.length) / recs.length)} de los reclamos` : 'Sin reclamos' },
+          { label: 'Pendientes', value: fmt(pend.length), tone: pend.length ? 'red' : 'green', note: pend.length ? 'Requieren seguimiento' : 'Todo solucionado' },
+          { label: 'Días promedio de solución', value: dSol.length ? d3.format('.1f')(d3.mean(dSol)) : '—', tone: 'gray', note: dSol.length ? `Máximo ${d3.max(dSol)} día(s)` : 'Sin fecha de solución' },
+        ]);
+        const padus = prev.filter((r) => r.tipo === 'Recojo de adulterado');
+        kpis($('v-adu-kpis'), [
+          { label: 'Unidades recogidas', value: fmt(d3.sum(adus, (r) => r.cantidad)), unit: 'unid.', delta: hasPrev && padus.length ? delta(d3.sum(adus, (r) => r.cantidad), d3.sum(padus, (r) => r.cantidad), true) : 'na', lowerBetter: true },
+          { label: 'Clientes con recojo', value: fmt(new Set(adus.map((r) => r.codigo)).size), tone: 'gray' },
+          { label: 'Materiales', value: fmt(new Set(adus.map((r) => r.motivo)).size), tone: 'gray', note: adus.length ? `Más recogido: ${d3.rollups(adus, (v) => d3.sum(v, (r) => r.cantidad), (r) => r.motivo).sort((a, b) => b[1] - a[1])[0][0]}` : 'Sin recojos' },
+        ]);
+        hbars($('v-ch-adu'), d3.rollups(adus, (v) => d3.sum(v, (r) => r.cantidad), (r) => r.motivo).sort((a, b) => b[1] - a[1]).slice(0, 10)
+          .map(([m, v]) => ({ label: m.length > 30 ? m.slice(0, 29) + '…' : m, parts: [{ name: 'Unidades', c: C.rp, v }] })), fmt, 'unid.');
+        if (!$('v-sem').hidden) {
+          const wk = weeks(rows).map(({ w, sem, v }) => { const ds2 = v.filter((r) => r.tipo === 'Cliente desplanificado');
+            return { w, sem, hl: d3.sum(ds2, (r) => r.hl), ca: d3.sum(ds2, (r) => r.ca), rp: ucli(ds2.filter((r) => r.accion === 'Reprogramación')), zt: ucli(ds2.filter((r) => r.accion === 'ZT (rechazo)')),
+              rec: v.filter((r) => r.tipo === 'Reclamo de ventas').length, adu: d3.sum(v.filter((r) => r.tipo === 'Recojo de adulterado'), (r) => r.cantidad) }; });
+          state.sort.vw = state.sort.vw || ['w', 1];
+          table($('v-sem'), 'vw', [
+            { k: 'w', h: 'Semana', f: (v, r) => r.sem }, { k: 'hl', h: 'HL desplan.', n: 1, f: f1, bg: heatOf(wk, 'hl') }, { k: 'ca', h: 'Cajas', n: 1, f: fmt, bg: heatOf(wk, 'ca') },
+            { k: 'rp', h: 'POCs reprog.', n: 1, f: fmt, bg: heatOf(wk, 'rp') }, { k: 'zt', h: 'POCs ZT', n: 1, f: fmt, bg: heatOf(wk, 'zt') },
+            { k: 'rec', h: 'Reclamos', n: 1, f: fmt, bg: heatOf(wk, 'rec') }, { k: 'adu', h: 'Adulterado (unid.)', n: 1, f: fmt },
+          ], wk, (c, i, rs) => i === 0 ? 'Total' : c.k === 'hl' ? f1(d3.sum(rs, (r) => r.hl)) : c.k === 'w' ? '' : fmt(d3.sum(rs, (r) => r[c.k])));
+        }
+        table($('i-rec'), 'r', [
+          { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' }, { k: 'sv', h: 'Supervisor' },
+          { k: 'motivo', h: 'Motivo' }, { k: 'medio', h: 'Medio' }, { k: 'status', h: 'Status', pill: (r) => (r.status === 'SOLUCIONADO' ? 'ok' : 'pe') }, { k: 'dias', h: 'Días a solución', n: 1, f: (v) => (v == null ? '—' : fmt(v)) }, { k: 'obs', h: 'Observación' },
+        ], recs.map((r) => ({ ...r, edtc: short(r.edt), dias: r.sol ? d3.utcDay.count(new Date(r.fecha + 'T00:00:00Z'), new Date(r.sol + 'T00:00:00Z')) : null })));
+        table($('i-adu'), 'a', [
+          { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' },
+          { k: 'motivo', h: 'Material' }, { k: 'cantidad', h: 'Unidades', n: 1, f: fmt }, { k: 'obs', h: 'Comentario' },
+        ], adus.map((r) => ({ ...r, edtc: short(r.edt) })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'cantidad' ? fmt(d3.sum(rs, (r) => r.cantidad)) : '');
+      }
+
+      // ===== REPORTE POR EDT =====
+      if (state.tab === 'edt') {
+        const eList = [...new Set(rows.filter((r) => r.edt).map((r) => r.edt))];
+        const TIP2 = [['DESPLANIFICACIÓN TOTAL', 'tot'], ['DESPLANIFICACIÓN PARCIAL', 'par'], ['CAMBIO DE CABECERA', 'cab']];
+        const eRowsT = eList.map((e) => { const v = rows.filter((r) => r.edt === e); const dd = v.filter((r) => r.tipo === 'Cliente desplanificado'), mv = v.filter((r) => r.tipo === 'Modificación de viaje'), tv = v.filter((r) => r.tipo === 'Placa con TT');
+          const r2 = dd.filter((r) => r.accion === 'Reprogramación'), z2 = dd.filter((r) => r.accion === 'ZT (rechazo)'); const nd = new Set(dd.map((r) => r.fecha)).size || 1, nt = new Set(tv.map((r) => r.fecha)).size || 1;
+          const o = { edt: short(e), viajes: mv.length, rpoc: ucli(r2), rhl: d3.sum(r2, (r) => r.hl), zpoc: ucli(z2), zhl: d3.sum(z2, (r) => r.hl), hld: d3.sum(dd, (r) => r.hl) / nd, usd: usd(d3.sum(dd, (r) => r.hl)), tt: tv.length, ph: d3.sum(tv, (r) => r.ph), phd: d3.sum(tv, (r) => r.ph) / nt };
+          TIP2.forEach(([n, k]) => { o[k] = mv.filter((r) => r.motivo === n).length; }); return o; }).filter((o) => o.viajes + o.rpoc + o.zpoc + o.tt > 0);
+        state.sort.e = state.sort.e || ['zhl', -1];
+        const hb = (k) => { const mx = d3.max(eRowsT, (r) => r[k]) || 1; return (v) => (v ? `rgba(201,74,67,${(0.06 + 0.4 * v / mx).toFixed(2)})` : ''); };
+        table($('e-tb'), 'e', [
+          { k: 'edt', h: 'EDT' }, { k: 'viajes', h: 'Viajes modif.', n: 1, f: fmt, bg: hb('viajes') }, { k: 'tot', h: 'Desplan. total', n: 1, f: fmt }, { k: 'par', h: 'Desplan. parcial', n: 1, f: fmt }, { k: 'cab', h: 'Cambio cabecera', n: 1, f: fmt },
+          { k: 'rpoc', h: 'Reprog. POCs', n: 1, f: fmt }, { k: 'rhl', h: 'Reprog. HL', n: 1, f: f1, bg: (v) => { const mx = d3.max(eRowsT, (r) => r.rhl) || 1; return v ? `rgba(217,166,46,${(0.06 + 0.34 * v / mx).toFixed(2)})` : ''; } },
+          { k: 'zpoc', h: 'ZT POCs', n: 1, f: fmt }, { k: 'zhl', h: 'ZT HL', n: 1, f: f1, bg: hb('zhl') }, { k: 'usd', h: 'Costo US$', n: 1, f: fUsd, bg: hb('usd') }, { k: 'hld', h: 'HL desplan./día', n: 1, f: f1 },
+          { k: 'tt', h: 'Placas TT', n: 1, f: fmt }, { k: 'ph', h: 'PH TT', n: 1, f: fmt, bg: hb('ph') }, { k: 'phd', h: 'PH TT/día', n: 1, f: (v) => fmt(Math.round(v)) },
+        ], eRowsT, (c, i, rs) => i === 0 ? 'Total' : ['hld', 'phd'].includes(c.k) ? '' : ['rhl', 'zhl'].includes(c.k) ? f1(d3.sum(rs, (r) => r[c.k])) : c.k === 'usd' ? fUsd(d3.sum(rs, (r) => r.usd)) : fmt(d3.sum(rs, (r) => r[c.k])));
+        // impacto diario por EDT
+        const EU = { hl: [(v) => d3.sum(v, (r) => r.hl), f1, 'HL'], usd: [(v) => usd(d3.sum(v, (r) => r.hl)), fUsd, ''], poc: [(v) => ucli(v), fmt, 'POCs'], ca: [(v) => d3.sum(v, (r) => r.ca), fmt, 'cajas'] }[state.eU];
+        const eImp = d3.rollups(des, (v) => v, (r) => r.edt).map(([e, v]) => ({ e, v, t: EU[0](v), nd: new Set(v.map((r) => r.fecha)).size || 1 })).sort((a, b) => b.t - a.t);
+        hbars($('e-ch-dia'), eImp.map((o) => ({ label: short(o.e), parts: ACC.map(([n, , c]) => ({ name: n, c, v: EU[0](o.v.filter((r) => r.accion === n)) })),
+          end: `${EU[1](o.t)}${EU[2] ? ' ' + EU[2] : ''} · ${EU[1](o.t / o.nd)}/día`,
+          tip: [...ACC.map(([n, , c]) => { const w = o.v.filter((r) => r.accion === n); return [c, `${n}: ${f1(d3.sum(w, (r) => r.hl))} HL · ${fUsd(usd(d3.sum(w, (r) => r.hl)))} · ${fmt(ucli(w))} POCs`, w.length]; }).filter((x) => x[2]).map(([c, t]) => [c, t]),
+            [null, `Promedio: ${f1(d3.sum(o.v, (r) => r.hl) / o.nd)} HL · ${fUsd(usd(d3.sum(o.v, (r) => r.hl)) / o.nd)} por día (${o.nd} días con desplanificación)`]] })), EU[1], EU[2]);
+        $('e-dia-sub').textContent = eImp.length ? `${short(eImp[0].e)} es el más impactado: ${f1(d3.sum(eImp[0].v, (r) => r.hl))} HL · ${fUsd(usd(d3.sum(eImp[0].v, (r) => r.hl)))} en el periodo` : 'Sin desplanificaciones en el periodo';
+        // mapa de calor
+        const HM = { zt: ['ZT (HL)', rows.filter((r) => r.tipo === 'Cliente desplanificado' && r.accion === 'ZT (rechazo)'), (v) => d3.sum(v, (r) => r.hl), f1, 'HL'],
+          rp: ['Reprogramación (HL)', rows.filter((r) => r.tipo === 'Cliente desplanificado' && r.accion === 'Reprogramación'), (v) => d3.sum(v, (r) => r.hl), f1, 'HL'],
+          mod: ['Viajes modificados', mods, (v) => v.length, fmt, 'viajes'], tt: ['PH con TT', tts, (v) => d3.sum(v, (r) => r.ph), fmt, 'PH'] }[state.eH];
+        const hDates = [...new Set(HM[1].map((r) => r.fecha))].sort();
+        const hE = d3.rollups(HM[1], (v) => HM[2](v), (r) => r.edt).sort((a, b) => b[1] - a[1]).map((d) => d[0]);
+        const hmap = d3.rollup(HM[1], (v) => HM[2](v), (r) => r.edt, (r) => r.fecha);
+        $('e-heat-sub').textContent = `${HM[0]} por empresario y día. Más intenso = más impacto; rojo = los días más críticos`;
+        heatmap($('e-ch-heat'), hE.map(short), hDates, (r, c) => (hmap.get(hE[hE.map(short).indexOf(r)]) || new Map()).get(c) || 0, HM[3], HM[4], ddmm, (c) => DIAS[new Date(c + 'T12:00:00Z').getUTCDay()]);
+        // top BK
+        const dRuta = d3.rollup(des, (v) => d3.sum(v, (r) => r.hl), (r) => r.ruta);
+        const bkD = d3.rollups(mods.filter((r) => r.motivo !== 'CAMBIO DE CABECERA'), (v) => ({ n: v.length, placa: v[0].placa, edt: v[0].edt, t: v.filter((r) => r.motivo === 'DESPLANIFICACIÓN TOTAL').length }), (r) => r.ruta)
+          .sort((a, b) => b[1].n - a[1].n || (dRuta.get(b[0]) || 0) - (dRuta.get(a[0]) || 0)).slice(0, 10)
+          .map(([ruta, o]) => ({ label: `${ruta} · ${o.placa || '—'}`, parts: [{ name: 'Total', c: C.zt, v: o.t }, { name: 'Parcial', c: C.rp, v: o.n - o.t }], end: `${o.n}× · ${f1(dRuta.get(ruta) || 0)} HL`,
+            tip: [[null, short(o.edt)], [C.zt, `Desplan. total: ${o.t}`], [C.rp, `Desplan. parcial: ${o.n - o.t}`], [null, `${f1(dRuta.get(ruta) || 0)} HL desplanificados`]] }));
+        hbars($('e-ch-bkd'), bkD, fmt, 'viajes');
+
+        const bkT = d3.rollups(tts, (v) => ({ ph: d3.sum(v, (r) => r.ph), n: v.length, placa: v[0].placa, edt: v[0].edt }), (r) => r.ruta).sort((a, b) => b[1].ph - a[1].ph || b[1].n - a[1].n).slice(0, 10)
+          .map(([ruta, o]) => ({ label: `${ruta} · ${o.placa || '—'}`, parts: [{ name: 'PH', c: C.gold, v: o.ph }], end: `${fmt(o.ph)} PH · ${o.n}×`, tip: [[null, short(o.edt)], [C.gold, `${fmt(o.ph)} PH en ${o.n} vez/veces`]] }));
+        hbars($('e-ch-bkt'), bkT, fmt, 'PH');
+        { const PC = periodCols(lo, hi); const motL = (r) => (r.motivo ? r.motivo.charAt(0) + r.motivo.slice(1).toLowerCase() : '(en blanco)');
+          const PV = { ca: ['Cajas', (v) => d3.sum(v, (r) => r.ca), (v) => fmt(Math.round(v))], hl: ['HL', (v) => d3.sum(v, (r) => r.hl), (v) => fmt(Math.round(v))], poc: ['POCs', (v) => ucli(v), fmt] }[state.pv];
+          $('e-piv-sub').textContent = `Suma de ${PV[0]} por acción y por motivo, por ${PC.by}`;
+          $('e-piv-h1').textContent = `Suma de ${PV[0]} · por acción`; $('e-piv-h2').textContent = `Suma de ${PV[0]} · por motivo`;
+          const motO = d3.rollups(des, (v) => d3.sum(v, (r) => r.hl), motL).sort((a, b) => (a[0] === '(en blanco)') - (b[0] === '(en blanco)') || b[1] - a[1]).map((d) => d[0]);
+          pivot($('e-piv-acc'), des, (r) => r.accion, ACC.map((a) => a[0]), PC.cols, PC.of, PV[1], PV[2], { rowLabel: 'Acción', label: (r) => (r === 'ZT (rechazo)' ? 'ZT' : r) });
+          pivot($('e-piv-mot'), des, motL, motO, PC.cols, PC.of, PV[1], PV[2], { rowLabel: 'Motivo', blank: (r) => r === '(en blanco)', rgb: '217,166,46' }); }
+      }
+    };
+    redraw();
+    const pie = $('pie').firstElementChild;
+    pie.textContent = ok && fechas.length ? `Fuente: bitácora compartida · ${fmt(all.length)} registros del ${ddmm(dMin)} al ${ddmm(dMax)}/${dMax.slice(0, 4)}` : '—';
+  });
+
+
+  const named = location.hash.slice(1);
+  if (TABS[named]) openTab(named, false);
+})();
+</script>
+
+<script>
+(function () {
+  var busy = false;
+  window.__bxLoad = async function (force) {
+    if (busy) return; busy = true; var bar = document.getElementById('bx-loading'); bar.hidden = false;
+    try {
+      var r = await fetch('/api/data' + (force ? '?force=1' : ''), { cache: 'no-store' });
+      var j = await r.json();
+      if (j.rows && j.rows.length) dash._set({ status: 'ok', data: j.rows });
+      else if (dash.data().status !== 'ok') dash._set({ status: 'error', data: [] });
+      var e = document.getElementById('err'); e.hidden = !j.error; e.textContent = j.error ? 'Aviso: ' + j.error : '';
+    } catch (err) {
+      var e2 = document.getElementById('err'); e2.hidden = false; e2.textContent = 'Sin conexión con el servidor; se muestran los últimos datos cargados.';
+    }
+    bar.hidden = true; busy = false;
+  };
+  window.__bxLoad(false);
+  setInterval(function () { window.__bxLoad(false); }, 10 * 60e3);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) window.__bxLoad(false); });
+})();
+</script>
+</body>
+</html>
