@@ -1280,7 +1280,7 @@ window.dash = (function () {
         window.__confRows = tr; updConfCount(); const hasTel = tr.some((r) => r.tel);
         table($('d-tabla'), 'd', [
           { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' }, ...(hasTel ? [{ k: 'tel', h: 'Teléfono', node: telNode }] : []), { k: 'zona', h: 'Zona' }, { k: 'svc', h: 'Supervisor' },
-          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'conf', h: '¿Se reprograma? · Autorizó', node: confNode }, { k: 'motivo', h: 'Motivo' },
+          { k: 'ca', h: 'Cajas', n: 1, f: fmt }, { k: 'hl', h: 'HL', n: 1, f: f2 }, { k: 'accion', h: 'Qué se hace', pill: (r) => (ACC.find((a) => a[0] === r.accion) || ACC[2])[1] }, { k: 'conf', h: '¿Se reprograma? · Autorizó', node: confNode }, { k: 'motivo', h: 'Motivo' }, { k: 'alertado', h: 'Alertado' },
         ], tr.map((r) => ({ ...r, edtc: short(r.edt), svc: svName(r.sv || '—'), conf: r.accion === 'Reprogramación' ? ((confMap.get(confId(r)) || {}).reprog || 'PENDIENTE') : 'ZZ' })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'ca' ? fmt(d3.sum(rs, (r) => r.ca)) : c.k === 'hl' ? f2(d3.sum(rs, (r) => r.hl)) : '');
       }
 
