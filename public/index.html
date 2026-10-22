@@ -240,6 +240,14 @@ window.dash = (function () {
 .bx-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--cds-gap-sm);font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;color:#8C7A45;text-transform:uppercase;padding:var(--cds-pad-sm) var(--cds-pad-lg);border-top:1px solid var(--k-line);background:#0B0A08}
 @media (max-width:560px){.bx-logos img{width:56px;height:56px}}
 
+.bx-split{display:flex;height:7px;border-radius:4px;overflow:hidden;background:#2A251B;margin-top:6px}
+.bx-split i{display:block;height:100%}
+.bx-splitl{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--k-mute);margin-top:2px}
+.bx-splitl span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.bx-splitl em{margin-left:auto;font-style:normal;font-family:var(--f-mono);font-size:11px;color:var(--k-mute);padding-left:6px}
+.bx-splitl b{width:9px;height:9px;border-radius:2px;flex:0 0 auto}
+.bx-splitl strong{color:var(--k-fg);font-weight:600;font-variant-numeric:tabular-nums}
+@media (max-width:600px){.bx-splitl{font-size:10.5px;gap:2px}.bx-splitl span{gap:4px}.bx-splitl em{font-size:10px;padding-left:3px}}
 .bx-refresh{margin-top:12px;margin-left:auto;display:inline-flex;align-items:center;gap:8px;background:rgba(242,197,42,.08);color:var(--k-gold);border:1px solid var(--k-gold2);border-radius:999px;padding:7px 14px;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
 .bx-refresh:hover{background:rgba(242,197,42,.18)}.bx-refresh:disabled{cursor:default;opacity:.85}
 .bx-refresh svg{width:15px;height:15px;flex:0 0 auto}.bx-refresh.spin svg{animation:bxspin 1s linear infinite}
@@ -866,6 +874,7 @@ window.dash = (function () {
   }
 
   // tarjeta KPI con delta y sparkline
+  const splitBy = (rows, k, f) => ACC.map(([a, , c]) => [a === 'ZT (rechazo)' ? 'ZT' : a === 'Reprogramación' ? 'Reprog.' : 'Sin clasif.', d3.sum(rows.filter((r) => r.accion === a), (r) => r[k]), c, f]).filter((x, i) => i < 2 || x[1] > 0);
   function kpis(box, cards) {
     box.replaceChildren(...cards.map((k) => {
       const c = el('div', 'bx-kpi ' + (k.tone || '')); c.append(el('span', 'lab', k.label));
@@ -875,6 +884,10 @@ window.dash = (function () {
         else if (Math.abs(dd) >= 0.005) { const better = k.lowerBetter ? dd < 0 : dd > 0; cls = better ? 'good' : 'bad'; txt = (dd > 0 ? '▲ ' : '▼ ') + pct(Math.abs(dd)); }
         const b = el('span', 'bx-delta ' + cls, txt); b.title = 'Contra el periodo anterior de igual duración'; row.append(b); }
       c.append(row); if (k.note) c.append(el('span', 'note', k.note));
+      if (k.split) { const tot = d3.sum(k.split, (x) => x[1]) || 1; const bar = el('div', 'bx-split'); const ls = el('div', 'bx-splitl');
+        k.split.forEach(([n, v, col, f]) => { const i = el('i'); i.style.width = (v / tot * 100) + '%'; i.style.background = col; i.title = `${n}: ${f(v)}`; bar.append(i);
+          const r = el('span'); const dot = el('b'); dot.style.background = col; r.append(dot, n, el('strong', null, f(v)), el('em', null, pct(v / tot))); ls.append(r); });
+        c.append(bar, ls); }
       if (k.meter != null) { const m = el('div', 'bx-meter'); const i = el('i'); i.style.width = Math.min(100, k.meter * 100) + '%'; i.style.background = k.meterColor; m.append(i); c.append(m); }
       if (k.spark) { const s = el('div', 'bx-spark'); c.append(s); requestAnimationFrame(() => sparkline(s, k.spark, k.sparkColor || C.gold)); }
       return c; }));
@@ -1099,8 +1112,8 @@ window.dash = (function () {
         kpis($('d-kpis'), [
           { label: 'Clientes a reprogramar', value: fmt(M.rp), tone: 'blue', delta: delta(M.rp, MP.rp, hasP), lowerBetter: true, note: `${f1(d3.sum(rp, (r) => r.hl))} HL · ${fmt(d3.sum(rp, (r) => r.ca))} cajas` },
           { label: 'Clientes en ZT (rechazo)', value: fmt(M.zt), tone: 'red', delta: delta(M.zt, MP.zt, hasP), lowerBetter: true, note: `${f1(d3.sum(zt, (r) => r.hl))} HL · ${fmt(d3.sum(zt, (r) => r.ca))} cajas` },
-          { label: 'HL desplanificado', value: f1(M.hl), delta: delta(M.hl, MP.hl, hasP), lowerBetter: true, note: `${f1(des.length ? M.hl / new Set(des.map((r) => r.fecha)).size : 0)} HL promedio por día` },
-          { label: 'Cajas desplanificadas', value: fmt(M.ca), tone: 'gray', delta: delta(M.ca, MP.ca, hasP), lowerBetter: true, note: `${fmt(new Set(des.map((r) => r.ruta + r.fecha)).size)} viaje(s) afectados` },
+          { label: 'HL desplanificado', value: f1(M.hl), delta: delta(M.hl, MP.hl, hasP), lowerBetter: true, note: `${f1(des.length ? M.hl / new Set(des.map((r) => r.fecha)).size : 0)} HL promedio por día`, split: splitBy(des, 'hl', (v) => f1(v) + ' HL') },
+          { label: 'Cajas desplanificadas', value: fmt(M.ca), tone: 'gray', delta: delta(M.ca, MP.ca, hasP), lowerBetter: true, note: `${fmt(new Set(des.map((r) => r.ruta + r.fecha)).size)} viaje(s) afectados`, split: splitBy(des, 'ca', (v) => fmt(v) + ' cajas') },
           (() => { const cd = d3.rollups(des, (v) => new Set(v.map((r) => r.fecha)).size, (r) => r.codigo); const rc = cd.filter((d) => d[1] >= 2).length;
             const pd = d3.rollups(prev.filter((r) => r.tipo === 'Cliente desplanificado'), (v) => new Set(v.map((r) => r.fecha)).size, (r) => r.codigo).filter((d) => d[1] >= 2).length;
             return { label: 'Clientes recurrentes', value: fmt(rc), tone: 'red', delta: delta(rc, pd, hasP), lowerBetter: true, note: `desplanificados en 2 o más días · ${cd.length ? pct(rc / cd.length) : '—'} de ${fmt(cd.length)} clientes` }; })(),
