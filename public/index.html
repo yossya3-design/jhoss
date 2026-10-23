@@ -319,6 +319,7 @@ window.dash = (function () {
 .bx-conf.edit{flex-direction:column;align-items:stretch;gap:5px;min-width:190px}
 .bx-conf select{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:5px 8px;font:inherit;font-size:12px;color-scheme:dark}
 .bx-cbs{display:flex;gap:6px}
+.bx-modo,#n-ocr{display:none!important}#n-osel{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-line);border-radius:var(--cds-radius);padding:7px 10px;font:inherit;color-scheme:dark}#n-o{margin-top:6px}
 .bx-modo{align-self:flex-start}.bx-modo button{font-size:13px;padding:6px 14px}
 .bx-foto{max-height:120px;max-width:200px;border-radius:6px;border:1px solid var(--k-line);display:block}
 .bx-csub{align-self:flex-start}.bx-csub button{font-size:13px;padding:7px 16px}
@@ -578,7 +579,7 @@ window.dash = (function () {
             <div class="bx-f"><label for="n-f">Fecha del incumplimiento</label><input type="date" id="n-f"></div>
             <div class="bx-f"><label for="n-p">Placas</label><textarea id="n-p" rows="5" placeholder="G-732 122&#10;G-732 45&#10;D-880 16&#10;(placa y total de cajas; se suman por placa)"></textarea></div>
             <div class="bx-f"><label for="n-as">Asistente de almacén</label><input type="text" id="n-as" maxlength="60" placeholder="Ej. Ramírez"></div><div class="bx-f"><label for="n-tu">Turno</label><input type="text" id="n-tu" maxlength="10" placeholder="Ej. 2"></div>
-            <div class="bx-f"><label for="n-o">Observación (opcional)</label><input type="text" id="n-o" maxlength="140" placeholder="Ej. retornó con TT sin autorización"></div>
+            <div class="bx-f"><label for="n-osel">Observación</label><select id="n-osel"><option value="Retorno de TT sin autorización">Retorno de TT sin autorización</option><option value="otro">Otra (escribir)</option></select><input type="text" id="n-o" maxlength="140" placeholder="Escribe la observación" hidden></div>
             <div class="bx-f"><label>Validación</label><div class="bx-prev" id="n-prev"><span class="bx-empty">Escribe las placas para validarlas.</span></div></div>
           </div>
           <div class="bx-tools"><button class="bx-btn bx-solid" type="button" id="n-go" disabled>Registrar incumplimientos</button><span class="bx-count" id="n-msg"></span></div>
@@ -1121,7 +1122,7 @@ window.dash = (function () {
   ['n-p', 'n-f'].forEach((id) => $(id).addEventListener('input', prevInc));
   $('n-f').value = ayer(); $('n-f').max = limaHoy();
   $('n-go').addEventListener('click', async () => {
-    const f = $('n-f').value, obs = $('n-o').value.trim(), todo = parsedInc.filter((x) => !x.dup); if (!f || !todo.length || !incAdmin) return;
+    const f = $('n-f').value, obs = ($('n-osel').value === 'otro' ? $('n-o').value.trim() : $('n-osel').value), todo = parsedInc.filter((x) => !x.dup); if (!f || !todo.length || !incAdmin) return;
     $('n-go').disabled = true; const msg = $('n-msg'); msg.textContent = 'Registrando…';
     try { const j = await incApi('POST', { fecha: f, obs, items: todo.map((x) => ({ placa: x.placa, ruta: x.ruta, edt: x.edt, paletas: x.cj != null ? x.pal : null, cajas: x.cj, puchos: x.cj != null ? x.pu : null, tipo: x.cj != null ? `${x.p6 || 0}x6xx+${x.pl || 0}xLt` : '' })), asistente: $('n-as').value.trim(), turno: $('n-tu').value.trim() });
       msg.textContent = `Se registraron ${j.added} placa(s) del ${dlabel(f)}.`; $('n-p').value = ''; $('n-o').value = ''; prevInc(); }
@@ -1328,8 +1329,9 @@ window.dash = (function () {
     finally { $('n-ocr').classList.remove('busy'); $('n-img').value = ''; } }
   document.querySelectorAll('[data-modo]').forEach((b) => b.addEventListener('click', () => { document.querySelectorAll('[data-modo]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     $('n-ocr').hidden = b.dataset.modo !== 'img'; if (b.dataset.modo === 'man') $('n-p').focus(); }));
+  $('n-osel').addEventListener('change', () => { const o = $('n-osel').value === 'otro'; $('n-o').hidden = !o; if (o) $('n-o').focus(); });
   $('n-img').addEventListener('change', (e) => leerPlanilla(e.target.files[0]));
-  document.addEventListener('paste', (e) => { if (!incAdmin || $('n-adm').hidden || state.tab !== 'almacen') return;
+  document.addEventListener('paste', (e) => { if (!incAdmin || $('n-adm').hidden || state.tab !== 'almacen' || getComputedStyle($('n-ocr')).display === 'none') return;
     const it = [...(e.clipboardData && e.clipboardData.items || [])].find((x) => x.type.startsWith('image/')); if (it) { e.preventDefault(); leerPlanilla(it.getAsFile()); } });
   const oz = $('n-ocr'); ['dragover', 'dragenter'].forEach((ev) => oz.addEventListener(ev, (e) => { e.preventDefault(); oz.classList.add('drag'); }));
   ['dragleave', 'drop'].forEach((ev) => oz.addEventListener(ev, () => oz.classList.remove('drag')));
