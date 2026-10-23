@@ -319,6 +319,10 @@ window.dash = (function () {
 .bx-conf.edit{flex-direction:column;align-items:stretch;gap:5px;min-width:190px}
 .bx-conf select{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:5px 8px;font:inherit;font-size:12px;color-scheme:dark}
 .bx-cbs{display:flex;gap:6px}
+.bx-csub{align-self:flex-start}.bx-csub button{font-size:13px;padding:7px 16px}
+.bx-pform{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px dashed var(--k-gold2);border-radius:var(--cds-radius);background:rgba(242,197,42,.05)}.bx-pform>div:first-child{display:flex;gap:6px;flex-wrap:wrap;align-items:baseline}.bx-pform b{color:var(--k-gold)}.bx-pform>div>span{font-size:12px;color:var(--k-mute)}
+.bx-pin{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.bx-pin span{font-size:12px;color:var(--k-fg)}.bx-pin input{width:100%}
+.bx-insight{margin:0;font-size:14px;color:var(--k-fg);background:rgba(201,74,67,.08);border-left:3px solid var(--k-red);padding:8px 12px;border-radius:6px}.bx-insight:empty{display:none}.bx-insight b{color:var(--k-gold)}
 .bx-ocr{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 14px;border:1px dashed var(--k-gold2);border-radius:var(--cds-radius);background:rgba(242,197,42,.05)}.bx-ocr>div{flex:1 1 320px;display:flex;flex-direction:column;gap:2px}.bx-ocr b{color:var(--k-gold)}.bx-ocr span{font-size:12px;color:var(--k-mute)}.bx-ocr.drag{background:rgba(242,197,42,.14)}.bx-ocr.busy{opacity:.8}.bx-up{cursor:pointer}#n-omsg{flex-basis:100%;color:var(--k-fg)}
 .bx-cimg{background:#fff;border-radius:8px;overflow:auto;border:1px solid var(--k-line)}.bx-cimg canvas{display:block;width:100%;min-width:880px;height:auto}
 .bx-cli{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:150px}.bx-cli .bx-wal{gap:6px}
@@ -564,7 +568,7 @@ window.dash = (function () {
           </div>
           <div class="bx-aform">
             <div class="bx-f"><label for="n-f">Fecha del incumplimiento</label><input type="date" id="n-f"></div>
-            <div class="bx-f"><label for="n-p">Placas</label><textarea id="n-p" rows="5" placeholder="BWD-880&#10;PED8S-777&#10;CHZ-792"></textarea></div>
+            <div class="bx-f"><label for="n-p">Placas</label><textarea id="n-p" rows="5" placeholder="BWD-880&#10;PED8S-777 6&#10;CHZ-792 4   (opcional: paletas al costado)"></textarea></div>
             <div class="bx-f"><label for="n-o">Observación (opcional)</label><input type="text" id="n-o" maxlength="140" placeholder="Ej. retornó con TT sin autorización"></div>
             <div class="bx-f"><label>Validación</label><div class="bx-prev" id="n-prev"><span class="bx-empty">Escribe las placas para validarlas.</span></div></div>
           </div>
@@ -575,11 +579,28 @@ window.dash = (function () {
     </section>
 
     <section class="bx-page" id="cierre" role="tabpanel" aria-labelledby="tab-cierre" hidden>
-      <div class="bx-card bx-wide bx-admin">
+      <div class="bx-seg bx-csub" role="group" aria-label="Sección del cierre"><button type="button" data-csub="dia" aria-pressed="true">Cierre del día</button><button type="button" data-csub="pal" aria-pressed="false">Incumplimiento de paletas</button></div>
+      <div class="bx-card bx-wide bx-admin" id="c-card-dia">
         <div class="bx-card-h"><div><h3 style="color:var(--k-gold)">Cierre de turno</h3><p class="sub">Solo administrador. Elige el día y pásalo a tu correo de cierre como imagen o como tablas.</p></div></div>
         <div class="bx-tools"><div class="bx-f"><label for="c-dia">Día del cierre</label><input type="date" id="c-dia"></div><div class="bx-f"><label>Estilo</label><div class="bx-seg" role="group" aria-label="Estilo de la imagen"><button type="button" data-cst="correo" aria-pressed="true">Como mi correo</button><button type="button" data-cst="visual" aria-pressed="false">Visual</button></div></div>
           <button class="bx-btn bx-solid" type="button" id="c-img">Copiar imagen</button><button class="bx-btn" type="button" id="c-dl">Descargar imagen</button><button class="bx-btn" type="button" id="c-html">Copiar tablas para Outlook</button><button class="bx-btn" type="button" id="c-mail">Enviar a mi correo</button><span class="bx-count" id="c-msg"></span></div>
         <div class="bx-cimg"><canvas id="c-cv" aria-label="Imagen del cierre del día"></canvas></div>
+      </div>
+      <div class="bx-page" id="c-pal" hidden>
+        <div class="bx-card bx-wide bx-admin">
+          <div class="bx-card-h"><div><h3 style="color:var(--k-gold)">Incumplimiento de paletas con TT</h3><p class="sub">Lo que cada empresario pidió contra lo que trajeron sus placas. Meta máxima del CD: 100 paletas por día.</p></div></div>
+          <div class="bx-tools"><div class="bx-f"><label for="p-dia">Día</label><input type="date" id="p-dia"></div>
+            <div class="bx-f"><label for="p-rango">Historial</label><select id="p-rango"><option value="14">Últimos 14 días</option><option value="30" selected>Últimos 30 días</option><option value="mes">Mes del día elegido</option></select></div></div>
+          <div class="bx-pform"><div><b>Paletas pedidas por empresario</b><span id="p-form-dia"></span></div><div class="bx-pin" id="p-inputs"></div>
+            <div class="bx-tools"><button class="bx-btn bx-solid" type="button" id="p-save">Guardar pedido del día</button><span class="bx-count" id="p-msg"></span></div></div>
+        </div>
+        <div class="bx-kpis" id="p-kpis"></div>
+        <p class="bx-insight" id="p-ins"></p>
+        <div class="bx-grid">
+          <div class="bx-card bx-wide"><div><h3>Pedido vs real por empresario · <span id="p-t1"></span></h3><p class="sub">Exceso = paletas reales − paletas pedidas · Incumplimiento = paletas de las placas registradas como incumplimiento</p></div><div class="bx-tw" id="p-tb-dia"></div></div>
+          <div class="bx-card bx-wide"><div class="bx-card-h"><div><h3>Historial diario</h3><p class="sub">Paletas con TT por día: dentro de lo pedido e incumplimiento, contra la meta de 100</p></div><div class="bx-edts" id="p-edts"></div></div><div class="bx-legend" id="p-lg"></div><div class="bx-chart" id="p-ch"></div></div>
+          <div class="bx-card bx-wide"><div><h3>Acumulado por empresario · <span id="p-t2"></span></h3><p class="sub">La tendencia: quién te está llevando fuera de meta en el periodo</p></div><div class="bx-tw" id="p-tb-acu"></div></div>
+        </div>
       </div>
     </section>
 
@@ -959,7 +980,7 @@ window.dash = (function () {
   function openTab(id, link) { if (!TABS[id]) return; if (window.__decOnly && id !== 'ventas') id = 'ventas'; if (id === 'cierre' && !window.__isAdmin) id = 'ventas'; state.tab = id;
     Object.entries(TABS).forEach(([sec, tab]) => { $(sec).hidden = sec !== id; $(tab).setAttribute('aria-selected', String(sec === id)); });
     $('f-sv-box').hidden = id !== 'ventas';
-    if (link) dash.setLink(id); hideTip(); redraw(); document.querySelectorAll('.bx-filters, #f-edts, #periodo').forEach((e) => { e.style.display = id === 'cierre' ? 'none' : ''; }); if (id === 'cierre' && window.__renderCierre) window.__renderCierre(); }
+    if (link) dash.setLink(id); hideTip(); redraw(); document.querySelectorAll('.bx-filters, #f-edts, #periodo').forEach((e) => { e.style.display = id === 'cierre' ? 'none' : ''; }); if (id === 'cierre' && window.__renderCierre) { window.__renderCierre(); if (window.__renderPal) window.__renderPal(); } }
   Object.entries(TABS).forEach(([sec, tab]) => $(tab).addEventListener('click', () => openTab(sec, true)));
 
   // ---------- controles ----------
@@ -1016,7 +1037,7 @@ window.dash = (function () {
     const j = await r.json().catch(() => ({}));
     if (r.status === 401) { setAdmin(''); throw new Error(j.error || 'Sesión vencida'); }
     if (!r.ok) throw new Error(j.error || 'Error ' + r.status);
-    if (j.rows) { incRows = j.rows.filter((x) => x.fecha && x.placa); incState = 'ok'; renderInc(); prevInc(); }
+    if (j.rows) { incRows = j.rows.filter((x) => x.fecha && x.placa); incState = 'ok'; renderInc(); prevInc(); if (window.__renderPal) window.__renderPal(); }
     return j; };
   function setAdmin(t) { incTok = t || ''; role = incTok ? incTok.split('.')[0] : ''; incAdmin = role === 'admin'; canConf = role === 'admin' || role === 'dec'; try { if (incTok) sessionStorage.setItem(TK, incTok); else sessionStorage.removeItem(TK); } catch (e) { /* sin almacenamiento */ }
     $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('adm-btn').hidden = role === 'dec';
@@ -1068,16 +1089,16 @@ window.dash = (function () {
   }
   let parsedInc = [];
   const prevInc = () => { const f = $('n-f').value; const seen = new Set();
-    parsedInc = $('n-p').value.split(/[\n,;]+/).map(normPlaca).filter(Boolean).filter((x) => (seen.has(x.placa) ? false : seen.add(x.placa))).map((x) => ({ ...x, dup: incRows.some((r) => r.fecha === f && r.placa === x.placa) }));
+    parsedInc = $('n-p').value.split(/[\n,;]+/).map((pc) => { const mm = pc.trim().match(/^(.*?)(?:\s+(\d{1,3}))?\s*$/); const xx = normPlaca(mm ? mm[1] : pc); if (xx && mm && mm[2]) xx.pal = +mm[2]; return xx; }).filter(Boolean).filter((x) => (seen.has(x.placa) ? false : seen.add(x.placa))).map((x) => ({ ...x, dup: incRows.some((r) => r.fecha === f && r.placa === x.placa) }));
     const pv = $('n-prev'); if (!parsedInc.length) pv.replaceChildren(el('span', 'bx-empty', 'Escribe las placas para validarlas.'));
-    else pv.replaceChildren(...parsedInc.map((x) => el('span', 'bx-chip ' + (x.dup ? 'dup' : x.ok ? 'ok' : 'warn'), `${x.placa}${x.ruta ? ' · ' + x.ruta : ''}${x.dup ? ' · ya registrada' : x.ok ? '' : ' · no está en la flota'}`)));
+    else pv.replaceChildren(...parsedInc.map((x) => el('span', 'bx-chip ' + (x.dup ? 'dup' : x.ok ? 'ok' : 'warn'), `${x.placa}${x.ruta ? ' · ' + x.ruta : ''}${x.pal ? ' · ' + x.pal + ' pal.' : ''}${x.dup ? ' · ya registrada' : x.ok ? '' : ' · no está en la flota'}`)));
     $('n-go').disabled = !f || !parsedInc.some((x) => !x.dup); };
   ['n-p', 'n-f'].forEach((id) => $(id).addEventListener('input', prevInc));
   $('n-f').value = ayer(); $('n-f').max = limaHoy();
   $('n-go').addEventListener('click', async () => {
     const f = $('n-f').value, obs = $('n-o').value.trim(), todo = parsedInc.filter((x) => !x.dup); if (!f || !todo.length || !incAdmin) return;
     $('n-go').disabled = true; const msg = $('n-msg'); msg.textContent = 'Registrando…';
-    try { const j = await incApi('POST', { fecha: f, obs, items: todo.map((x) => ({ placa: x.placa, ruta: x.ruta, edt: x.edt })) });
+    try { const j = await incApi('POST', { fecha: f, obs, items: todo.map((x) => ({ placa: x.placa, ruta: x.ruta, edt: x.edt, paletas: x.pal || null })) });
       msg.textContent = `Se registraron ${j.added} placa(s) del ${dlabel(f)}.`; $('n-p').value = ''; $('n-o').value = ''; prevInc(); }
     catch (e) { msg.textContent = 'No se pudo registrar: ' + e.message; $('n-go').disabled = false; }
   });
@@ -1267,6 +1288,78 @@ window.dash = (function () {
   const oz = $('n-ocr'); ['dragover', 'dragenter'].forEach((ev) => oz.addEventListener(ev, (e) => { e.preventDefault(); oz.classList.add('drag'); }));
   ['dragleave', 'drop'].forEach((ev) => oz.addEventListener(ev, () => oz.classList.remove('drag')));
   oz.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) ocrImagen(f); });
+  // ----- incumplimiento de paletas (pestaña del cierre) -----
+  let cupos = {}, cSub = 'dia', pEdt = '';
+  const loadCupos = () => fetch('/api/cupos', { cache: 'no-store' }).then((r) => r.json()).then((j) => { cupos = j.cupos || {}; renderPal(); }).catch(() => {});
+  loadCupos();
+  document.querySelectorAll('[data-csub]').forEach((b) => b.addEventListener('click', () => { cSub = b.dataset.csub; document.querySelectorAll('[data-csub]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    $('c-card-dia').hidden = cSub !== 'dia'; $('c-pal').hidden = cSub !== 'pal'; if (cSub === 'pal') renderPal(); else renderCierre(); }));
+  const edtList = () => [...new Set([...FLOTA.map((f) => f[2]), ...(window.__allRows || []).filter((r) => r.tipo === 'Placa con TT').map((r) => r.edt)].filter((e) => e && e !== 'SIN EDT').map(short))].sort();
+  function palDia(day) {
+    const tt = (window.__allRows || []).filter((r) => r.tipo === 'Placa con TT' && r.fecha === day), inc = incRows.filter((r) => r.fecha === day), cu = cupos[day] || {};
+    return edtList().map((e) => { const real = d3.sum(tt.filter((r) => short(r.edt) === e), (r) => r.ph);
+      const pl = inc.filter((r) => short(r.edt) === e).map((r) => ({ placa: r.placa, pal: r.paletas != null ? r.paletas : d3.sum(tt.filter((t) => t.placa === r.placa || (r.ruta && t.ruta === r.ruta)), (t) => t.ph) }));
+      const ped = cu[e] != null ? cu[e] : null; const incP = d3.sum(pl, (x) => x.pal);
+      return { edt: e, real, ped, inc: incP, npl: pl.length, placas: pl, exc: ped != null ? Math.max(0, real - ped) : null }; }); }
+  function renderPal() {
+    if (cSub !== 'pal' || state.tab !== 'cierre' || !window.__allRows) return;
+    const pd = $('p-dia'); const tts = window.__allRows.filter((r) => r.tipo === 'Placa con TT').map((r) => r.fecha).filter((f) => f <= hoyLima()).sort();
+    if (!pd.value) pd.value = tts.length ? tts[tts.length - 1] : hoyLima(); pd.max = hoyLima(); const day = pd.value;
+    $('p-form-dia').textContent = ` · ${dlabel(day)}/${day.slice(0, 4)} (lo que autorizaste a cada empresario)`;
+    const cu = cupos[day] || {}; const ins = $('p-inputs');
+    if (ins.dataset.day !== day || ins.dataset.n !== String(edtList().length)) { ins.dataset.day = day; ins.dataset.n = String(edtList().length);
+      ins.replaceChildren(...edtList().map((e) => { const f = el('label', 'bx-f'); f.append(el('span', null, e)); const i = el('input'); i.type = 'number'; i.min = '0'; i.max = '500'; i.step = '1'; i.dataset.edt = e; i.value = cu[e] != null ? cu[e] : ''; i.placeholder = '—'; f.append(i); return f; })); }
+    const rows = palDia(day); const real = d3.sum(rows, (r) => r.real), ped = d3.sum(rows.filter((r) => r.ped != null), (r) => r.ped), incT = d3.sum(rows, (r) => r.inc), npl = d3.sum(rows, (r) => r.npl), exc = d3.sum(rows.filter((r) => r.exc != null), (r) => r.exc);
+    const conPed = rows.filter((r) => r.ped != null).length;
+    kpis($('p-kpis'), [
+      { label: 'Paletas con TT del día', value: fmt(real), tone: real > META_PH ? 'red' : 'green', note: real > META_PH ? `Fuera de meta: +${fmt(real - META_PH)} sobre 100` : `Dentro de meta: margen ${fmt(META_PH - real)}`, meter: real / META_PH, meterColor: real > META_PH ? C.bad : C.ok },
+      { label: 'Paletas pedidas', value: conPed ? fmt(ped) : '—', tone: 'blue', note: conPed ? `${conPed} de ${rows.length} empresarios con pedido` : 'Registra el pedido del día abajo' },
+      { label: 'Paletas en incumplimiento', value: fmt(incT), tone: incT ? 'red' : 'green', note: `${fmt(npl)} placa(s) registradas como incumplimiento` },
+      { label: 'Exceso sobre lo pedido', value: conPed ? fmt(exc) : '—', tone: exc ? 'red' : 'green', note: conPed ? (exc ? 'Paletas por encima de lo autorizado' : 'Nadie se pasó de lo pedido') : 'Necesita el pedido del día' }]);
+    $('p-t1').textContent = `${dlabel(day)}/${day.slice(0, 4)}`;
+    state.sort.pd = state.sort.pd || ['real', -1];
+    const tbRows = rows.filter((r) => r.real || r.ped != null || r.inc).map((r) => ({ ...r, est: r.ped != null && r.real > r.ped ? 'EXCEDE' : r.inc ? 'INCUMPLE' : r.ped == null ? 'SIN PEDIDO' : 'CUMPLE', pls: r.placas.map((x) => `${x.placa.replace(/^PE/, '')}${x.pal ? ' (' + x.pal + ')' : ''}`).join(', ') }));
+    table($('p-tb-dia'), 'pd', [{ k: 'edt', h: 'Empresario' }, { k: 'ped', h: 'Pedido', n: 1, f: (v) => (v == null ? '—' : fmt(v)) }, { k: 'real', h: 'Real con TT', n: 1, f: fmt },
+      { k: 'exc', h: 'Exceso', n: 1, f: (v) => (v == null ? '—' : v ? '+' + fmt(v) : '0'), bg: (v) => (v ? 'rgba(201,74,67,.35)' : v === 0 ? 'rgba(47,163,107,.2)' : '') },
+      { k: 'inc', h: 'Paletas incumpl.', n: 1, f: fmt, bg: (v) => (v ? 'rgba(201,74,67,.35)' : '') }, { k: 'npl', h: 'Placas', n: 1, f: fmt }, { k: 'pls', h: 'Placas que incumplieron' },
+      { k: 'est', h: 'Estado', pill: (r) => (r.est === 'CUMPLE' ? 'ok' : r.est === 'SIN PEDIDO' ? 'pend' : 'bad') }], tbRows,
+      (c, i, rs) => i === 0 ? 'Total' : c.k === 'ped' ? (conPed ? fmt(ped) : '—') : c.k === 'real' ? fmt(real) : c.k === 'exc' ? (conPed ? fmt(exc) : '—') : c.k === 'inc' ? fmt(incT) : c.k === 'npl' ? fmt(npl) : '');
+    // historial
+    const rg = $('p-rango').value; let lo;
+    if (rg === 'mes') lo = day.slice(0, 8) + '01'; else lo = iso(d3.utcDay.offset(new Date(day + 'T00:00:00Z'), -(+rg - 1)));
+    const dias = []; for (let d = new Date(lo + 'T00:00:00Z'); iso(d) <= day; d = d3.utcDay.offset(d, 1)) dias.push(iso(d));
+    const per = dias.map((f) => ({ fecha: f, rows: palDia(f) })).filter((x) => x.rows.some((r) => r.real || r.inc));
+    const eds = edtList(); const pe = $('p-edts');
+    pe.replaceChildren(el('span', 't', 'EDT'), ...[['', 'Todos'], ...eds.map((e) => [e, e])].map(([v, t]) => { const b = el('button', null, t); b.type = 'button'; b.setAttribute('aria-pressed', String(v === pEdt)); b.addEventListener('click', () => { pEdt = v; renderPal(); }); return b; }));
+    const pick = (rs) => (pEdt ? rs.filter((r) => r.edt === pEdt) : rs);
+    const days = per.map(({ fecha, rows: rs }) => { const s = pick(rs); const re = d3.sum(s, (r) => r.real), ic = Math.min(d3.sum(s, (r) => r.inc), re || d3.sum(s, (r) => r.inc)); const pp = s.filter((r) => r.ped != null);
+      return { fecha, dentro: Math.max(0, re - ic), inc: ic, real: re, ped: pp.length ? d3.sum(pp, (r) => r.ped) : null }; });
+    legend($('p-lg'), [[C.ok, 'Dentro de lo autorizado'], [C.rp, 'Día fuera de meta (más de 100)'], [C.bad, 'Incumplimiento (placas registradas)']]);
+    dayCombo($('p-ch'), days, [{ k: 'dentro', c: (d) => (!pEdt && d.real > META_PH ? C.rp : C.ok) }, { k: 'inc', c: C.bad }], { h: 260, goal: pEdt ? null : META_PH, tick: fmt, val: fmt, sel: day,
+      tipLines: (d) => [[C.ok, `Dentro: ${fmt(d.dentro)}`], [C.bad, `Incumplimiento: ${fmt(d.inc)}`], [null, `Real: ${fmt(d.real)}${d.ped != null ? ' · Pedido: ' + fmt(d.ped) : ''}`]],
+      onClick: (d) => { $('p-dia').value = d.fecha; renderPal(); } });
+    // acumulado por empresario
+    $('p-t2').textContent = `${ddmm(dias[0])} al ${ddmm(day)}`;
+    const acc = eds.map((e) => { const rs = per.map((x) => x.rows.find((r) => r.edt === e)).filter(Boolean); const real2 = d3.sum(rs, (r) => r.real), inc2 = d3.sum(rs, (r) => r.inc);
+      const wp = rs.filter((r) => r.ped != null); return { edt: e, dias: rs.filter((r) => r.real).length, ped: wp.length ? d3.sum(wp, (r) => r.ped) : null, real: real2, inc: inc2, npl: d3.sum(rs, (r) => r.npl),
+        exc: wp.length ? d3.sum(wp, (r) => r.exc) : null, fuera: wp.filter((r) => r.real > r.ped).length, ndp: wp.length, pinc: real2 ? inc2 / real2 : 0 }; }).filter((r) => r.real || r.inc);
+    state.sort.pa = state.sort.pa || ['inc', -1];
+    table($('p-tb-acu'), 'pa', [{ k: 'edt', h: 'Empresario' }, { k: 'dias', h: 'Días con TT', n: 1, f: fmt }, { k: 'ped', h: 'Pedido', n: 1, f: (v) => (v == null ? '—' : fmt(v)) }, { k: 'real', h: 'Real con TT', n: 1, f: fmt },
+      { k: 'exc', h: 'Exceso acum.', n: 1, f: (v) => (v == null ? '—' : fmt(v)), bg: (v) => (v ? 'rgba(201,74,67,.35)' : '') }, { k: 'inc', h: 'Paletas incumpl.', n: 1, f: fmt, bg: (v) => (v ? 'rgba(201,74,67,.35)' : '') },
+      { k: 'npl', h: 'Placas incumpl.', n: 1, f: fmt }, { k: 'pinc', h: '% incumpl.', n: 1, f: (v) => pct(v), bg: (v) => (v >= 0.2 ? 'rgba(201,74,67,.4)' : v >= 0.1 ? 'rgba(217,166,46,.3)' : v > 0 ? 'rgba(47,163,107,.2)' : '') },
+      { k: 'fuera', h: 'Días sobre pedido', n: 1, f: (v, r) => (r.ndp ? `${v} de ${r.ndp}` : '—') }], acc,
+      (c, i, rs) => i === 0 ? 'Total' : ['real', 'inc', 'npl'].includes(c.k) ? fmt(d3.sum(rs, (r) => r[c.k])) : '');
+    const top = acc.slice().sort((a, b) => b.inc - a.inc)[0]; const insE = $('p-ins'); insE.replaceChildren();
+    const diasFuera = days.filter((d) => !pEdt && d.real > META_PH).length;
+    if (top && top.inc) insE.append('En el periodo, ', B(top.edt), ' acumula ', B(fmt(top.inc) + ' paletas en incumplimiento'), ` (${pct(top.pinc)} de su TT)` + (top.ndp ? ` y se pasó de lo pedido en ${top.fuera} de ${top.ndp} días` : '') + '. ');
+    if (!pEdt && days.length) insE.append('El CD superó la meta de 100 paletas en ', B(`${diasFuera} de ${days.length} días`), '.');
+  }
+  window.__renderPal = renderPal;
+  $('p-dia').addEventListener('change', () => renderPal()); $('p-rango').addEventListener('change', () => renderPal());
+  $('p-save').addEventListener('click', async () => { const day = $('p-dia').value, m = $('p-msg'); if (!day) return; const body = { fecha: day, cupos: {} };
+    $('p-inputs').querySelectorAll('input').forEach((i) => { if (i.value !== '') body.cupos[i.dataset.edt] = +i.value; });
+    m.textContent = 'Guardando…'; try { const r = await fetch('/api/cupos', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + incTok }, body: JSON.stringify(body) });
+      const j = await r.json(); if (!r.ok) throw new Error(j.error || 'Error'); cupos = j.cupos || {}; m.textContent = 'Pedido guardado.'; renderPal(); } catch (e) { m.textContent = 'No se pudo guardar: ' + e.message; } });
   setAdmin(incTok);
 
 
@@ -1588,7 +1681,7 @@ window.dash = (function () {
     window.__allRows = all;
     { const cd = $('c-dia'); const hoyC = hoyLima(); const fd = all.filter((r) => r.tipo === 'Cliente desplanificado' || r.tipo === 'Modificación de viaje').map((r) => r.fecha).filter((f) => f <= hoyC).sort();
       if (fd.length) { cd.max = hoyC; cd.min = fd[0]; if (!cd.value) cd.value = fd[fd.length - 1]; } }
-    if (state.tab === 'cierre') renderCierre();
+    if (state.tab === 'cierre') { renderCierre(); if (window.__renderPal) window.__renderPal(); }
     const pie = $('pie').firstElementChild;
     pie.textContent = ok && fechas.length ? `Fuente: bitácora compartida · ${fmt(all.length)} registros del ${ddmm(dMin)} al ${ddmm(dMax)}/${dMax.slice(0, 4)}` : '—';
   });

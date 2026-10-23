@@ -25,7 +25,7 @@ export default async (req) => {
       if (!placa) continue;
       const id = `${fecha}_${placa}`;
       if (have.has(id)) continue;
-      rows.push({ id, fecha, placa, ruta: clean(x.ruta, 12).toUpperCase(), edt: clean(x.edt, 60) || "SIN EDT", obs: clean(b.obs, 140), at });
+      const pal = Number(x.paletas); rows.push({ id, fecha, placa, ruta: clean(x.ruta, 12).toUpperCase(), edt: clean(x.edt, 60) || "SIN EDT", obs: clean(b.obs, 140), paletas: Number.isFinite(pal) && pal > 0 && pal < 1000 ? Math.round(pal) : null, at });
       have.add(id); n++;
     }
     await store().setJSON(KEY, rows);
