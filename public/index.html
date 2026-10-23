@@ -319,6 +319,7 @@ window.dash = (function () {
 .bx-conf.edit{flex-direction:column;align-items:stretch;gap:5px;min-width:190px}
 .bx-conf select{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:5px 8px;font:inherit;font-size:12px;color-scheme:dark}
 .bx-cbs{display:flex;gap:6px}
+.bx-modo{align-self:flex-start}.bx-modo button{font-size:13px;padding:6px 14px}
 .bx-foto{max-height:120px;max-width:200px;border-radius:6px;border:1px solid var(--k-line);display:block}
 .bx-csub{align-self:flex-start}.bx-csub button{font-size:13px;padding:7px 16px}
 .bx-pform{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px dashed var(--k-gold2);border-radius:var(--cds-radius);background:rgba(242,197,42,.05)}.bx-pform>div:first-child{display:flex;gap:6px;flex-wrap:wrap;align-items:baseline}.bx-pform b{color:var(--k-gold)}.bx-pform>div>span{font-size:12px;color:var(--k-mute)}
@@ -566,6 +567,7 @@ window.dash = (function () {
         </div>
         <div class="bx-card bx-wide bx-admin" id="n-adm" hidden>
           <div><h3 style="color:var(--k-gold)">Ingresar placas de incumplimiento</h3><p class="sub">Solo administrador. Se registra el día siguiente: elige la fecha del incumplimiento (por defecto, ayer) y escribe o pega las placas, una por línea o separadas por coma. La ruta y el EDT se completan solos.</p></div>
+          <div class="bx-seg bx-modo" role="group" aria-label="Cómo ingresar"><button type="button" data-modo="img" aria-pressed="true">Con imagen de la planilla</button><button type="button" data-modo="man" aria-pressed="false">Sin imagen (escribo las placas)</button></div>
           <div class="bx-ocr" id="n-ocr">
             <div><b>Leer placas desde la imagen del reporte</b><span>Sube la foto de la planilla de envases (o pégala con Ctrl + V). Se llenan la fecha, asistente, turno y cada placa con su total de cajas; revisa contra la foto antes de registrar.</span></div>
             <label class="bx-btn bx-solid bx-up">Subir imagen<input type="file" id="n-img" accept="image/*" hidden></label>
@@ -1087,34 +1089,38 @@ window.dash = (function () {
     state.sort.nr = state.sort.nr || ['n', -1];
     table($('n-tb-rei'), 'nr', [{ k: 'placa', h: 'Placa' }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'n', h: 'Veces', n: 1, f: fmt, bg: () => 'rgba(201,74,67,.3)' }, { k: 'fs', h: 'Fechas' }],
       rei.map((x) => ({ ...x, edtc: short(x.edt), fs: x.fechas.map(ddmm).join(', ') })));
-    { const pu = sel.filter((r) => r.cajas != null && r.cajas < 84).sort((a, b) => b.fecha.localeCompare(a.fecha) || b.cajas - a.cajas);
+    { const pu = sel.filter((r) => r.cajas != null && !r.paletas && r.puchos).sort((a, b) => b.fecha.localeCompare(a.fecha) || b.cajas - a.cajas);
       state.sort.npu = state.sort.npu || ['fecha', -1];
-      table($('n-tb-pu'), 'npu', [{ k: 'fecha', h: 'Fecha', f: (v) => dlabel(v) }, { k: 'placa', h: 'Placa' }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'cajas', h: 'Cajas', n: 1, f: fmt, bg: (v) => (v >= 60 ? 'rgba(217,166,46,.3)' : '') }, { k: 'astu', h: 'Asistente · turno' }],
-        pu.map((r) => ({ ...r, edtc: short(r.edt), astu: [r.asistente, r.turno && 'T' + r.turno].filter(Boolean).join(' · ') || '—' })), (c, i, rs) => (i === 0 ? 'Total' : c.k === 'cajas' ? fmt(d3.sum(rs, (r) => r.cajas)) : c.k === 'placa' ? `${rs.length} placa(s)` : '')); }
+      table($('n-tb-pu'), 'npu', [{ k: 'fecha', h: 'Fecha', f: (v) => dlabel(v) }, { k: 'placa', h: 'Placa' }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'puchos', h: 'Cajas', n: 1, f: fmt, bg: (v) => (v >= 60 ? 'rgba(217,166,46,.3)' : '') }, { k: 'astu', h: 'Asistente · turno' }],
+        pu.map((r) => ({ ...r, edtc: short(r.edt), astu: [r.asistente, r.turno && 'T' + r.turno].filter(Boolean).join(' · ') || '—' })), (c, i, rs) => (i === 0 ? 'Total' : c.k === 'puchos' ? fmt(d3.sum(rs, (r) => r.puchos)) : c.k === 'placa' ? `${rs.length} placa(s)` : '')); }
     $('n-det-sub').textContent = `${fmt(sel.length)} registro(s) · más recientes primero`;
     const det = sel.slice().sort((a, b) => b.fecha.localeCompare(a.fecha) || a.placa.localeCompare(b.placa));
     const box = $('n-tb-det');
     if (!det.length) empty(box, incState === 'ok' ? 'Sin incumplimientos registrados en el periodo.' : '—');
-    else { const t = el('table'); const hr = t.insertRow(); ['Fecha', 'Placa', 'Ruta', 'EDT', 'Total cajas', 'PH (÷84)', 'Puchos', 'Asistente · turno', 'Observación', ...(incAdmin ? [''] : [])].forEach((h) => hr.append(el('th', null, h)));
-      det.forEach((r) => { const tr = t.insertRow(); [dlabel(r.fecha), r.placa, r.ruta || '—', short(r.edt), r.cajas != null ? fmt(r.cajas) : '—', r.cajas != null ? fmt(Math.floor(r.cajas / 84)) : (r.paletas != null ? fmt(r.paletas) : '—'), r.cajas != null ? (r.cajas < 84 ? `${r.cajas} cj (pucho)` : (r.cajas % 84 ? `${r.cajas % 84} cj` : '—')) : '—', [r.asistente, r.turno && 'T' + r.turno].filter(Boolean).join(' · ') || '—', r.obs || '—'].forEach((v) => { tr.insertCell().textContent = v; });
+    else { const t = el('table'); const hr = t.insertRow(); ['Fecha', 'Placa', 'Ruta', 'EDT', 'Total cajas', 'PH', 'Cajas sueltas', 'Asistente · turno', 'Observación', ...(incAdmin ? [''] : [])].forEach((h) => hr.append(el('th', null, h)));
+      det.forEach((r) => { const tr = t.insertRow(); [dlabel(r.fecha), r.placa, r.ruta || '—', short(r.edt), r.cajas != null ? fmt(r.cajas) : '—', r.paletas != null ? fmt(r.paletas) : '—', r.puchos ? `${r.puchos} cj${!r.paletas ? ' (pucho)' : ''}` : '—', [r.asistente, r.turno && 'T' + r.turno].filter(Boolean).join(' · ') || '—', r.obs || '—'].forEach((v) => { tr.insertCell().textContent = v; });
         if (incAdmin) { const b = el('button', 'bx-btn bx-del', 'Eliminar'); b.type = 'button'; b.addEventListener('click', async () => { b.disabled = true; if (!window.confirm(`¿Eliminar ${r.placa} del ${dlabel(r.fecha)}?`)) { b.disabled = false; return; } try { await incApi('DELETE', null, r.id); } catch (err) { b.disabled = false; $('n-msg').textContent = err.message; } }); tr.insertCell().append(b); } });
       box.replaceChildren(t); }
     $('n-adm').hidden = !incAdmin; $('n-dl').hidden = !incAdmin;
   }
   let parsedInc = [];
   const prevInc = () => { const f = $('n-f').value; const seen = new Set();
-    const agg = new Map(); $('n-p').value.split(/[\n;]+/).forEach((pc) => { const mm = pc.trim().match(/^(.*?)(?:[\s,:=]+(\d{1,5}))?\s*$/); const xx = normPlaca(mm ? mm[1] : pc); if (!xx) return;
-      const o = agg.get(xx.placa) || { ...xx, cj: null, leido: [] }; if (mm && mm[2]) o.cj = (o.cj || 0) + +mm[2]; if (xx.leido) o.leido.push(xx.leido); agg.set(xx.placa, o); });
-    parsedInc = [...agg.values()].map((x) => (x.cj != null ? { ...x, pal: Math.floor(x.cj / 84), pu: x.cj % 84 } : x)).filter((x) => (seen.has(x.placa) ? false : seen.add(x.placa))).map((x) => ({ ...x, dup: incRows.some((r) => r.fecha === f && r.placa === x.placa) }));
+    const agg = new Map(); $('n-p').value.split(/[\n;]+/).forEach((pc) => { let L = pc.trim().toUpperCase(); if (!L) return; L = L.replace(/^([A-Z])\s+(\d{3})\b/, '$1-$2');
+      const tk = L.split(/\s+/); const xx = normPlaca(tk[0]); if (!xx) return; const rest = tk.slice(1).join(' ');
+      const o = agg.get(xx.placa) || { ...xx, cj: null, p6: 0, pl: 0, lo: 0, leido: [] }; if (xx.leido) o.leido.push(xx.leido);
+      let hasPh = false; rest.replace(/(?:PH\s*[=:]?\s*)(\d+)\s*\(?\s*(6\s*X+|LT|L|3\s*X+)?\s*\)?|(\d+)\s*\(?\s*(6\s*X+|LT|L|3\s*X+)?\s*\)?\s*PH/g, (m0, a, ta, b, tb) => { hasPh = true; const n = +(a || b), t = ta || tb || ''; if (/^L/.test(t)) o.pl += n; else o.p6 += n; return ''; })
+        .replace(/(?:CJ\s*[=:]?\s*)?(\d+)\s*(?:\(\s*(?:6\s*X+|LT|L|3\s*X+)\s*\))?\s*(?:CJ)?/g, (m0, n) => { if (n) { o.lo += +n; o.cj = (o.cj || 0) + +n; } return ''; });
+      if (hasPh) o.cj = (o.cj || 0); agg.set(xx.placa, o); });
+    parsedInc = [...agg.values()].map((x) => { if (x.cj == null && !x.p6 && !x.pl) return x; const ex = Math.floor(x.lo / 84), pu = x.lo % 84; return { ...x, pal: x.p6 + x.pl + ex, pu, tot: x.p6 * 84 + x.pl * 45 + x.lo, cj: x.p6 * 84 + x.pl * 45 + x.lo }; }).filter((x) => (seen.has(x.placa) ? false : seen.add(x.placa))).map((x) => ({ ...x, dup: incRows.some((r) => r.fecha === f && r.placa === x.placa) }));
     const pv = $('n-prev'); if (!parsedInc.length) pv.replaceChildren(el('span', 'bx-empty', 'Escribe las placas para validarlas.'));
-    else pv.replaceChildren(...parsedInc.map((x) => el('span', 'bx-chip ' + (x.dup ? 'dup' : x.ok ? 'ok' : 'warn'), `${x.placa}${x.ruta ? ' · ' + x.ruta : ''}${x.cj != null ? ` · ${x.cj} cj → ${x.pal ? x.pal + ' PH' + (x.pu ? ' + ' + x.pu + ' cj' : '') : 'pucho'}` : ''}${x.leido && x.leido.length ? ' · leído ' + [...new Set(x.leido)].join('/') : ''}${x.dup ? ' · ya registrada' : x.ok ? '' : ' · no está en la flota'}`)));
+    else pv.replaceChildren(...parsedInc.map((x) => el('span', 'bx-chip ' + (x.dup ? 'dup' : x.ok ? 'ok' : 'warn'), `${x.placa}${x.ruta ? ' · ' + x.ruta : ''}${x.cj != null ? ` · ${x.cj} cj → ${x.pal ? x.pal + ' PH' + (x.pl ? ` (${x.pl} Lt)` : '') + (x.pu ? ' + ' + x.pu + ' cj' : '') : x.pu + ' cj (pucho)'}` : ''}${x.leido && x.leido.length ? ' · leído ' + [...new Set(x.leido)].join('/') : ''}${x.dup ? ' · ya registrada' : x.ok ? '' : ' · no está en la flota'}`)));
     $('n-go').disabled = !f || !parsedInc.some((x) => !x.dup); };
   ['n-p', 'n-f'].forEach((id) => $(id).addEventListener('input', prevInc));
   $('n-f').value = ayer(); $('n-f').max = limaHoy();
   $('n-go').addEventListener('click', async () => {
     const f = $('n-f').value, obs = $('n-o').value.trim(), todo = parsedInc.filter((x) => !x.dup); if (!f || !todo.length || !incAdmin) return;
     $('n-go').disabled = true; const msg = $('n-msg'); msg.textContent = 'Registrando…';
-    try { const j = await incApi('POST', { fecha: f, obs, items: todo.map((x) => ({ placa: x.placa, ruta: x.ruta, edt: x.edt, paletas: x.cj != null ? x.pal : null, cajas: x.cj })), asistente: $('n-as').value.trim(), turno: $('n-tu').value.trim() });
+    try { const j = await incApi('POST', { fecha: f, obs, items: todo.map((x) => ({ placa: x.placa, ruta: x.ruta, edt: x.edt, paletas: x.cj != null ? x.pal : null, cajas: x.cj, puchos: x.cj != null ? x.pu : null, tipo: x.cj != null ? `${x.p6 || 0}x6xx+${x.pl || 0}xLt` : '' })), asistente: $('n-as').value.trim(), turno: $('n-tu').value.trim() });
       msg.textContent = `Se registraron ${j.added} placa(s) del ${dlabel(f)}.`; $('n-p').value = ''; $('n-o').value = ''; prevInc(); }
     catch (e) { msg.textContent = 'No se pudo registrar: ' + e.message; $('n-go').disabled = false; }
   });
@@ -1312,11 +1318,13 @@ window.dash = (function () {
       if (j.fecha && /^\d{4}-\d{2}-\d{2}$/.test(j.fecha)) $('n-f').value = j.fecha;
       if (j.asistente) $('n-as').value = j.asistente; if (j.turno) $('n-tu').value = String(j.turno);
       const filas = (j.filas || []).filter((x) => x.placa);
-      $('n-p').value = filas.map((x) => `${x.placa}${x.total_cajas != null ? ' ' + x.total_cajas : ''}`).join('\n'); prevInc();
+      $('n-p').value = filas.map((x) => { const ph = x.ph ? String(x.ph).replace(/\s+/g, '') : '', cj = x.cajas ? String(x.cajas).replace(/\s+/g, '') : ''; return ph || cj ? `${x.placa}${ph ? ' ' + ph + 'ph' : ''}${cj ? ' ' + cj : ''}` : `${x.placa}${x.total_cajas != null ? ' ' + x.total_cajas : ''}`; }).join('\n'); prevInc();
       const malas = parsedInc.filter((x) => !x.ok).length;
       m.textContent = `Leí ${filas.length} fila(s) → ${parsedInc.length} placa(s).` + (malas ? ` ${malas} no están en la flota: corrígelas.` : '') + ' Revisa contra la foto y pulsa Registrar.'; }
     catch (e) { m.textContent = e.message || 'No se pudo leer la planilla.'; }
     finally { $('n-ocr').classList.remove('busy'); $('n-img').value = ''; } }
+  document.querySelectorAll('[data-modo]').forEach((b) => b.addEventListener('click', () => { document.querySelectorAll('[data-modo]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    $('n-ocr').hidden = b.dataset.modo !== 'img'; if (b.dataset.modo === 'man') $('n-p').focus(); }));
   $('n-img').addEventListener('change', (e) => leerPlanilla(e.target.files[0]));
   document.addEventListener('paste', (e) => { if (!incAdmin || $('n-adm').hidden || state.tab !== 'almacen') return;
     const it = [...(e.clipboardData && e.clipboardData.items || [])].find((x) => x.type.startsWith('image/')); if (it) { e.preventDefault(); leerPlanilla(it.getAsFile()); } });
@@ -1335,7 +1343,7 @@ window.dash = (function () {
     return edtList().map((e) => { const real = d3.sum(tt.filter((r) => short(r.edt) === e), (r) => r.ph);
       const pl = inc.filter((r) => short(r.edt) === e).map((r) => ({ placa: r.placa, pal: r.paletas != null ? r.paletas : d3.sum(tt.filter((t) => t.placa === r.placa || (r.ruta && t.ruta === r.ruta)), (t) => t.ph) }));
       const ped = cu[e] != null ? cu[e] : null; const incP = d3.sum(pl, (x) => x.pal);
-      const puch = d3.sum(inc.filter((r) => short(r.edt) === e && r.cajas != null), (r) => r.cajas % 84);
+      const puch = d3.sum(inc.filter((r) => short(r.edt) === e), (r) => r.puchos || 0);
       return { edt: e, real, ped, inc: incP, npl: pl.length, placas: pl, puch, exc: ped != null ? Math.max(0, real - ped) : null }; }); }
   function renderPal() {
     if (cSub !== 'pal' || state.tab !== 'cierre' || !window.__allRows) return;

@@ -5,7 +5,7 @@ import { isAdmin, json } from "../../src/auth.mjs";
 const PROMPT = `Esta es la foto de una planilla manuscrita "CONTROL DE INCUMPLIMIENTO DE ENVASES SIN CLASIFICAR" de un centro de distribución.
 Columnas: ASISTENTE ALMACÉN, TURNO, PLACA, PH, CAJAS, TOTAL CAJAS. Arriba está la FECHA (dd/mm/aa).
 Transcribe TODAS las filas con placa, en orden, aunque la placa se repita. La placa suele estar abreviada (ej. "G-732", "D880", "B-863"): cópiala tal cual la ves, sin inventar letras.
-Para cada fila devuelve el número de TOTAL CAJAS (la última columna). Si una celda está vacía usa null.
+Para cada fila copia la columna PH tal cual (ej. "1(6xx)", "2(Lt)"), la columna CAJAS tal cual (ej. "38(6xx)", "4(Lt)", "16(3xx)") y el número de TOTAL CAJAS. Si una celda está vacía usa null. Copia también el nombre del ASISTENTE ALMACÉN y el TURNO escritos en la planilla.
 Responde SOLO con JSON válido, sin texto adicional, con esta forma:
 {"fecha":"AAAA-MM-DD o null","asistente":"texto o null","turno":"texto o null","filas":[{"placa":"G-732","ph":"1(6xx)","cajas":"38(6xx)","total_cajas":122}]}`;
 
