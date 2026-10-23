@@ -8,8 +8,10 @@
   const fecha = (d) => `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
 
   function build(all, day, short) {
-    const bit = all.filter((r) => r.tipo === 'Modificación de viaje' && r.fecha === day);
-    const des = all.filter((r) => r.tipo === 'Cliente desplanificado' && r.fecha === day);
+    const esBK = (r) => /^BK\d+/.test(String(r.ruta || '').trim().toUpperCase());
+    const bit = all.filter((r) => r.tipo === 'Modificación de viaje' && r.fecha === day && esBK(r));
+    const des = all.filter((r) => r.tipo === 'Cliente desplanificado' && r.fecha === day && esBK(r));
+    const sinBK = all.filter((r) => (r.tipo === 'Cliente desplanificado' || r.tipo === 'Modificación de viaje') && r.fecha === day && !esBK(r)).length;
     const kindOf = (r) => {
       const b = (r.viaje && bit.find((x) => x.viaje && x.viaje === r.viaje)) || bit.find((x) => x.ruta === r.ruta && /DESPLANIF/.test(x.motivo));
       return b ? (/TOTAL/.test(b.motivo) ? 'TOTAL' : 'PARCIAL') : 'PARCIAL';
@@ -40,7 +42,7 @@
     const emap = new Map(); des.forEach((r) => { const k = short(r.edt); const o = emap.get(k) || { edt: k, n: 0, hl: 0, zt: 0, rp: 0, nzt: 0, nrp: 0 }; o.n++; o.hl += +r.hl || 0;
       if (r.accion === 'ZT (rechazo)') { o.zt += +r.hl || 0; o.nzt++; } else if (r.accion === 'Reprogramación') { o.rp += +r.hl || 0; o.nrp++; } emap.set(k, o); });
     const edts = [...emap.values()].sort((a, b) => b.hl - a.hl);
-    return { lunes, rutas, edts, sinLineas, day, fecha: fecha(day), dia: DIAS[new Date(day + 'T12:00:00Z').getUTCDay()], totalRows: totalConLineas, parcRows, edtGroups, recl, recSol, recPend: recl.length - recSol,
+    return { sinBK, lunes, rutas, edts, sinLineas, day, fecha: fecha(day), dia: DIAS[new Date(day + 'T12:00:00Z').getUTCDay()], totalRows: totalConLineas, parcRows, edtGroups, recl, recSol, recPend: recl.length - recSol,
       nTotal: bit.filter((b) => /TOTAL/.test(b.motivo)).length, nParc: bit.filter((b) => /PARCIAL/.test(b.motivo)).length || parcRows.length, cab, nDes: des.length, hlDes: sum(des, (x) => x.hl), short };
   }
 
