@@ -4,6 +4,7 @@
   const sum = (a, f) => a.reduce((s, x) => s + (+f(x) || 0), 0);
   const f3 = (v) => (Math.round(v * 1000) / 1000).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const cerrado = (r) => /SOLUCION|CERRAD|RESUELT|ATENDID|FINALIZ/.test(String(r.status || '').toUpperCase());
   const fecha = (d) => `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
 
   function build(all, day, short) {
@@ -27,9 +28,10 @@
     const edtGroups = ACC.map(([a, lab]) => { const ls = des.filter((r) => r.accion === a); if (!ls.length) return null;
       const m = new Map(); ls.forEach((r) => { const k = short(r.edt); const o = m.get(k) || { n: 0, hl: 0, full: r.edt || 'SIN EDT' }; o.n++; o.hl += +r.hl || 0; m.set(k, o); });
       return { lab, n: ls.length, hl: sum(ls, (x) => x.hl), rows: [...m.entries()].sort((a2, b2) => b2[1].hl - a2[1].hl).map(([k, o]) => [k, o.n, o.hl, o.full]) }; }).filter(Boolean);
-    const recl = all.filter((r) => r.tipo === 'Reclamo de ventas' && (r.fecha === day || (r.fecha <= day && r.status !== 'SOLUCIONADO')))
+    const dd0 = new Date(day + 'T12:00:00Z'); const lunes = new Date(dd0.getTime() - 6 * 864e5).toISOString().slice(0, 10);
+    const recl = all.filter((r) => r.tipo === 'Reclamo de ventas' && r.fecha <= day && (r.fecha >= lunes || !cerrado(r)))
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
-    const recSol = recl.filter((r) => r.status === 'SOLUCIONADO').length;
+    const recSol = recl.filter(cerrado).length;
     const cab = bit.filter((b) => /CABECERA/.test(b.motivo)).length;
     const totalConLineas = totalRows.filter((r) => r[4]);
     const rmap = new Map(); des.forEach((r) => { const o = rmap.get(r.ruta) || { ruta: r.ruta, tipo: r._k, edt: short(r.edt), n: 0, hl: 0, zt: 0, rp: 0 }; o.n++; o.hl += +r.hl || 0;
@@ -38,7 +40,7 @@
     const emap = new Map(); des.forEach((r) => { const k = short(r.edt); const o = emap.get(k) || { edt: k, n: 0, hl: 0, zt: 0, rp: 0, nzt: 0, nrp: 0 }; o.n++; o.hl += +r.hl || 0;
       if (r.accion === 'ZT (rechazo)') { o.zt += +r.hl || 0; o.nzt++; } else if (r.accion === 'Reprogramación') { o.rp += +r.hl || 0; o.nrp++; } emap.set(k, o); });
     const edts = [...emap.values()].sort((a, b) => b.hl - a.hl);
-    return { rutas, edts, sinLineas, day, fecha: fecha(day), dia: DIAS[new Date(day + 'T12:00:00Z').getUTCDay()], totalRows: totalConLineas, parcRows, edtGroups, recl, recSol, recPend: recl.length - recSol,
+    return { lunes, rutas, edts, sinLineas, day, fecha: fecha(day), dia: DIAS[new Date(day + 'T12:00:00Z').getUTCDay()], totalRows: totalConLineas, parcRows, edtGroups, recl, recSol, recPend: recl.length - recSol,
       nTotal: bit.filter((b) => /TOTAL/.test(b.motivo)).length, nParc: bit.filter((b) => /PARCIAL/.test(b.motivo)).length || parcRows.length, cab, nDes: des.length, hlDes: sum(des, (x) => x.hl), short };
   }
 
@@ -127,7 +129,7 @@
     const eRows = []; d.edtGroups.forEach((g) => { eRows.push({ cells: ['⊟ ' + g.lab, g.n, f3(g.hl)], st: { bg: P.grp, bold: 1, mark: g.lab === 'ZT' ? K.red : g.lab === 'REPROGRAMACIÓN' ? K.amber : '#9AA5B1' } });
       g.rows.forEach((r) => eRows.push({ cells: [(r[3] || r[0]).toUpperCase(), r[1], f3(r[2])], st: { indent: 1 } })); });
     const n1 = Math.max(d.totalRows.length, 1) + 2, n2 = Math.max(d.parcRows.length, 1) + 2, n3 = Math.max(eRows.length, 1) + 2;
-    const rec = d.recl.slice(-14);
+    const rec = d.recl.slice().sort((a, b) => (cerrado(a) - cerrado(b)) || b.fecha.localeCompare(a.fecha)).slice(0, 40);
     const yTop = 120, yTbl = yTop + 96, hTbl = Math.max(n1, n2, n3) * RH;
     const yRec = yTbl + hTbl + 46 + (d.sinLineas.length ? 26 : 0);
     const H = yRec + 50 + RH * (1 + Math.max(rec.length, 1)) + 64;
@@ -160,11 +162,11 @@
     if (d.sinLineas.length) { ctx.font = FT(500, 13); ctx.fillStyle = P.mute; ctx.textAlign = 'left'; ctx.fillText(fit(ctx, `Nota: viajes en bitácora sin clientes en DESPLANIFICACIÓN — ${d.sinLineas.join(', ')}`, Wd - 2 * M), M, y); y += 26; }
     // status de reclamos como en su correo
     y = yRec; ctx.font = FT(500, 18); ctx.fillStyle = P.ink; ctx.textAlign = 'left';
-    const pre = `Status de reclamos de ventas: se tiene ${String(d.recl.length).padStart(2, '0')} - `; ctx.fillText(pre, M, y);
+    const pre = `Status de reclamos de los últimos 7 días (${d.lunes.slice(8, 10)}/${d.lunes.slice(5, 7)} al ${d.fecha.slice(0, 5)}): se tiene ${String(d.recl.length).padStart(2, '0')} - `; ctx.fillText(pre, M, y);
     const px = M + ctx.measureText(pre).width; const hl = `${String(d.recSol).padStart(2, '0')} reclamos cerrados y ${String(d.recPend).padStart(2, '0')} reclamos pendientes de revisión por EDT y BO`;
     ctx.font = FT(700, 18); const hw = ctx.measureText(hl).width; ctx.fillStyle = P.yel; ctx.fillRect(px - 4, y - 14, hw + 8, 28); ctx.fillStyle = P.ink; ctx.fillText(hl, px, y + 1);
-    const cR = [{ h: 'Fecha', w: 72 }, { h: 'Supervisor', w: 196 }, { h: 'Zona', w: 88 }, { h: 'Código de Cliente', w: 152 }, { h: 'Cliente', w: 226 }, { h: 'Placa', w: 124 }, { h: 'EDT', w: 340 }, { h: 'Motivo del reclamo', w: 184 }, { h: 'Status', w: 146 }];
-    const yEnd = tbl(ctx, M, y + 28, cR, rec.map((r) => ({ cells: [r.fecha.slice(8, 10) + '/' + r.fecha.slice(5, 7), r.sv, r.zona, r.codigo, r.cliente, r.placa, (r.edt || '').toUpperCase(), r.motivo, r.status], st: r.status === 'SOLUCIONADO' ? {} : { bg: P.yelSoft } })),
+    const cR = [{ h: 'Fecha', w: 72 }, { h: 'Supervisor', w: 196 }, { h: 'Zona', w: 88 }, { h: 'Código de Cliente', w: 152 }, { h: 'Cliente', w: 226 }, { h: 'Placa', w: 124 }, { h: 'EDT', w: 272 }, { h: 'Motivo del reclamo', w: 252 }, { h: 'Status', w: 146 }];
+    const yEnd = tbl(ctx, M, y + 28, cR, rec.map((r) => ({ cells: [r.fecha.slice(8, 10) + '/' + r.fecha.slice(5, 7), r.sv, r.zona, r.codigo, r.cliente, r.placa, (r.edt || '').toUpperCase(), r.motivo, r.status], st: cerrado(r) ? {} : { bg: P.yelSoft } })),
       { head: P.yel, headInk: '#3B2F00', empty: 'Sin reclamos registrados ni pendientes' });
     const now = new Date(Date.now() - 5 * 3600e3).toISOString(); ctx.font = FM(500, 11); ctx.fillStyle = '#8A96A3'; ctx.textAlign = 'left'; ctx.fillText('FUENTE: BITÁCORA COMPARTIDA · REPORTES DE DELIVERY · CD CALLAO', M, yEnd + 30);
     ctx.textAlign = 'right'; ctx.fillText(`GENERADO ${now.slice(8, 10)}/${now.slice(5, 7)} ${now.slice(11, 16)}`, Wd - M, yEnd + 30);
@@ -183,7 +185,7 @@
     const yHero = 168, hHero = 250, yB = yHero + hHero + G;
     const hB = 64 + Math.max(Math.max(d.edts.length, 1) * 58, Math.max(rutas.length, 1) * 40 + (extraR ? 26 : 0)) + 18;
     const yC = yB + hB + G;
-    const recRows = d.recl.filter((r) => r.status !== 'SOLUCIONADO').slice(0, 5);
+    const recRows = d.recl.filter((r) => !cerrado(r)).slice(0, 5);
     const hIns = 58 + ins.length * 30 + 14, hRec = 58 + Math.max(recRows.length, 1) * 30 + 14, hC = Math.max(hIns, hRec);
     const H = yC + hC + 58;
     canvas.width = Wd * S; canvas.height = H * S; canvas.style.aspectRatio = `${Wd} / ${H}`;
@@ -278,7 +280,7 @@
     const eRows = []; d.edtGroups.forEach((g) => { eRows.push('<tr>' + td(g.lab, 0, 'font-weight:bold;background:#EEF4FA') + td(g.n, 1, 'font-weight:bold;background:#EEF4FA') + td(f3(g.hl), 1, 'font-weight:bold;background:#EEF4FA') + '</tr>');
       g.rows.forEach((r) => eRows.push('<tr>' + td(r[0], 0, 'padding-left:22px') + td(r[1], 1) + td(f3(r[2]), 1) + '</tr>')); });
     const E = tbl('RESUMEN POR EDT', ['Acción / EDT', 'Clientes', 'HL'], [0, 1, 1], eRows, ['Total general', d.nDes, f3(d.hlDes)]);
-    const R = tbl('RECLAMOS DEL DÍA Y PENDIENTES', ['Fecha', 'Ruta', 'Placa', 'Código', 'Cliente', 'Motivo del reclamo', 'Supervisor', 'EDT', 'Status'], [], d.recl.map((r) => '<tr>' + [r.fecha.slice(8, 10) + '/' + r.fecha.slice(5, 7), r.ruta, r.placa, r.codigo, r.cliente, r.motivo, r.sv, d.short(r.edt), r.status].map((v) => td(v, 0, r.status === 'SOLUCIONADO' ? '' : 'background:#FFF4CC')).join('') + '</tr>'));
+    const R = tbl('RECLAMOS DE LOS ÚLTIMOS 7 DÍAS Y PENDIENTES', ['Fecha', 'Ruta', 'Placa', 'Código', 'Cliente', 'Motivo del reclamo', 'Supervisor', 'EDT', 'Status'], [], d.recl.map((r) => '<tr>' + [r.fecha.slice(8, 10) + '/' + r.fecha.slice(5, 7), r.ruta, r.placa, r.codigo, r.cliente, r.motivo, r.sv, d.short(r.edt), r.status].map((v) => td(v, 0, cerrado(r) ? '' : 'background:#FFF4CC')).join('') + '</tr>'));
     return `<div style="font:10pt Calibri,Arial;color:#1F2329"><p style="font:bold 13pt Calibri,Arial;margin:0 0 4px">Cierre del día · ${d.dia} ${d.fecha}</p>`
       + `<p style="margin:0 0 6px">Viajes desplanificados: ${d.nTotal} total · ${d.nParc} parcial${d.cab ? ` · ${d.cab} cambio(s) de cabecera` : ''} | Clientes desplanificados: ${d.nDes} · ${f3(d.hlDes)} HL</p>`
       + `<table cellspacing="0" cellpadding="0"><tr><td style="vertical-align:top;padding-right:24px">${A}</td><td style="vertical-align:top;padding-right:24px">${B}</td><td style="vertical-align:top">${E}</td></tr></table>`
