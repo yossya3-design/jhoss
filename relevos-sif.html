@@ -445,6 +445,21 @@ footer b{color:var(--oro)}
 .rk-b b{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--f-titulo);font-size:16px;color:#fff;text-shadow:0 1px 3px #000}
 .rk-r .v{font-family:var(--f-mono);font-size:12.5px;font-weight:700;text-align:right}
 .tend-w{overflow-x:auto}
+table.rt tr.con-foto{cursor:pointer}table.rt tr.con-foto:hover td{background:rgba(242,197,42,.06)}
+table.rt tr.con-foto:focus-visible{outline:2px solid var(--oro);outline-offset:-2px}
+.chip.ver-foto{font-weight:700}
+.foto-modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.foto-modal[hidden]{display:none!important}
+.fm-caja{width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;gap:10px;background:#0B0B0A;border:1px solid var(--oro-osc,#8a6d12);border-radius:12px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.fm-cab{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.fm-cab .et{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gris)}
+.fm-cab h3{margin:2px 0;font-family:var(--f-titulo);font-weight:800;font-size:20px;color:var(--oro)}
+.fm-cab p{margin:0;font-size:12.5px;color:var(--gris)}
+.fm-x{background:none;border:1px solid var(--borde);color:var(--blanco);border-radius:8px;width:38px;height:38px;font-size:22px;line-height:1;cursor:pointer;flex:none}
+.fm-img{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;background:#000;border-radius:8px;overflow:hidden}
+.fm-img img{max-width:100%;max-height:68vh;object-fit:contain;display:block}
+.fm-img p{padding:30px 16px;text-align:center}
+.fm-pie{display:flex;justify-content:space-between;align-items:center;gap:8px}.fm-pie .btn{min-height:40px}.fm-pie .btn:disabled{opacity:.35}
 @media (max-width:600px){
   .control .tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;scrollbar-width:none;padding-bottom:2px}
   .control .tabs::-webkit-scrollbar{display:none}
@@ -646,6 +661,13 @@ body .tg-seg .btn{padding:6px 8px;font-size:10px;min-height:32px}
     </section>
   </div>
 </div>
+<div class="foto-modal" id="fotoModal" hidden role="dialog" aria-modal="true" aria-labelledby="fmTit">
+  <div class="fm-caja">
+    <div class="fm-cab"><div><span class="et" id="fmTipo"></span><h3 id="fmTit"></h3><p id="fmSub"></p></div><button type="button" class="fm-x" id="fmCerrar" aria-label="Cerrar">×</button></div>
+    <div class="fm-img"><img id="fmImg" alt="Foto del relevo"><p class="mut" id="fmNo" hidden>La foto está guardada en el Drive y no se puede mostrar aquí. Sí va en el PPT.</p></div>
+    <div class="fm-pie"><button type="button" class="btn" id="fmPrev">‹ Anterior</button><span class="mut" id="fmPos"></span><button type="button" class="btn" id="fmNext">Siguiente ›</button></div>
+  </div>
+</div>
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -805,7 +827,7 @@ async function guardarRelevo() {
 }
 function tablaRel(L) {
   const cab = '<thead><tr><th class="n">#</th><th>Fecha registro</th><th>Placa</th><th>Ruta</th><th>Tipo</th><th>Conductor</th><th class="n">Inicio</th><th class="n">Fin</th><th>Foto</th><th class="n">Registrado</th></tr></thead><tbody>';
-  const f = L.map((r, i) => `<tr><td class="n mono">${L.length - i}</td><td class="mono">${fmtDia(r.fecha)}</td><td class="mono"><b>${esc(r.placa)}</b></td><td>${esc((FLOTA[r.placa] || [''])[0])}</td><td>${tl(r)}</td><td>${esc(r.cond)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.ini)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.fin)}</td><td>${conFoto(r) ? '<span class="chip verde">con foto</span>' : '<span class="chip rojo">sin foto</span>'}</td><td class="n mono">${esc((r.at || '').slice(11, 16))}</td></tr>`).join('');
+  const f = L.map((r, i) => `<tr class="${conFoto(r) ? 'con-foto' : ''}" data-ri="${RELEVOS.indexOf(r)}" tabindex="${conFoto(r) ? 0 : -1}"><td class="n mono">${L.length - i}</td><td class="mono">${fmtDia(r.fecha)}</td><td class="mono"><b>${esc(r.placa)}</b></td><td>${esc((FLOTA[r.placa] || [''])[0])}</td><td>${tl(r)}</td><td>${esc(r.cond)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.ini)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.fin)}</td><td>${conFoto(r) ? '<span class="chip verde ver-foto">Ver foto ›</span>' : '<span class="chip rojo">sin foto</span>'}</td><td class="n mono">${esc((r.at || '').slice(11, 16))}</td></tr>`).join('');
   return cab + (f || '<tr><td colspan="10" class="mut">No hay relevos registrados ese día.</td></tr>') + '</tbody>';
 }
 function kpisDia(L) {
@@ -1087,6 +1109,30 @@ function renderP4() {
       return `<tr><td class="n mono">${i + 1}</td><td class="mono">${fmtDia(d)}</td><td class="mono"><b>${esc(p)}</b></td><td>${esc(FLOTA[p][0])}</td><td>${esc(FLOTA[p][1])}</td><td class="n mono">${a ? a.prog : '—'}</td><td class="n mono">${a ? a.av : '—'}</td><td class="n mono">${a ? Math.max(0, a.prog - a.av) : '—'}</td><td>${pct == null ? '<span class="mut">—</span>' : `<span class="chip ${CHIP[sem(pct)]}">${pctTxt(pct)}</span>`}</td><td>${rs.length ? `<span class="chip verde">Sí · ${rs.length}</span>` : '<span class="chip sin">No</span>'}</td><td class="n mono">${a && a.ini ? esc(a.ini) : '—'}</td><td>${rs.map(r => `${tipoDe(r) === 'mov' ? 'Mov.' : esc(r.ini || '')} ${esc(r.cond)}`).join('<br>') || '<span class="mut">—</span>'}</td></tr>`; }).join('') + '</tbody>';
 }
 function etiquetar() { document.querySelectorAll('table.rt').forEach(t => { const h = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim()); t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { if (h[i] && td.colSpan < 2) td.setAttribute('data-l', h[i]); })); }); }
+const urlFoto = r => {
+  if (r.foto && /^data:/.test(r.foto)) return r.foto;
+  const u = r.fotoUrl || ''; if (!/^https?:/.test(u)) return null;
+  const id = (u.match(/[-\w]{25,}/) || [])[0];
+  return /drive\.google\.com|googleusercontent/.test(u) && id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1600` : u;
+};
+let FM = { lista: [], i: 0 };
+function verFoto(ri, tabla) {
+  const filas = tabla ? [...tabla.querySelectorAll('tr.con-foto')].map(t => RELEVOS[+t.dataset.ri]).filter(Boolean) : [RELEVOS[ri]];
+  FM = { lista: filas, i: Math.max(0, filas.indexOf(RELEVOS[ri])) }; pintarFoto();
+  $('#fotoModal').hidden = false; document.body.style.overflow = 'hidden'; $('#fmCerrar').focus();
+}
+function pintarFoto() {
+  const r = FM.lista[FM.i]; if (!r) return; const u = urlFoto(r), f = FLOTA[r.placa] || ['', ''];
+  $('#fmTipo').textContent = `${tl(r)} · ${fmtDia(r.fecha)}`;
+  $('#fmTit').textContent = `${r.placa} · ${r.cond}`;
+  $('#fmSub').textContent = [f[0], f[1], tipoDe(r) === 'doble' && r.ini ? `${r.ini} – ${r.fin}` : '', r.at ? 'registrado ' + r.at.slice(11, 16) : '', r.com || ''].filter(Boolean).join(' · ');
+  const img = $('#fmImg'); $('#fmNo').hidden = !!u; img.hidden = !u;
+  img.onerror = () => { img.hidden = true; $('#fmNo').hidden = false; };
+  if (u) img.src = u; else img.removeAttribute('src');
+  $('#fmPos').textContent = `${FM.i + 1} de ${FM.lista.length}`;
+  $('#fmPrev').disabled = FM.i === 0; $('#fmNext').disabled = FM.i >= FM.lista.length - 1;
+}
+function cerrarFoto() { $('#fotoModal').hidden = true; document.body.style.overflow = ''; }
 function renderTodo() { renderRegistro(); renderP2(); renderAdmin(); renderProd(); renderP4(); etiquetar(); $('#vivoTxt').textContent = 'En vivo · actualizado ' + new Date().toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour12: false }); }
 
 /* pestañas */
@@ -1102,6 +1148,12 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   CONDS = LS.get('rel_conds', CONDS); PLACAS_EXTRA = LS.get('rel_placas', []); aplicarFlota();
   if (!NET) RELEVOS = historialMuestra();
   renderTodo();
+  document.addEventListener('click', e => { const tr = e.target.closest('table.rt tr.con-foto'); if (tr) verFoto(+tr.dataset.ri, tr.closest('table')); });
+  document.addEventListener('keydown', e => {
+    if (!$('#fotoModal').hidden) { if (e.key === 'Escape') cerrarFoto(); if (e.key === 'ArrowLeft' && FM.i > 0) { FM.i--; pintarFoto(); } if (e.key === 'ArrowRight' && FM.i < FM.lista.length - 1) { FM.i++; pintarFoto(); } return; }
+    const tr = e.target.closest && e.target.closest('tr.con-foto'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); verFoto(+tr.dataset.ri, tr.closest('table')); } });
+  $('#fmCerrar').onclick = cerrarFoto; $('#fotoModal').onclick = e => { if (e.target.id === 'fotoModal') cerrarFoto(); };
+  $('#fmPrev').onclick = () => { if (FM.i > 0) { FM.i--; pintarFoto(); } }; $('#fmNext').onclick = () => { if (FM.i < FM.lista.length - 1) { FM.i++; pintarFoto(); } };
   $('#relBtn').onclick = guardarRelevo; $('#relEntrar').onclick = entrarRelevo; $('#relPin').onkeydown = e => { if (e.key === 'Enter') entrarRelevo(); };
   $('#relTD').onclick = () => tipoRel('doble'); $('#relTM').onclick = () => tipoRel('mov');
   ['#relCam', '#relSubir'].forEach(s => { $(s).onchange = e => { tomarFoto(e.target.files[0]); e.target.value = ''; }; });
