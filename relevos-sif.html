@@ -693,7 +693,7 @@ function pinUI() {
   $('#rolChip').style.color = CAN ? 'var(--oro)' : '';
 }
 async function entrarPin() {
-  const v = $('#pinIn').value.trim(); if (!v) return;
+  const raw = $('#pinIn').value.trim(); if (!raw) return; const v = raw.replace(/\D/g, '') === PIN_ADMIN ? PIN_ADMIN : raw;
   PIN = v; $('#pinMsg').textContent = 'Verificando…';
   try { if (v !== PIN_ADMIN) { if (!NET) throw new Error('PIN incorrecto.'); await apps({ action: 'pin' }); } CAN = true; try { sessionStorage.setItem('t2pin', PIN); } catch (e) {} $('#pinIn').value = ''; $('#pinMsg').textContent = ''; pinUI(); renderAdmin(); }
   catch (e) { $('#pinMsg').textContent = e.message; }
