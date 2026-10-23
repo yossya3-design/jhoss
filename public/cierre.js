@@ -25,8 +25,8 @@
     const parcRows = [...parc.entries()].filter(([, o]) => o.n).sort((a, b) => a[0].localeCompare(b[0])).map(([ru, o]) => [ru, o.n, o.hl]);
     const ACC = [['ZT (rechazo)', 'ZT'], ['Reprogramación', 'REPROGRAMACIÓN'], ['Sin clasificar', 'SIN CLASIFICAR']];
     const edtGroups = ACC.map(([a, lab]) => { const ls = des.filter((r) => r.accion === a); if (!ls.length) return null;
-      const m = new Map(); ls.forEach((r) => { const k = short(r.edt); const o = m.get(k) || { n: 0, hl: 0 }; o.n++; o.hl += +r.hl || 0; m.set(k, o); });
-      return { lab, n: ls.length, hl: sum(ls, (x) => x.hl), rows: [...m.entries()].sort((a2, b2) => b2[1].hl - a2[1].hl).map(([k, o]) => [k, o.n, o.hl]) }; }).filter(Boolean);
+      const m = new Map(); ls.forEach((r) => { const k = short(r.edt); const o = m.get(k) || { n: 0, hl: 0, full: r.edt || 'SIN EDT' }; o.n++; o.hl += +r.hl || 0; m.set(k, o); });
+      return { lab, n: ls.length, hl: sum(ls, (x) => x.hl), rows: [...m.entries()].sort((a2, b2) => b2[1].hl - a2[1].hl).map(([k, o]) => [k, o.n, o.hl, o.full]) }; }).filter(Boolean);
     const recl = all.filter((r) => r.tipo === 'Reclamo de ventas' && (r.fecha === day || (r.fecha <= day && r.status !== 'SOLUCIONADO')))
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
     const recSol = recl.filter((r) => r.status === 'SOLUCIONADO').length;
@@ -99,7 +99,80 @@
     if (d.sinLineas.length) out.push(['mute', `Revisar bitácora: ${d.sinLineas.length} viaje${d.sinLineas.length > 1 ? 's' : ''} sin clientes en DESPLANIFICACIÓN (${d.sinLineas.map((x) => x.split(' ')[0]).join(', ')}).`]);
     return out;
   }
-  async function draw(canvas, d) {
+  // ---------- estilo "mi correo": la misma estructura del cierre de Mayra, más prolijo ----------
+  async function drawCorreo(canvas, d) {
+    const L = window.BX_LOGOS || {};
+    try { if (document.fonts) await Promise.all([document.fonts.load(FD(800, 40)), document.fonts.load(FT(500, 14)), document.fonts.load(FT(700, 14))]); } catch (e) { /* sin fuentes web */ }
+    const [iAb, iT77, iCd] = await Promise.all([loadImg(L.ab), loadImg(L.t77), loadImg(L.cd)]);
+    const P = { ink: '#1B2430', mute: '#5F6B7A', head: '#9DC3E6', headInk: '#0E2841', row: '#FFFFFF', alt: '#F5F9FD', line: '#D9E2EC', grp: '#DDEBF7', yel: '#FFD966', yelSoft: '#FFF2CC', org: '#F4B183' };
+    const S = 2, Wd = 1600, M = 36, RH = 30;
+    const sec = (ctx, t, x, y) => { ctx.font = FT(800, 17); ctx.fillStyle = P.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(t, x, y); };
+    function tbl(ctx, x, y, cols, rows, opt = {}) {
+      const W = cols.reduce((s, c) => s + c.w, 0); const hdr = opt.head || P.head, hInk = opt.headInk || P.headInk;
+      ctx.save(); ctx.shadowColor = 'rgba(14,40,65,.12)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 4; rr(ctx, x, y, W, RH * (1 + Math.max(rows.length, 1) + (opt.total ? 1 : 0)), 8); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+      ctx.save(); rr(ctx, x, y, W, RH * (1 + Math.max(rows.length, 1) + (opt.total ? 1 : 0)), 8); ctx.clip();
+      let cy = y;
+      const line = (cells, st) => { ctx.fillStyle = st.bg || P.row; ctx.fillRect(x, cy, W, RH); let cx = x;
+        cells.forEach((v, i) => { const c = cols[i]; let span = c.w; if (!c.r) for (let j = i + 1; j < cells.length && cells[j] === ''; j++) span += cols[j].w;
+          ctx.font = st.font || FT(st.bold ? 700 : 500, 14); ctx.fillStyle = st.ink || P.ink; const pad = 12 + (i === 0 && st.indent ? 22 : 0);
+          const t = fit(ctx, v == null ? '' : v, span - pad - 12); if (c.r) { ctx.textAlign = 'right'; ctx.fillText(t, cx + c.w - 12, cy + RH / 2 + 1); } else { ctx.textAlign = 'left'; ctx.fillText(t, cx + pad, cy + RH / 2 + 1); } cx += c.w; });
+        if (st.mark) { ctx.fillStyle = st.mark; ctx.fillRect(x, cy, 4, RH); }
+        ctx.strokeStyle = P.line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, cy + RH - 0.5); ctx.lineTo(x + W, cy + RH - 0.5); ctx.stroke(); cy += RH; };
+      line(cols.map((c) => c.h), { bg: hdr, ink: hInk, font: FT(800, 14) });
+      if (!rows.length) line([opt.empty || 'Sin registros', ...cols.slice(1).map(() => '')], { ink: P.mute });
+      rows.forEach((r, i) => line(r.cells || r, Object.assign({ bg: i % 2 ? P.alt : P.row }, r.st || {})));
+      if (opt.total) line(opt.total, { bg: hdr, ink: hInk, bold: 1, font: FT(800, 14) });
+      ctx.restore(); return cy;
+    }
+    const eRows = []; d.edtGroups.forEach((g) => { eRows.push({ cells: ['⊟ ' + g.lab, g.n, f3(g.hl)], st: { bg: P.grp, bold: 1, mark: g.lab === 'ZT' ? K.red : g.lab === 'REPROGRAMACIÓN' ? K.amber : '#9AA5B1' } });
+      g.rows.forEach((r) => eRows.push({ cells: [(r[3] || r[0]).toUpperCase(), r[1], f3(r[2])], st: { indent: 1 } })); });
+    const n1 = Math.max(d.totalRows.length, 1) + 2, n2 = Math.max(d.parcRows.length, 1) + 2, n3 = Math.max(eRows.length, 1) + 2;
+    const rec = d.recl.slice(-14);
+    const yTop = 120, yTbl = yTop + 96, hTbl = Math.max(n1, n2, n3) * RH;
+    const yRec = yTbl + hTbl + 46 + (d.sinLineas.length ? 26 : 0);
+    const H = yRec + 50 + RH * (1 + Math.max(rec.length, 1)) + 64;
+    canvas.width = Wd * S; canvas.height = H * S; canvas.style.aspectRatio = `${Wd} / ${H}`;
+    const ctx = canvas.getContext('2d'); ctx.setTransform(S, 0, 0, S, 0, 0); ctx.textBaseline = 'middle';
+    const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#F7F9FC'); bg.addColorStop(1, '#EEF3F8'); ctx.fillStyle = bg; ctx.fillRect(0, 0, Wd, H);
+    // banda superior negra y dorada
+    ctx.fillStyle = K.bg; ctx.fillRect(0, 0, Wd, 92); const gl = ctx.createLinearGradient(0, 0, Wd, 0); gl.addColorStop(0, K.gold2); gl.addColorStop(0.5, K.gold3); gl.addColorStop(1, K.gold2); ctx.fillStyle = gl; ctx.fillRect(0, 92, Wd, 4);
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.font = FD(800, 44); goldText(ctx, `CIERRE DEL DÍA ${d.fecha.slice(0, 5).replace('/', '.')}`, M, 62, 44);
+    const tw = ctx.measureText(`CIERRE DEL DÍA ${d.fecha.slice(0, 5).replace('/', '.')}`).width; ctx.font = FD(700, 26); ctx.fillStyle = K.fg; ctx.fillText(`// TRANSPORTE · ${d.dia.toUpperCase()}`, M + tw + 16, 60);
+    let rx = Wd - M; if (iCd) { const r = 34; ctx.save(); ctx.beginPath(); ctx.arc(rx - r, 46, r + 3, 0, Math.PI * 2); ctx.strokeStyle = K.gold; ctx.lineWidth = 2; ctx.stroke(); ctx.restore(); ctx.drawImage(iCd, rx - 2 * r, 46 - r, 2 * r, 2 * r); rx -= 2 * r + 22; }
+    if (iT77) { const h = 24, w = iT77.width * h / iT77.height; rr(ctx, rx - w - 16, 30, w + 16, 32, 6); ctx.fillStyle = '#fff'; ctx.fill(); ctx.drawImage(iT77, rx - w - 8, 34, w, h); rx -= w + 30; }
+    if (iAb) { const h = 24, w = iAb.width * h / iAb.height; ctx.drawImage(iAb, rx - w, 34, w, h); }
+    ctx.textBaseline = 'middle';
+    // franja resumen
+    const zt = d.edtGroups.find((g) => g.lab === 'ZT') || { n: 0, hl: 0 }, rp = d.edtGroups.find((g) => g.lab === 'REPROGRAMACIÓN') || { n: 0, hl: 0 };
+    const chips = [[`${d.nDes} clientes · ${f3(d.hlDes)} HL desplanificados`, K.gold2], [`${d.nTotal} viaje(s) total · ${d.nParc} parcial`, '#5F6B7A'], [`ZT: ${zt.n} cl. · ${f3(zt.hl)} HL`, K.red], [`Reprogramación: ${rp.n} cl. · ${f3(rp.hl)} HL`, K.amber]];
+    let cx = M; chips.forEach(([t, c]) => { ctx.font = FT(700, 15); const w = ctx.measureText(t).width + 34; rr(ctx, cx, yTop, w, 34, 17); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#D9E2EC'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx + 15, yTop + 17, 5, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); ctx.fillStyle = P.ink; ctx.textAlign = 'left'; ctx.fillText(t, cx + 26, yTop + 18); cx += w + 12; });
+    // las tres tablas de su correo
+    const cA = [{ h: 'Ruta', w: 92 }, { h: 'Transporte', w: 122 }, { h: 'Viaje', w: 62, r: 1 }, { h: 'Vehículo', w: 104 }, { h: 'Cliente.', w: 82, r: 1 }, { h: 'HL.', w: 92, r: 1 }];
+    const cB = [{ h: 'RUTA', w: 120 }, { h: 'Cliente.', w: 90, r: 1 }, { h: 'HL.', w: 104, r: 1 }];
+    const cE = [{ h: 'RUTA', w: 330 }, { h: 'Cliente.', w: 90, r: 1 }, { h: 'HL.', w: 104, r: 1 }];
+    const xA = M, xB = xA + 554 + 34, xE = xB + 314 + 34;
+    sec(ctx, 'DESPLANIFICACIÓN TOTAL', xA, yTbl - 22); sec(ctx, 'DESPLANIFICACIÓN PARCIAL', xB, yTbl - 22); sec(ctx, 'RESUMEN POR EDT', xE, yTbl - 22);
+    tbl(ctx, xA, yTbl, cA, d.totalRows.map((r) => [r[0], r[1], r[2], r[3], r[4], f3(r[5])]), { total: ['Total general', '', '', '', sum(d.totalRows, (r) => r[4]) || '', d.totalRows.length ? f3(sum(d.totalRows, (r) => r[5])) : ''], empty: 'Sin desplanificación total' });
+    tbl(ctx, xB, yTbl, cB, d.parcRows.map((r) => [r[0], r[1], f3(r[2])]), { total: ['Total general', sum(d.parcRows, (r) => r[1]), f3(sum(d.parcRows, (r) => r[2]))], empty: 'Sin parciales' });
+    tbl(ctx, xE, yTbl, cE, eRows, { total: ['Total general', d.nDes, f3(d.hlDes)], empty: 'Sin clientes desplanificados' });
+    let y = yTbl + hTbl + 22;
+    if (d.sinLineas.length) { ctx.font = FT(500, 13); ctx.fillStyle = P.mute; ctx.textAlign = 'left'; ctx.fillText(fit(ctx, `Nota: viajes en bitácora sin clientes en DESPLANIFICACIÓN — ${d.sinLineas.join(', ')}`, Wd - 2 * M), M, y); y += 26; }
+    // status de reclamos como en su correo
+    y = yRec; ctx.font = FT(500, 18); ctx.fillStyle = P.ink; ctx.textAlign = 'left';
+    const pre = `Status de reclamos de ventas: se tiene ${String(d.recl.length).padStart(2, '0')} - `; ctx.fillText(pre, M, y);
+    const px = M + ctx.measureText(pre).width; const hl = `${String(d.recSol).padStart(2, '0')} reclamos cerrados y ${String(d.recPend).padStart(2, '0')} reclamos pendientes de revisión por EDT y BO`;
+    ctx.font = FT(700, 18); const hw = ctx.measureText(hl).width; ctx.fillStyle = P.yel; ctx.fillRect(px - 4, y - 14, hw + 8, 28); ctx.fillStyle = P.ink; ctx.fillText(hl, px, y + 1);
+    const cR = [{ h: 'Fecha', w: 72 }, { h: 'Supervisor', w: 196 }, { h: 'Zona', w: 88 }, { h: 'Código de Cliente', w: 152 }, { h: 'Cliente', w: 226 }, { h: 'Placa', w: 124 }, { h: 'EDT', w: 340 }, { h: 'Motivo del reclamo', w: 184 }, { h: 'Status', w: 146 }];
+    const yEnd = tbl(ctx, M, y + 28, cR, rec.map((r) => ({ cells: [r.fecha.slice(8, 10) + '/' + r.fecha.slice(5, 7), r.sv, r.zona, r.codigo, r.cliente, r.placa, (r.edt || '').toUpperCase(), r.motivo, r.status], st: r.status === 'SOLUCIONADO' ? {} : { bg: P.yelSoft } })),
+      { head: P.yel, headInk: '#3B2F00', empty: 'Sin reclamos registrados ni pendientes' });
+    const now = new Date(Date.now() - 5 * 3600e3).toISOString(); ctx.font = FM(500, 11); ctx.fillStyle = '#8A96A3'; ctx.textAlign = 'left'; ctx.fillText('FUENTE: BITÁCORA COMPARTIDA · REPORTES DE DELIVERY · CD CALLAO', M, yEnd + 30);
+    ctx.textAlign = 'right'; ctx.fillText(`GENERADO ${now.slice(8, 10)}/${now.slice(5, 7)} ${now.slice(11, 16)}`, Wd - M, yEnd + 30);
+    const fin = yEnd + 52; if (fin < H) { const img = ctx.getImageData(0, 0, Wd * S, Math.ceil(fin * S)); canvas.height = Math.ceil(fin * S); canvas.style.aspectRatio = `${Wd} / ${fin}`; canvas.getContext('2d').putImageData(img, 0, 0); }
+    return canvas;
+  }
+
+  async function drawVisual(canvas, d) {
     const L = window.BX_LOGOS || {};
     try { if (document.fonts) await Promise.all([document.fonts.load(FD(800, 40)), document.fonts.load(FT(500, 14)), document.fonts.load(FT(700, 14)), document.fonts.load(FM(700, 11))]); } catch (e) { /* sin fuentes web */ }
     const [iTap, iAb, iT77, iCd] = await Promise.all([loadImg(L.tapiz), loadImg(L.ab), loadImg(L.t77), loadImg(L.cd)]);
@@ -212,5 +285,6 @@
       + (d.sinLineas.length ? `<p style="margin:8px 0 0;color:#5E6670;font-size:9pt">Viajes en bitácora sin clientes en DESPLANIFICACIÓN: ${d.sinLineas.join(', ')}</p>` : '')
       + `<p style="margin:14px 0 0">Status de reclamos de ventas: ${d.recl.length} — <b style="background:#FFE14D">${d.recSol} solucionado(s) y ${d.recPend} pendiente(s)</b></p>${R}</div>`;
   }
+  const draw = (canvas, d, style) => (style === 'visual' ? drawVisual(canvas, d) : drawCorreo(canvas, d));
   window.bxCierre = { build, draw, html };
 })();

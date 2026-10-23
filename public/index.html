@@ -570,7 +570,7 @@ window.dash = (function () {
     <section class="bx-page" id="cierre" role="tabpanel" aria-labelledby="tab-cierre" hidden>
       <div class="bx-card bx-wide bx-admin">
         <div class="bx-card-h"><div><h3 style="color:var(--k-gold)">Cierre de turno</h3><p class="sub">Solo administrador. Elige el día y pásalo a tu correo de cierre como imagen o como tablas.</p></div></div>
-        <div class="bx-tools"><div class="bx-f"><label for="c-dia">Día del cierre</label><input type="date" id="c-dia"></div>
+        <div class="bx-tools"><div class="bx-f"><label for="c-dia">Día del cierre</label><input type="date" id="c-dia"></div><div class="bx-f"><label>Estilo</label><div class="bx-seg" role="group" aria-label="Estilo de la imagen"><button type="button" data-cst="correo" aria-pressed="true">Como mi correo</button><button type="button" data-cst="visual" aria-pressed="false">Visual</button></div></div>
           <button class="bx-btn bx-solid" type="button" id="c-img">Copiar imagen</button><button class="bx-btn" type="button" id="c-dl">Descargar imagen</button><button class="bx-btn" type="button" id="c-html">Copiar tablas para Outlook</button><button class="bx-btn" type="button" id="c-mail">Enviar a mi correo</button><span class="bx-count" id="c-msg"></span></div>
         <div class="bx-cimg"><canvas id="c-cv" aria-label="Imagen del cierre del día"></canvas></div>
       </div>
@@ -1210,7 +1210,11 @@ window.dash = (function () {
     const box = el('div'); fillConf(box, r, false); return box; }
   const telNode = (r) => { if (!r.tel) return el('span', 'bx-cz', '—'); const a = el('a', 'bx-tel', r.tel); a.href = 'tel:' + String(r.tel).replace(/[^0-9+]/g, ''); return a; };
   function renderCierre() { const cv = $('c-cv'), day = $('c-dia').value; if (!window.bxCierre || !window.__allRows || !day) return;
-    window.__cierre = window.bxCierre.build(window.__allRows, day, short); window.__cierreP = window.bxCierre.draw(cv, window.__cierre); }
+    window.__cierre = window.bxCierre.build(window.__allRows, day, short); window.__cierreP = window.bxCierre.draw(cv, window.__cierre, cStyle); }
+  let cStyle = 'correo'; try { cStyle = localStorage.getItem('bx_cierre_estilo') || 'correo'; } catch (e) { cStyle = 'correo'; }
+  document.querySelectorAll('[data-cst]').forEach((b) => { b.setAttribute('aria-pressed', String(b.dataset.cst === cStyle));
+    b.addEventListener('click', () => { cStyle = b.dataset.cst; try { localStorage.setItem('bx_cierre_estilo', cStyle); } catch (e) { /* sin almacenamiento */ }
+      document.querySelectorAll('[data-cst]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); renderCierre(); }); });
   window.__renderCierre = renderCierre;
   $('c-dia').addEventListener('change', () => { $('c-msg').textContent = ''; renderCierre(); });
   const cMsg = (t) => { $('c-msg').textContent = t; clearTimeout(cMsg.t); cMsg.t = setTimeout(() => { $('c-msg').textContent = ''; }, 6000); };
