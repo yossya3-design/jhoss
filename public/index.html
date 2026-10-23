@@ -6,7 +6,14 @@
 <title>Reportes de delivery · CD Callao</title>
 <meta name="description" content="Reportes de delivery del CD Callao: Ventas, Almacén y EDT, actualizados desde la bitácora compartida.">
 <meta name="theme-color" content="#070707">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script>
+(function () { var p = location.pathname.replace(/\/+$/, '').toLowerCase();
+  var V = { '/ventas': { tabs: ['ventas'], adm: false, dec: false, titulo: 'Reporte para Ventas', eyebrow: 'Reporte para Ventas' },
+    '/almacen': { tabs: ['almacen'], adm: false, dec: false, titulo: 'Reporte para Almacén', eyebrow: 'Reporte para Almacén' },
+    '/dec': { tabs: ['ventas'], adm: false, dec: true, titulo: 'Reprogramaciones DEC', eyebrow: 'Confirmación de reprogramaciones' } }[p];
+  if (V) window.__VISTA = V; })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Big+Shoulders+Display:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -676,11 +683,11 @@ window.dash = (function () {
   <div class="bx-tip" id="tip" hidden></div>
 </div>
 
-<script src="logos.js"></script>
-<script src="flota.js"></script>
-<script src="xlsx-lite.js"></script>
-<script src="cierre.js"></script>
-<script src="ocr-placas.js"></script>
+<script src="/logos.js"></script>
+<script src="/flota.js"></script>
+<script src="/xlsx-lite.js"></script>
+<script src="/cierre.js"></script>
+<script src="/ocr-placas.js"></script>
 <script>
 (function () {
   const USD_HL = 3.396; // costo en dólares por HL desplanificado, definido por Transportes
@@ -987,7 +994,7 @@ window.dash = (function () {
 
   // ---------- pestañas ----------
   const TABS = { ventas: 'tab-ventas', almacen: 'tab-almacen', edt: 'tab-edt', cierre: 'tab-cierre' };
-  function openTab(id, link) { if (!TABS[id]) return; if (window.__decOnly && id !== 'ventas') id = 'ventas'; if (id === 'cierre' && !window.__isAdmin) id = 'ventas'; state.tab = id;
+  function openTab(id, link) { if (!TABS[id]) return; if (window.__decOnly && id !== 'ventas') id = 'ventas'; if (window.__VISTA && !window.__VISTA.tabs.includes(id)) id = window.__VISTA.tabs[0]; if (id === 'cierre' && !window.__isAdmin) id = 'ventas'; state.tab = id;
     Object.entries(TABS).forEach(([sec, tab]) => { $(sec).hidden = sec !== id; $(tab).setAttribute('aria-selected', String(sec === id)); });
     $('f-sv-box').hidden = id !== 'ventas';
     if (link) dash.setLink(id); hideTip(); redraw(); document.querySelectorAll('.bx-filters, #f-edts, #periodo').forEach((e) => { e.style.display = id === 'cierre' ? 'none' : ''; }); if (id === 'cierre' && window.__renderCierre) { window.__renderCierre(); if (window.__renderPal) window.__renderPal(); } }
@@ -1736,8 +1743,11 @@ window.dash = (function () {
   });
 
 
+  if (window.__VISTA) { const V = window.__VISTA; Object.keys(TABS).forEach((t) => { if (!V.tabs.includes(t)) $(TABS[t]).style.display = 'none'; });
+    if (!V.adm) $('adm-btn').style.display = 'none'; if (!V.dec) $('dec-btn').style.display = 'none'; document.title = V.titulo + ' · CD Callao';
+    const eb = document.querySelector('.bx-eyebrow'); if (eb) eb.lastChild.textContent = 'CD Callao · Delivery · ' + V.eyebrow; }
   const named = location.hash.slice(1);
-  if (TABS[named]) openTab(named, false);
+  if (TABS[named]) openTab(named, false); else if (window.__VISTA) openTab(window.__VISTA.tabs[0], false);
 })();
 </script>
 

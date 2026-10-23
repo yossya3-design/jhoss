@@ -10,3 +10,33 @@
   [headers.values]
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[redirects]]
+  from = "/ventas"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/ventas/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/almacen"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/almacen/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/dec"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/dec/*"
+  to = "/index.html"
+  status = 200
