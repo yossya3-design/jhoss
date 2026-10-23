@@ -32,7 +32,13 @@
     const recSol = recl.filter((r) => r.status === 'SOLUCIONADO').length;
     const cab = bit.filter((b) => /CABECERA/.test(b.motivo)).length;
     const totalConLineas = totalRows.filter((r) => r[4]);
-    return { sinLineas, day, fecha: fecha(day), dia: DIAS[new Date(day + 'T12:00:00Z').getUTCDay()], totalRows: totalConLineas, parcRows, edtGroups, recl, recSol, recPend: recl.length - recSol,
+    const rmap = new Map(); des.forEach((r) => { const o = rmap.get(r.ruta) || { ruta: r.ruta, tipo: r._k, edt: short(r.edt), n: 0, hl: 0, zt: 0, rp: 0 }; o.n++; o.hl += +r.hl || 0;
+      if (r.accion === 'ZT (rechazo)') o.zt += +r.hl || 0; else if (r.accion === 'Reprogramación') o.rp += +r.hl || 0; if (r._k === 'TOTAL') o.tipo = 'TOTAL'; rmap.set(r.ruta, o); });
+    const rutas = [...rmap.values()].sort((a, b) => b.hl - a.hl);
+    const emap = new Map(); des.forEach((r) => { const k = short(r.edt); const o = emap.get(k) || { edt: k, n: 0, hl: 0, zt: 0, rp: 0, nzt: 0, nrp: 0 }; o.n++; o.hl += +r.hl || 0;
+      if (r.accion === 'ZT (rechazo)') { o.zt += +r.hl || 0; o.nzt++; } else if (r.accion === 'Reprogramación') { o.rp += +r.hl || 0; o.nrp++; } emap.set(k, o); });
+    const edts = [...emap.values()].sort((a, b) => b.hl - a.hl);
+    return { rutas, edts, sinLineas, day, fecha: fecha(day), dia: DIAS[new Date(day + 'T12:00:00Z').getUTCDay()], totalRows: totalConLineas, parcRows, edtGroups, recl, recSol, recPend: recl.length - recSol,
       nTotal: bit.filter((b) => /TOTAL/.test(b.motivo)).length, nParc: bit.filter((b) => /PARCIAL/.test(b.motivo)).length || parcRows.length, cab, nDes: des.length, hlDes: sum(des, (x) => x.hl), short };
   }
 
@@ -76,67 +82,114 @@
     ctx.font = FD(800, 40); ctx.fillStyle = K.fg; ctx.fillText(val, x + 16, y + 72);
     ctx.font = FT(500, 13); ctx.fillStyle = K.mute; ctx.fillText(fit(ctx, sub, w - 32), x + 16, y + 96); ctx.textBaseline = 'middle';
   }
-  async function draw(canvas, d, maxRec = 14) {
+  const f1 = (v) => (Math.round(v * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const pct = (a, b) => (b ? Math.round(a / b * 100) : 0);
+  function label(ctx, t, x, y, col) { ctx.font = FM(700, 12); ctx.fillStyle = col || K.mute; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(t.toUpperCase(), x, y); }
+  function chip(ctx, t, x, y, bg, ink) { ctx.font = FM(700, 10); const w = ctx.measureText(t).width + 14; rr(ctx, x, y - 10, w, 20, 10); ctx.fillStyle = bg; ctx.fill(); ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.fillText(t, x + 7, y + 1); return w; }
+  function wrap(ctx, t, w) { const out = []; let line = ''; t.split(' ').forEach((wd) => { const tt = line ? line + ' ' + wd : wd; if (ctx.measureText(tt).width > w && line) { out.push(line); line = wd; } else line = tt; }); if (line) out.push(line); return out; }
+  function insights(d) {
+    const out = []; const zt = d.edtGroups.find((g) => g.lab === 'ZT') || { n: 0, hl: 0 }, rp = d.edtGroups.find((g) => g.lab === 'REPROGRAMACIÓN') || { n: 0, hl: 0 };
+    if (!d.nDes) { out.push(['gold', 'No se registraron clientes desplanificados en la bitácora para este día.']); }
+    else {
+      const e = d.edts[0]; if (e) out.push(['gold', `${e.edt} concentró el ${pct(e.hl, d.hlDes)}% del HL desplanificado (${f1(e.hl)} HL en ${e.n} cliente${e.n > 1 ? 's' : ''}).`]);
+      const r = d.rutas[0]; if (r) out.push(['gold', `La ruta más afectada fue ${r.ruta} (${r.tipo === 'TOTAL' ? 'desplanificación total' : 'parcial'}): ${r.n} cliente${r.n > 1 ? 's' : ''} y ${f1(r.hl)} HL, el ${pct(r.hl, d.hlDes)}% del día.`]);
+      out.push([zt.hl > rp.hl ? 'red' : 'amber', `${zt.n} de ${d.nDes} clientes terminaron en ZT (${pct(zt.hl, d.hlDes)}% del HL) y ${rp.n} se reprograman (${pct(rp.hl, d.hlDes)}% del HL).`]);
+    }
+    if (d.recPend) out.push(['red', `${d.recPend} reclamo${d.recPend > 1 ? 's' : ''} de ventas sigue${d.recPend > 1 ? 'n' : ''} pendiente${d.recPend > 1 ? 's' : ''} de solución.`]);
+    if (d.sinLineas.length) out.push(['mute', `Revisar bitácora: ${d.sinLineas.length} viaje${d.sinLineas.length > 1 ? 's' : ''} sin clientes en DESPLANIFICACIÓN (${d.sinLineas.map((x) => x.split(' ')[0]).join(', ')}).`]);
+    return out;
+  }
+  async function draw(canvas, d) {
     const L = window.BX_LOGOS || {};
     try { if (document.fonts) await Promise.all([document.fonts.load(FD(800, 40)), document.fonts.load(FT(500, 14)), document.fonts.load(FT(700, 14)), document.fonts.load(FM(700, 11))]); } catch (e) { /* sin fuentes web */ }
     const [iTap, iAb, iT77, iCd] = await Promise.all([loadImg(L.tapiz), loadImg(L.ab), loadImg(L.t77), loadImg(L.cd)]);
-    const S = 2, Wd = 1480, M = 28, sh = d.short;
-    const eRows = []; d.edtGroups.forEach((g) => { const col = g.lab === 'ZT' ? K.red : g.lab === 'REPROGRAMACIÓN' ? K.amber : K.mute;
-      eRows.push({ cells: [g.lab, g.n, f3(g.hl)], st: { bold: 1, bg: 'rgba(242,197,42,.07)', bar: col } }); g.rows.forEach((r) => eRows.push({ cells: [r[0], r[1], f3(r[2])], st: { indent: 1 } })); });
-    const rec = d.recl.slice(-maxRec);
-    const top = 150, kh = 112, yT = top + kh + 26;
-    const hRow = Math.max(tblH(d.totalRows.length, 1), tblH(d.parcRows.length, 1), tblH(eRows.length, 1));
-    const note = d.sinLineas.length ? 26 : 0;
-    const H = yT + hRow + 22 + note + 34 + tblH(rec.length, 0) + 56;
+    const S = 2, Wd = 1600, M = 32, G = 20;
+    const zt = d.edtGroups.find((g) => g.lab === 'ZT') || { n: 0, hl: 0 }, rp = d.edtGroups.find((g) => g.lab === 'REPROGRAMACIÓN') || { n: 0, hl: 0 };
+    const RMAX = 9, rutas = d.rutas.slice(0, RMAX), extraR = d.rutas.length - rutas.length;
+    const ins = insights(d);
+    const yHero = 168, hHero = 250, yB = yHero + hHero + G;
+    const hB = 64 + Math.max(Math.max(d.edts.length, 1) * 58, Math.max(rutas.length, 1) * 40 + (extraR ? 26 : 0)) + 18;
+    const yC = yB + hB + G;
+    const recRows = d.recl.filter((r) => r.status !== 'SOLUCIONADO').slice(0, 5);
+    const hIns = 58 + ins.length * 30 + 14, hRec = 58 + Math.max(recRows.length, 1) * 30 + 14, hC = Math.max(hIns, hRec);
+    const H = yC + hC + 58;
     canvas.width = Wd * S; canvas.height = H * S; canvas.style.aspectRatio = `${Wd} / ${H}`;
     const ctx = canvas.getContext('2d'); ctx.setTransform(S, 0, 0, S, 0, 0); ctx.textBaseline = 'middle';
+    // fondo con tapiz
     ctx.fillStyle = K.bg; ctx.fillRect(0, 0, Wd, H);
-    if (iTap) { ctx.save(); ctx.globalAlpha = 0.22; const r = Math.max(Wd / iTap.width, H / iTap.height); ctx.drawImage(iTap, 0, 0, iTap.width * r, iTap.height * r); ctx.restore(); }
-    const vg = ctx.createLinearGradient(0, 0, Wd, 0); vg.addColorStop(0, 'rgba(10,10,11,.92)'); vg.addColorStop(0.6, 'rgba(10,10,11,.55)'); vg.addColorStop(1, 'rgba(10,10,11,.8)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, Wd, H);
+    if (iTap) { ctx.save(); ctx.globalAlpha = 0.28; const r = Math.max(Wd / iTap.width, H / iTap.height); ctx.drawImage(iTap, 0, 0, iTap.width * r, iTap.height * r); ctx.restore(); }
+    const vg = ctx.createRadialGradient(Wd * 0.75, 40, 40, Wd * 0.6, H * 0.4, Wd * 0.9); vg.addColorStop(0, 'rgba(242,197,42,.10)'); vg.addColorStop(0.35, 'rgba(10,10,11,.55)'); vg.addColorStop(1, 'rgba(10,10,11,.92)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, Wd, H);
     // encabezado
-    let bx = M; if (iAb) { const h = 26, w = iAb.width * h / iAb.height; ctx.drawImage(iAb, bx, 24, w, h); bx += w + 14; }
-    if (iT77) { const h = 24, w = iT77.width * h / iT77.height; rr(ctx, bx, 21, w + 16, 32, 6); ctx.fillStyle = '#FFF'; ctx.fill(); ctx.drawImage(iT77, bx + 8, 25, w, h); bx += w + 30; }
-    ctx.fillStyle = 'rgba(242,197,42,.4)'; ctx.fillRect(bx, 24, 1, 26); bx += 14;
-    ctx.font = FM(700, 12); ctx.fillStyle = K.gold; ctx.textAlign = 'left'; ctx.fillText('CD CALLAO · DELIVERY · TRANSPORTES', bx, 38);
-    ctx.font = FD(800, 56); ctx.textBaseline = 'alphabetic'; goldText(ctx, 'CIERRE DEL DÍA', M, 112, 56);
-    const tw = ctx.measureText('CIERRE DEL DÍA').width;
-    ctx.font = FD(700, 34); ctx.fillStyle = K.fg; ctx.fillText(`${d.dia.toUpperCase()} ${d.fecha}`, M + tw + 22, 110);
-    ctx.fillStyle = K.gold2; ctx.fillRect(M, 126, 420, 2);
-    if (iCd) { const cx = Wd - M - 62, cy = 74, r = 58; ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r + 5, 0, Math.PI * 2); const rg = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r); rg.addColorStop(0, K.gold3); rg.addColorStop(0.5, K.gold); rg.addColorStop(1, '#B07E07'); ctx.strokeStyle = rg; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
-      ctx.drawImage(iCd, cx - r, cy - r, r * 2, r * 2); }
+    let bx = M; if (iAb) { const h = 26, w = iAb.width * h / iAb.height; ctx.drawImage(iAb, bx, 26, w, h); bx += w + 14; }
+    if (iT77) { const h = 24, w = iT77.width * h / iT77.height; rr(ctx, bx, 23, w + 16, 32, 6); ctx.fillStyle = '#FFF'; ctx.fill(); ctx.drawImage(iT77, bx + 8, 27, w, h); bx += w + 30; }
+    ctx.fillStyle = 'rgba(242,197,42,.4)'; ctx.fillRect(bx, 26, 1, 26); label(ctx, 'CD Callao · Delivery · Cierre de turno', bx + 14, 40, K.gold);
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.font = FD(800, 64); goldText(ctx, 'CIERRE DEL DÍA', M, 122, 64);
+    const tw = ctx.measureText('CIERRE DEL DÍA').width; ctx.font = FD(700, 34); ctx.fillStyle = K.fg; ctx.fillText(`${d.dia.toUpperCase()} ${d.fecha}`, M + tw + 24, 120);
+    const lg = ctx.createLinearGradient(M, 0, M + 520, 0); lg.addColorStop(0, K.gold); lg.addColorStop(1, 'rgba(242,197,42,0)'); ctx.fillStyle = lg; ctx.fillRect(M, 136, 520, 2);
+    if (iCd) { const cx = Wd - M - 66, cy = 80, r = 60; ctx.save(); ctx.shadowColor = 'rgba(242,197,42,.45)'; ctx.shadowBlur = 24; ctx.beginPath(); ctx.arc(cx, cy, r + 6, 0, Math.PI * 2); const rg = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r); rg.addColorStop(0, K.gold3); rg.addColorStop(0.5, K.gold); rg.addColorStop(1, '#B07E07'); ctx.strokeStyle = rg; ctx.lineWidth = 3; ctx.stroke(); ctx.restore(); ctx.drawImage(iCd, cx - r, cy - r, r * 2, r * 2); }
     ctx.textBaseline = 'middle';
-    // indicadores
-    const zt = d.edtGroups.find((g) => g.lab === 'ZT') || { n: 0, hl: 0 }, rp = d.edtGroups.find((g) => g.lab === 'REPROGRAMACIÓN') || { n: 0, hl: 0 };
-    const kw = (Wd - M * 2 - 16 * 4) / 5; const cards = [
-      ['Viajes desplanificados', String(d.nTotal + d.nParc), `${d.nTotal} total · ${d.nParc} parcial${d.cab ? ` · ${d.cab} cambio cabecera` : ''}`, K.gold],
-      ['HL desplanificado', f3(d.hlDes), `${d.nDes} cliente(s) desplanificado(s)`, K.gold],
-      ['ZT (rechazo)', String(zt.n), `${f3(zt.hl)} HL · ${d.hlDes ? Math.round(zt.hl / d.hlDes * 100) : 0}% del HL`, K.red],
-      ['Reprogramación', String(rp.n), `${f3(rp.hl)} HL · ${d.hlDes ? Math.round(rp.hl / d.hlDes * 100) : 0}% del HL`, K.amber],
-      ['Reclamos de ventas', String(d.recl.length), `${d.recSol} solucionado(s) · ${d.recPend} pendiente(s)`, d.recPend ? K.red : K.green]];
-    cards.forEach((c, i) => kpi(ctx, M + i * (kw + 16), top + 4, kw, kh - 4, ...c));
-    // tablas
-    const gap = 18, wA = 560, wB = 330, wE = Wd - M * 2 - wA - wB - gap * 2;
-    const yA = table(ctx, M, yT, wA, 'Desplanificación total', [{ h: 'Ruta', w: 80 }, { h: 'Transporte', w: 110 }, { h: 'Viaje', w: 50, r: 1 }, { h: 'Vehículo', w: 90 }, { h: 'Clientes', w: 75, r: 1 }, { h: 'HL', w: 85, r: 1 }],
-      d.totalRows.map((r) => [r[0], r[1], r[2], r[3], r[4], f3(r[5])]), { total: ['Total general', '', '', '', sum(d.totalRows, (r) => r[4]), f3(sum(d.totalRows, (r) => r[5]))], empty: 'Sin desplanificación total' });
-    const yB = table(ctx, M + wA + gap, yT, wB, 'Desplanificación parcial', [{ h: 'Ruta', w: 110 }, { h: 'Clientes', w: 80, r: 1 }, { h: 'HL', w: 95, r: 1 }],
-      d.parcRows.map((r) => [r[0], r[1], f3(r[2])]), { total: ['Total general', sum(d.parcRows, (r) => r[1]), f3(sum(d.parcRows, (r) => r[2]))], empty: 'Sin parciales' });
-    const yE = table(ctx, M + wA + wB + gap * 2, yT, wE, 'Resumen por EDT', [{ h: 'Acción / EDT', w: 300 }, { h: 'Clientes', w: 80, r: 1 }, { h: 'HL', w: 95, r: 1 }], eRows,
-      { total: ['Total general', d.nDes, f3(d.hlDes)], empty: 'Sin clientes desplanificados' });
-    let y = Math.max(yA, yB, yE) + 22;
-    if (note) { ctx.font = FT(500, 13); ctx.fillStyle = K.mute; ctx.textAlign = 'left'; ctx.fillText(fit(ctx, `⚠ Viajes en bitácora sin clientes en DESPLANIFICACIÓN: ${d.sinLineas.join(', ')}`, Wd - M * 2), M, y + 4); y += note; }
-    ctx.font = FT(500, 16); ctx.fillStyle = K.fg; ctx.textAlign = 'left'; const pre = `Status de reclamos de ventas: ${d.recl.length} — `; ctx.fillText(pre, M, y + 6);
-    const px = M + ctx.measureText(pre).width; const hl = `${d.recSol} solucionado(s) y ${d.recPend} pendiente(s)`; ctx.font = FT(700, 16); const hw = ctx.measureText(hl).width;
-    rr(ctx, px - 6, y - 8, hw + 12, 28, 6); ctx.fillStyle = K.gold; ctx.fill(); ctx.fillStyle = '#14110A'; ctx.fillText(hl, px, y + 6);
-    if (d.recl.length > rec.length) { ctx.font = FT(500, 12); ctx.fillStyle = K.mute; ctx.fillText(`(se muestran los ${rec.length} más recientes)`, px + hw + 18, y + 6); }
-    y += 34;
-    const yR = table(ctx, M, y, Wd - M * 2, 'Reclamos del día y pendientes', [{ h: 'Fecha', w: 60 }, { h: 'Ruta', w: 75 }, { h: 'Placa', w: 85 }, { h: 'Código', w: 90 }, { h: 'Cliente', w: 230 }, { h: 'Motivo del reclamo', w: 320 }, { h: 'Supervisor', w: 170 }, { h: 'EDT', w: 150 }, { h: 'Status', w: 120 }],
-      rec.map((r) => ({ cells: [r.fecha.slice(8, 10) + '/' + r.fecha.slice(5, 7), r.ruta, r.placa.replace(/^PE/, ''), r.codigo, r.cliente, r.motivo, r.sv, sh(r.edt), r.status], st: r.status === 'SOLUCIONADO' ? {} : { bg: 'rgba(217,166,46,.16)', bar: K.amber } })),
-      { empty: 'Sin reclamos registrados ni pendientes', accent: d.recPend ? K.red : K.green });
-    const now = new Date(Date.now() - 5 * 3600e3).toISOString();
-    ctx.font = FM(500, 11); ctx.fillStyle = '#8C7A45'; ctx.textAlign = 'left'; ctx.fillText('FUENTE: BITÁCORA COMPARTIDA · REPORTES DE DELIVERY', M, yR + 26);
-    ctx.textAlign = 'right'; ctx.fillText(`GENERADO ${now.slice(8, 10)}/${now.slice(5, 7)} ${now.slice(11, 16)} · TRANSPORTES · CD CALLAO`, Wd - M, yR + 26);
-    const yEnd = yR + 46;
-    if (yEnd < H) { const img = ctx.getImageData(0, 0, Wd * S, Math.ceil(yEnd * S)); canvas.height = Math.ceil(yEnd * S); canvas.style.aspectRatio = `${Wd} / ${yEnd}`; canvas.getContext('2d').putImageData(img, 0, 0); }
+    // HERO: HL desplanificado + división ZT / reprogramación
+    const wH = 700; panel(ctx, M, yHero, wH, hHero, K.gold);
+    label(ctx, 'HL desplanificado del día', M + 26, yHero + 32);
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.font = FD(800, 110); goldText(ctx, f1(d.hlDes), M + 22, yHero + 132, 110);
+    const nw = ctx.measureText(f1(d.hlDes)).width; ctx.font = FD(700, 34); ctx.fillStyle = K.fg; ctx.fillText('HL', M + 34 + nw, yHero + 128);
+    ctx.font = FT(500, 17); ctx.fillStyle = K.mute; ctx.fillText(`${d.nDes} cliente${d.nDes === 1 ? '' : 's'} · ${d.nTotal + d.nParc} viaje${d.nTotal + d.nParc === 1 ? '' : 's'} modificado${d.nTotal + d.nParc === 1 ? '' : 's'} (${d.nTotal} total · ${d.nParc} parcial${d.cab ? ` · ${d.cab} cambio de cabecera` : ''})`, M + 26, yHero + 166);
+    ctx.textBaseline = 'middle';
+    const bx0 = M + 26, bw = wH - 52, by = yHero + 196, bh = 18, tot = (zt.hl + rp.hl) || 1;
+    rr(ctx, bx0, by, bw, bh, 9); ctx.fillStyle = '#2A251B'; ctx.fill();
+    ctx.save(); rr(ctx, bx0, by, bw, bh, 9); ctx.clip(); const wz = bw * zt.hl / tot; ctx.fillStyle = K.red; ctx.fillRect(bx0, by, wz, bh); ctx.fillStyle = K.amber; ctx.fillRect(bx0 + wz, by, bw - wz, bh); ctx.restore();
+    ctx.font = FT(700, 15); ctx.textAlign = 'left'; ctx.fillStyle = '#E8776F'; ctx.fillText(`ZT ${pct(zt.hl, d.hlDes)}% · ${f1(zt.hl)} HL · ${zt.n} cl.`, bx0, by + 36);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#E9C46A'; ctx.fillText(`Reprogramación ${pct(rp.hl, d.hlDes)}% · ${f1(rp.hl)} HL · ${rp.n} cl.`, bx0 + bw, by + 36);
+    // tiles a la derecha
+    const tx = M + wH + G, tWd = Wd - M - tx, tw3 = (tWd - G * 2) / 3;
+    const tiles = [
+      { lab: 'ZT · rechazo', big: String(zt.n), unit: zt.n === 1 ? 'cliente' : 'clientes', sub: `${f1(zt.hl)} HL cerrados`, col: K.red },
+      { lab: 'Reprogramación', big: String(rp.n), unit: rp.n === 1 ? 'cliente' : 'clientes', sub: `${f1(rp.hl)} HL para otro día`, col: K.amber },
+      { lab: 'Reclamos de ventas', big: String(d.recPend), unit: 'pendientes', sub: d.recl.length ? `${d.recl.length} en seguimiento · ${d.recSol} solucionado${d.recSol === 1 ? '' : 's'}` : 'Sin reclamos en seguimiento', col: d.recPend ? K.red : K.green }];
+    tiles.forEach((t, i) => { const x = tx + i * (tw3 + G); panel(ctx, x, yHero, tw3, hHero, t.col);
+      label(ctx, t.lab, x + 22, yHero + 32); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.font = FD(800, 92); ctx.fillStyle = K.fg; ctx.fillText(t.big, x + 20, yHero + 132);
+      const bw2 = ctx.measureText(t.big).width; ctx.font = FD(700, 24); ctx.fillStyle = t.col; ctx.fillText(t.unit.toUpperCase(), x + 30 + bw2, yHero + 128);
+      ctx.textBaseline = 'middle'; ctx.font = FT(500, 15); ctx.fillStyle = K.mute; wrap(ctx, t.sub, tw3 - 44).slice(0, 2).forEach((ln, k) => ctx.fillText(ln, x + 22, yHero + 168 + k * 22));
+      if (i === 2 && !d.recPend) { ctx.font = FT(700, 15); ctx.fillStyle = '#7FD3A5'; ctx.fillText('✓ Todo al día', x + 22, yHero + 220); } });
+    // BLOQUE B: impacto por EDT (barras) | rutas desplanificadas
+    const wB1 = 700; panel(ctx, M, yB, wB1, hB, K.gold);
+    ctx.font = FD(800, 24); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; goldText(ctx, 'IMPACTO POR EMPRESARIO', M + 26, yB + 34, 24);
+    const lgx = M + wB1 - 26; ctx.font = FT(500, 12); ctx.textAlign = 'right'; ctx.fillStyle = K.mute; ctx.fillText('Reprogramación', lgx, yB + 34); let lw = ctx.measureText('Reprogramación').width;
+    ctx.fillStyle = K.amber; ctx.fillRect(lgx - lw - 16, yB + 29, 10, 10); ctx.fillStyle = K.mute; ctx.fillText('ZT', lgx - lw - 28, yB + 34); const lw2 = ctx.measureText('ZT').width; ctx.fillStyle = K.red; ctx.fillRect(lgx - lw - 28 - lw2 - 16, yB + 29, 10, 10);
+    const emax = Math.max(...d.edts.map((e) => e.hl), 0.001);
+    if (!d.edts.length) { ctx.font = FT(500, 15); ctx.fillStyle = K.mute; ctx.textAlign = 'left'; ctx.fillText('Sin clientes desplanificados', M + 26, yB + 84); }
+    d.edts.forEach((e, i) => { const y = yB + 72 + i * 58; ctx.textAlign = 'left'; ctx.font = FT(700, 16); ctx.fillStyle = K.fg; ctx.fillText(e.edt, M + 26, y);
+      ctx.textAlign = 'right'; ctx.font = FT(700, 16); ctx.fillStyle = K.fg; ctx.fillText(`${f1(e.hl)} HL`, M + wB1 - 26, y); const vw = ctx.measureText(`${f1(e.hl)} HL`).width;
+      ctx.font = FT(500, 13); ctx.fillStyle = K.mute; ctx.fillText(`${pct(e.hl, d.hlDes)}% · ${e.n} cl. ·`, M + wB1 - 32 - vw, y + 1);
+      const x0 = M + 26, W0 = wB1 - 52, y0 = y + 14, hb = 14; rr(ctx, x0, y0, W0, hb, 7); ctx.fillStyle = '#221E16'; ctx.fill();
+      const wz2 = W0 * e.zt / emax, wr2 = W0 * e.rp / emax; ctx.save(); rr(ctx, x0, y0, Math.max(wz2 + wr2, 2), hb, 7); ctx.clip(); ctx.fillStyle = K.red; ctx.fillRect(x0, y0, wz2, hb); ctx.fillStyle = K.amber; ctx.fillRect(x0 + wz2, y0, wr2, hb); ctx.restore(); });
+    const xR = M + wB1 + G, wR = Wd - M - xR; panel(ctx, xR, yB, wR, hB, K.gold);
+    ctx.font = FD(800, 24); ctx.textAlign = 'left'; goldText(ctx, 'RUTAS DESPLANIFICADAS', xR + 26, yB + 34, 24);
+    const rmax = Math.max(...rutas.map((r) => r.hl), 0.001);
+    if (!rutas.length) { ctx.font = FT(500, 15); ctx.fillStyle = K.mute; ctx.fillText('Sin rutas con clientes desplanificados', xR + 26, yB + 84); }
+    rutas.forEach((r, i) => { const y = yB + 80 + i * 40; ctx.textAlign = 'left'; ctx.font = FD(800, 22); ctx.fillStyle = K.fg; ctx.fillText(r.ruta, xR + 26, y);
+      chip(ctx, r.tipo === 'TOTAL' ? 'TOTAL' : 'PARCIAL', xR + 116, y, r.tipo === 'TOTAL' ? 'rgba(201,74,67,.25)' : 'rgba(242,197,42,.14)', r.tipo === 'TOTAL' ? '#E8776F' : K.gold);
+      ctx.font = FT(500, 14); ctx.fillStyle = K.mute; ctx.fillText(fit(ctx, r.edt, 200), xR + 200, y + 1);
+      const x0 = xR + 410, W0 = wR - 410 - 190, hb = 12; rr(ctx, x0, y - 6, W0, hb, 6); ctx.fillStyle = '#221E16'; ctx.fill();
+      const wz3 = W0 * r.zt / rmax, wr3 = W0 * r.rp / rmax; if (wz3 + wr3 > 0) { ctx.save(); rr(ctx, x0, y - 6, Math.max(wz3 + wr3, 2), hb, 6); ctx.clip(); ctx.fillStyle = K.red; ctx.fillRect(x0, y - 6, wz3, hb); ctx.fillStyle = K.amber; ctx.fillRect(x0 + wz3, y - 6, wr3, hb); ctx.restore(); }
+      ctx.textAlign = 'right'; ctx.font = FT(700, 15); ctx.fillStyle = K.fg; ctx.fillText(`${f3(r.hl)} HL`, xR + wR - 26, y); ctx.font = FT(500, 13); ctx.fillStyle = K.mute; ctx.fillText(`${r.n} cl.`, xR + wR - 120, y + 1);
+      if (i < rutas.length - 1) { ctx.strokeStyle = 'rgba(58,49,33,.6)'; ctx.beginPath(); ctx.moveTo(xR + 26, y + 20.5); ctx.lineTo(xR + wR - 26, y + 20.5); ctx.stroke(); } });
+    if (extraR) { ctx.font = FT(500, 13); ctx.fillStyle = K.mute; ctx.textAlign = 'left'; ctx.fillText(`+ ${extraR} ruta(s) más con menor impacto`, xR + 26, yB + 80 + rutas.length * 40); }
+    // BLOQUE C: lo más importante | reclamos pendientes
+    const wC1 = 960; panel(ctx, M, yC, wC1, hC, K.gold);
+    ctx.font = FD(800, 24); ctx.textAlign = 'left'; goldText(ctx, 'LO MÁS IMPORTANTE DEL DÍA', M + 26, yC + 34, 24);
+    const dotC = { gold: K.gold, red: K.red, amber: K.amber, mute: K.gray || '#6E6758' };
+    ins.forEach(([c, t], i) => { const y = yC + 74 + i * 30; ctx.beginPath(); ctx.arc(M + 32, y, 5, 0, Math.PI * 2); ctx.fillStyle = dotC[c] || K.gold; ctx.fill();
+      ctx.font = FT(c === 'mute' ? 500 : 600, 16); ctx.fillStyle = c === 'mute' ? K.mute : K.fg; ctx.textAlign = 'left'; ctx.fillText(fit(ctx, t, wC1 - 80), M + 46, y + 1); });
+    const xR2 = M + wC1 + G, wR2 = Wd - M - xR2; panel(ctx, xR2, yC, wR2, hC, d.recPend ? K.red : K.green);
+    ctx.font = FD(800, 24); ctx.textAlign = 'left'; goldText(ctx, 'RECLAMOS PENDIENTES', xR2 + 26, yC + 34, 24);
+    if (!recRows.length) { ctx.font = FT(700, 17); ctx.fillStyle = '#7FD3A5'; ctx.fillText('✓ Sin reclamos pendientes', xR2 + 26, yC + 76); }
+    recRows.forEach((r, i) => { const y = yC + 74 + i * 30; ctx.font = FT(700, 14); ctx.fillStyle = K.fg; ctx.textAlign = 'left'; ctx.fillText(`${r.fecha.slice(8, 10)}/${r.fecha.slice(5, 7)} · ${r.ruta}`, xR2 + 26, y);
+      ctx.font = FT(500, 14); ctx.fillStyle = K.mute; ctx.fillText(fit(ctx, `${r.cliente} — ${r.motivo}`, wR2 - 200), xR2 + 150, y + 1); });
+    if (d.recPend > recRows.length) { ctx.font = FT(500, 12); ctx.fillStyle = K.mute; ctx.fillText(`+ ${d.recPend - recRows.length} más`, xR2 + 26, yC + 74 + recRows.length * 30); }
+    // pie
+    const now = new Date(Date.now() - 5 * 3600e3).toISOString(); ctx.font = FM(500, 11); ctx.fillStyle = '#8C7A45'; ctx.textAlign = 'left'; ctx.fillText('FUENTE: BITÁCORA COMPARTIDA · REPORTES DE DELIVERY', M, H - 28);
+    ctx.textAlign = 'right'; ctx.fillText(`GENERADO ${now.slice(8, 10)}/${now.slice(5, 7)} ${now.slice(11, 16)} · TRANSPORTES · CD CALLAO`, Wd - M, H - 28);
     return canvas;
   }
 
