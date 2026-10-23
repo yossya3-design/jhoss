@@ -95,14 +95,14 @@ export function convert(buf) {
   const hd = header("DESPLANIFICACIÓN").map((h) => s(or(h, "")).toUpperCase());
   const ci = (...names) => { for (const n of names) { const i = hd.indexOf(n); if (i >= 0) return i; } return null; };
   const iF = ci("FECHA"), iR = ci("RUTA"), iC = ci("CODIGO", "CÓDIGO"), iN = ci("CLIENTE"), iCA = ci("CA"), iHL = ci("HL"), iM = ci("MOTIVO"),
-    iQ = ci("QUE SE HACE?", "QUÉ SE HACE?", "QUE SE HACE"), iS = ci("STATUS"), iA = ci("ALERTADO");
+    iQ = ci("QUE SE HACE?", "QUÉ SE HACE?", "QUE SE HACE"), iS = ci("STATUS"), iA = ci("ALERTADO"), iT = ci("TRANSPORTE"), iV = ci("# VIAJE", "VIAJE", "N° VIAJE");
   const ACC = { ZT: "ZT (rechazo)", REPROGRAMACION: "Reprogramación", "REPROGRAMACIÓN": "Reprogramación" };
   for (const r of rows("DESPLANIFICACIÓN", 2)) {
     const f = d(g(r, iF)), rt = ru(g(r, iR)); if (!f || !rt) continue;
     const [p, e] = info(rt); const acc = s(or(g(r, iQ), "")).toUpperCase(); const code = g(r, iC);
     add({ tipo: "Cliente desplanificado", fecha: f, ruta: rt, edt: e, placa: placa(p), motivo: s(or(g(r, iM), "")), accion: ACC[acc] || "Sin clasificar",
       codigo: pyStr(or(code, "")), cliente: cli(code, g(r, iN)), sv: svof(code), zona: zof(code), tel: telof(code), ca: num(g(r, iCA)), hl: Math.round(num(g(r, iHL)) * 1000) / 1000,
-      status: s(or(g(r, iS), "")).toUpperCase(), alertado: s(or(g(r, iA), "")).toUpperCase() });
+      status: s(or(g(r, iS), "")).toUpperCase(), alertado: s(or(g(r, iA), "")).toUpperCase(), viaje: pyStr(or(g(r, iT), "")), nviaje: pyStr(or(g(r, iV), "")) });
   }
 
   for (const r of rows("LISTA DE TT", 2)) {

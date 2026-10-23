@@ -318,6 +318,7 @@ window.dash = (function () {
 .bx-conf.edit{flex-direction:column;align-items:stretch;gap:5px;min-width:190px}
 .bx-conf select{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:5px 8px;font:inherit;font-size:12px;color-scheme:dark}
 .bx-cbs{display:flex;gap:6px}
+.bx-cimg{background:#fff;border-radius:8px;overflow:auto;border:1px solid var(--k-line)}.bx-cimg canvas{display:block;width:100%;min-width:880px;height:auto}
 .bx-cli{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:150px}.bx-cli .bx-wal{gap:6px}
 .bx-estado{white-space:nowrap;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;border:1px solid}
 .bx-estado.ok{color:#7FD3A5;background:rgba(47,163,107,.12);border-color:rgba(47,163,107,.5)}.bx-estado.bad{color:#E8776F;background:rgba(201,74,67,.12);border-color:rgba(201,74,67,.5)}.bx-estado.warn{color:#E9C46A;background:rgba(217,166,46,.1);border-color:rgba(217,166,46,.5)}
@@ -357,7 +358,7 @@ window.dash = (function () {
       <div class="bx-tabs" role="tablist" aria-label="Secciones">
         <button role="tab" id="tab-ventas" aria-controls="ventas" aria-selected="true">Reporte para Ventas</button>
         <button role="tab" id="tab-almacen" aria-controls="almacen" aria-selected="false">Reporte para Almacén</button>
-        <button role="tab" id="tab-edt" aria-controls="edt" aria-selected="false">Reporte por EDT</button>
+        <button role="tab" id="tab-edt" aria-controls="edt" aria-selected="false">Reporte por EDT</button><button role="tab" id="tab-cierre" aria-controls="cierre" aria-selected="false" hidden>Cierre de turno</button>
       </div>
       <div class="bx-filters" id="filtros" data-source="registros">
         <button class="bx-btn" id="f-hoy" type="button" aria-pressed="false">Hoy</button>
@@ -566,6 +567,15 @@ window.dash = (function () {
       </div>
     </section>
 
+    <section class="bx-page" id="cierre" role="tabpanel" aria-labelledby="tab-cierre" hidden>
+      <div class="bx-card bx-wide bx-admin">
+        <div class="bx-card-h"><div><h3 style="color:var(--k-gold)">Cierre de turno</h3><p class="sub">Solo administrador. Elige el día y pásalo a tu correo de cierre como imagen o como tablas.</p></div></div>
+        <div class="bx-tools"><div class="bx-f"><label for="c-dia">Día del cierre</label><input type="date" id="c-dia"></div>
+          <button class="bx-btn bx-solid" type="button" id="c-img">Copiar imagen</button><button class="bx-btn" type="button" id="c-dl">Descargar imagen</button><button class="bx-btn" type="button" id="c-html">Copiar tablas para Outlook</button><span class="bx-count" id="c-msg"></span></div>
+        <div class="bx-cimg"><canvas id="c-cv" aria-label="Imagen del cierre del día"></canvas></div>
+      </div>
+    </section>
+
     <!-- ===================== EDT ===================== -->
     <section class="bx-page" id="edt" role="tabpanel" aria-labelledby="tab-edt" hidden>
       <h2 class="bx-h2">Rendimiento por empresario</h2>
@@ -631,6 +641,7 @@ window.dash = (function () {
 <script src="logos.js"></script>
 <script src="flota.js"></script>
 <script src="xlsx-lite.js"></script>
+<script src="cierre.js"></script>
 <script>
 (function () {
   const USD_HL = 3.396; // costo en dólares por HL desplanificado, definido por Transportes
@@ -936,11 +947,11 @@ window.dash = (function () {
   const heatOf = (arr, k) => { const mx = d3.max(arr, (r) => r[k]) || 1; return (v) => (v ? `rgba(201,74,67,${(0.08 + 0.42 * v / mx).toFixed(2)})` : ''); };
 
   // ---------- pestañas ----------
-  const TABS = { ventas: 'tab-ventas', almacen: 'tab-almacen', edt: 'tab-edt' };
-  function openTab(id, link) { if (!TABS[id]) return; if (window.__decOnly && id !== 'ventas') id = 'ventas'; state.tab = id;
+  const TABS = { ventas: 'tab-ventas', almacen: 'tab-almacen', edt: 'tab-edt', cierre: 'tab-cierre' };
+  function openTab(id, link) { if (!TABS[id]) return; if (window.__decOnly && id !== 'ventas') id = 'ventas'; if (id === 'cierre' && !window.__isAdmin) id = 'ventas'; state.tab = id;
     Object.entries(TABS).forEach(([sec, tab]) => { $(sec).hidden = sec !== id; $(tab).setAttribute('aria-selected', String(sec === id)); });
     $('f-sv-box').hidden = id !== 'ventas';
-    if (link) dash.setLink(id); hideTip(); redraw(); }
+    if (link) dash.setLink(id); hideTip(); redraw(); document.querySelectorAll('.bx-filters, #f-edts, #periodo').forEach((e) => { e.style.display = id === 'cierre' ? 'none' : ''; }); if (id === 'cierre' && window.__renderCierre) window.__renderCierre(); }
   Object.entries(TABS).forEach(([sec, tab]) => $(tab).addEventListener('click', () => openTab(sec, true)));
 
   // ---------- controles ----------
@@ -1002,7 +1013,7 @@ window.dash = (function () {
   function setAdmin(t) { incTok = t || ''; role = incTok ? incTok.split('.')[0] : ''; incAdmin = role === 'admin'; canConf = role === 'admin' || role === 'dec'; try { if (incTok) sessionStorage.setItem(TK, incTok); else sessionStorage.removeItem(TK); } catch (e) { /* sin almacenamiento */ }
     $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('adm-btn').hidden = role === 'dec';
     $('dec-btn').textContent = role === 'dec' ? 'Salir (DEC)' : 'Acceso DEC'; $('dec-btn').hidden = incAdmin; $('n-login').hidden = true;
-    $('d-xl').hidden = !canConf; window.__decOnly = role === 'dec'; $('tab-almacen').hidden = window.__decOnly; $('tab-edt').hidden = window.__decOnly; if (window.__decOnly && state.tab !== 'ventas') openTab('ventas', true);
+    $('d-xl').hidden = !canConf; window.__isAdmin = incAdmin; $('tab-cierre').hidden = !incAdmin; if (!incAdmin && state.tab === 'cierre') openTab('ventas', true); window.__decOnly = role === 'dec'; $('tab-almacen').hidden = window.__decOnly; $('tab-edt').hidden = window.__decOnly; if (window.__decOnly && state.tab !== 'ventas') openTab('ventas', true);
     renderInc(); redraw(); }
   function renderInc() {
     const { lo, hi, edt, isDay } = incF;
@@ -1198,6 +1209,21 @@ window.dash = (function () {
     if (r.accion !== 'Reprogramación') return el('span', 'bx-cz', '—');
     const box = el('div'); fillConf(box, r, false); return box; }
   const telNode = (r) => { if (!r.tel) return el('span', 'bx-cz', '—'); const a = el('a', 'bx-tel', r.tel); a.href = 'tel:' + String(r.tel).replace(/[^0-9+]/g, ''); return a; };
+  function renderCierre() { const cv = $('c-cv'), day = $('c-dia').value; if (!window.bxCierre || !window.__allRows || !day) return;
+    window.__cierre = window.bxCierre.build(window.__allRows, day, short); window.bxCierre.draw(cv, window.__cierre); }
+  window.__renderCierre = renderCierre;
+  $('c-dia').addEventListener('change', () => { $('c-msg').textContent = ''; renderCierre(); });
+  const cMsg = (t) => { $('c-msg').textContent = t; clearTimeout(cMsg.t); cMsg.t = setTimeout(() => { $('c-msg').textContent = ''; }, 6000); };
+  const cBlob = () => new Promise((res) => $('c-cv').toBlob(res, 'image/png'));
+  const cName = () => `cierre_${$('c-dia').value}.png`;
+  const cDown = async () => { const b = await cBlob(); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = cName(); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); };
+  $('c-img').addEventListener('click', async () => { try { if (!navigator.clipboard || !window.ClipboardItem) throw new Error('x');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': cBlob() })]); cMsg('Imagen copiada: pégala en tu correo con Ctrl + V.'); }
+    catch (e) { await cDown(); cMsg('Tu navegador no deja copiar imágenes: la descargué para que la adjuntes.'); } });
+  $('c-dl').addEventListener('click', () => { cDown(); cMsg('Imagen descargada.'); });
+  $('c-html').addEventListener('click', async () => { if (!window.__cierre) return; const h = window.bxCierre.html(window.__cierre);
+    try { await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([h], { type: 'text/html' }), 'text/plain': new Blob([document.createRange().createContextualFragment(h).textContent], { type: 'text/plain' }) })]); cMsg('Tablas copiadas: pégalas en Outlook con Ctrl + V.'); }
+    catch (e) { cMsg('No se pudo copiar; usa Copiar imagen.'); } });
   setAdmin(incTok);
 
 
@@ -1516,6 +1542,10 @@ window.dash = (function () {
       }
     };
     redraw();
+    window.__allRows = all;
+    { const cd = $('c-dia'); const hoyC = hoyLima(); const fd = all.filter((r) => r.tipo === 'Cliente desplanificado' || r.tipo === 'Modificación de viaje').map((r) => r.fecha).filter((f) => f <= hoyC).sort();
+      if (fd.length) { cd.max = hoyC; cd.min = fd[0]; if (!cd.value) cd.value = fd[fd.length - 1]; } }
+    if (state.tab === 'cierre') renderCierre();
     const pie = $('pie').firstElementChild;
     pie.textContent = ok && fechas.length ? `Fuente: bitácora compartida · ${fmt(all.length)} registros del ${ddmm(dMin)} al ${ddmm(dMax)}/${dMax.slice(0, 4)}` : '—';
   });
