@@ -571,7 +571,7 @@ window.dash = (function () {
       <div class="bx-card bx-wide bx-admin">
         <div class="bx-card-h"><div><h3 style="color:var(--k-gold)">Cierre de turno</h3><p class="sub">Solo administrador. Elige el día y pásalo a tu correo de cierre como imagen o como tablas.</p></div></div>
         <div class="bx-tools"><div class="bx-f"><label for="c-dia">Día del cierre</label><input type="date" id="c-dia"></div>
-          <button class="bx-btn bx-solid" type="button" id="c-img">Copiar imagen</button><button class="bx-btn" type="button" id="c-dl">Descargar imagen</button><button class="bx-btn" type="button" id="c-html">Copiar tablas para Outlook</button><span class="bx-count" id="c-msg"></span></div>
+          <button class="bx-btn bx-solid" type="button" id="c-img">Copiar imagen</button><button class="bx-btn" type="button" id="c-dl">Descargar imagen</button><button class="bx-btn" type="button" id="c-html">Copiar tablas para Outlook</button><button class="bx-btn" type="button" id="c-mail">Enviar a mi correo</button><span class="bx-count" id="c-msg"></span></div>
         <div class="bx-cimg"><canvas id="c-cv" aria-label="Imagen del cierre del día"></canvas></div>
       </div>
     </section>
@@ -1210,11 +1210,11 @@ window.dash = (function () {
     const box = el('div'); fillConf(box, r, false); return box; }
   const telNode = (r) => { if (!r.tel) return el('span', 'bx-cz', '—'); const a = el('a', 'bx-tel', r.tel); a.href = 'tel:' + String(r.tel).replace(/[^0-9+]/g, ''); return a; };
   function renderCierre() { const cv = $('c-cv'), day = $('c-dia').value; if (!window.bxCierre || !window.__allRows || !day) return;
-    window.__cierre = window.bxCierre.build(window.__allRows, day, short); window.bxCierre.draw(cv, window.__cierre); }
+    window.__cierre = window.bxCierre.build(window.__allRows, day, short); window.__cierreP = window.bxCierre.draw(cv, window.__cierre); }
   window.__renderCierre = renderCierre;
   $('c-dia').addEventListener('change', () => { $('c-msg').textContent = ''; renderCierre(); });
   const cMsg = (t) => { $('c-msg').textContent = t; clearTimeout(cMsg.t); cMsg.t = setTimeout(() => { $('c-msg').textContent = ''; }, 6000); };
-  const cBlob = () => new Promise((res) => $('c-cv').toBlob(res, 'image/png'));
+  const cBlob = async () => { await window.__cierreP; return new Promise((res) => $('c-cv').toBlob(res, 'image/png')); };
   const cName = () => `cierre_${$('c-dia').value}.png`;
   const cDown = async () => { const b = await cBlob(); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = cName(); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); };
   $('c-img').addEventListener('click', async () => { try { if (!navigator.clipboard || !window.ClipboardItem) throw new Error('x');
@@ -1224,6 +1224,14 @@ window.dash = (function () {
   $('c-html').addEventListener('click', async () => { if (!window.__cierre) return; const h = window.bxCierre.html(window.__cierre);
     try { await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([h], { type: 'text/html' }), 'text/plain': new Blob([document.createRange().createContextualFragment(h).textContent], { type: 'text/plain' }) })]); cMsg('Tablas copiadas: pégalas en Outlook con Ctrl + V.'); }
     catch (e) { cMsg('No se pudo copiar; usa Copiar imagen.'); } });
+  const MAIL_TO = 'jhoselyn.m.torres@ab-inbev.com';
+  $('c-mail').addEventListener('click', async () => { const d = window.__cierre; if (!d) return;
+    let ok = false; try { if (navigator.clipboard && window.ClipboardItem) { await navigator.clipboard.write([new ClipboardItem({ 'image/png': cBlob() })]); ok = true; } } catch (e) { ok = false; }
+    if (!ok) await cDown();
+    const subj = `CIERRE DEL DÍA ${d.fecha.slice(0, 5)} // TRANSPORTE`;
+    const body = `Buenas noches,\n\nComparto el cierre del día ${d.dia.toLowerCase()} ${d.fecha}.\n\n${ok ? '(Pega aquí la imagen con Ctrl + V)' : '(Adjunta aquí la imagen descargada)'}\n\nSaludos.`;
+    cMsg(ok ? 'Imagen copiada: en el correo que se abre, pégala con Ctrl + V.' : 'Imagen descargada: adjúntala en el correo que se abre.');
+    location.href = `mailto:${MAIL_TO}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`; });
   setAdmin(incTok);
 
 

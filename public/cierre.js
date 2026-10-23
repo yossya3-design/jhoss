@@ -36,66 +36,106 @@
       nTotal: bit.filter((b) => /TOTAL/.test(b.motivo)).length, nParc: bit.filter((b) => /PARCIAL/.test(b.motivo)).length || parcRows.length, cab, nDes: des.length, hlDes: sum(des, (x) => x.hl), short };
   }
 
-  // ---------- imagen ----------
-  const C = { ink: '#1F2329', mute: '#5E6670', head: '#BDD7EE', headInk: '#0F2A44', line: '#D6DCE4', grp: '#EEF4FA', tot: '#9DC3E6', band: '#0A0A0B', gold: '#F2C52A' };
-  const FONT = (w, s) => `${w} ${s}px Calibri, 'Segoe UI', Arial, sans-serif`;
+  // ---------- imagen (estilo Tapiz Backus: negro y dorado) ----------
+  const K = { bg: '#0A0A0B', panel: '#14120D', panel2: '#1B1810', line: '#3A3121', fg: '#F4F1E8', mute: '#A79F8C', gold: '#F2C52A', gold2: '#C8960F', gold3: '#FFE97A', red: '#C94A43', amber: '#D9A62E', green: '#2FA36B', headBg: '#2A2310' };
+  const FD = (w, s) => `${w} ${s}px 'Big Shoulders Display', 'Bahnschrift Condensed', 'Arial Narrow', Arial, sans-serif`;
+  const FT = (w, s) => `${w} ${s}px Barlow, 'Segoe UI', Arial, sans-serif`;
+  const FM = (w, s) => `${w} ${s}px 'JetBrains Mono', Consolas, 'Courier New', monospace`;
+  const imgCache = {};
+  const loadImg = (src) => imgCache[src] || (imgCache[src] = new Promise((res) => { if (!src) return res(null); const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; }));
   function fit(ctx, t, w) { t = String(t); if (ctx.measureText(t).width <= w) return t; while (t.length > 1 && ctx.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; }
-  function table(ctx, x, y, title, cols, rows, opt = {}) {
-    const W = cols.reduce((s, c) => s + c.w, 0), RH = 26;
-    ctx.fillStyle = C.ink; ctx.font = FONT(700, 15); ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillText(title, x, y + 10); y += 28;
+  function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function goldText(ctx, t, x, y, size) { const g = ctx.createLinearGradient(0, y - size * 0.7, 0, y + size * 0.4); g.addColorStop(0, K.gold3); g.addColorStop(0.55, K.gold); g.addColorStop(1, K.gold2); ctx.fillStyle = g; ctx.fillText(t, x, y); }
+  function panel(ctx, x, y, w, h, accent) { ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6; rr(ctx, x, y, w, h, 12); ctx.fillStyle = K.panel; ctx.fill(); ctx.restore();
+    rr(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 12); ctx.strokeStyle = K.line; ctx.lineWidth = 1; ctx.stroke();
+    if (accent) { ctx.save(); rr(ctx, x, y, w, h, 12); ctx.clip(); ctx.fillStyle = accent; ctx.fillRect(x, y, w, 4); ctx.restore(); } }
+  const RH = 28;
+  const tblH = (n, total) => 50 + RH * (1 + Math.max(n, 1) + (total ? 1 : 0)) + 14;
+  function table(ctx, x, y, w, title, cols, rows, opt = {}) {
+    const h = tblH(rows.length, !!opt.total); panel(ctx, x, y, w, h, opt.accent || K.gold);
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.font = FD(800, 20); goldText(ctx, title.toUpperCase(), x + 16, y + 28, 20);
+    const cw = cols.reduce((s, c) => s + c.w, 0), sc = (w - 28) / cw; const X = x + 14; let cy = y + 46;
     const row = (cells, st) => {
-      if (st.bg) { ctx.fillStyle = st.bg; ctx.fillRect(x, y, W, RH); }
-      let cx = x; ctx.font = FONT(st.bold ? 700 : 400, 13);
-      cells.forEach((v, i) => { const c = cols[i]; ctx.fillStyle = st.ink || C.ink; const pad = 8 + (i === 0 && st.indent ? 16 : 0);
-        const t = fit(ctx, v == null ? '' : v, c.w - pad - 8);
-        if (c.r) { ctx.textAlign = 'right'; ctx.fillText(t, cx + c.w - 8, y + RH / 2 + 1); } else { ctx.textAlign = 'left'; ctx.fillText(t, cx + pad, y + RH / 2 + 1); }
-        cx += c.w; });
-      ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y + RH + 0.5); ctx.lineTo(x + W, y + RH + 0.5); ctx.stroke(); y += RH; };
-    row(cols.map((c) => c.h), { bg: C.head, bold: 1, ink: C.headInk });
-    if (!rows.length) { ctx.font = FONT(400, 13); ctx.fillStyle = C.mute; ctx.textAlign = 'left'; ctx.fillText(opt.empty || 'Sin registros', x + 8, y + RH / 2 + 1);
-      ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(x, y + RH + 0.5); ctx.lineTo(x + W, y + RH + 0.5); ctx.stroke(); y += RH; }
+      if (st.bg) { ctx.fillStyle = st.bg; if (st.round) { rr(ctx, X, cy, w - 28, RH, 6); ctx.fill(); } else ctx.fillRect(X, cy, w - 28, RH); }
+      if (st.bar) { ctx.fillStyle = st.bar; ctx.fillRect(X, cy + 4, 3, RH - 8); }
+      let cx = X; cells.forEach((v, i) => { const c = cols[i], cwd = c.w * sc; ctx.font = st.font || (st.bold ? FT(700, 14) : FT(500, 14)); ctx.fillStyle = st.ink || K.fg;
+        let span = cwd; if (!c.r) for (let j = i + 1; j < cells.length && cells[j] === ''; j++) span += cols[j].w * sc;
+        const pad = 10 + (i === 0 && st.indent ? 16 : 0); const t = fit(ctx, v == null ? '' : v, span - pad - 10);
+        if (c.r) { ctx.textAlign = 'right'; ctx.fillText(t, cx + cwd - 10, cy + RH / 2 + 1); } else { ctx.textAlign = 'left'; ctx.fillText(t, cx + pad, cy + RH / 2 + 1); } cx += cwd; });
+      if (!st.noLine) { ctx.strokeStyle = 'rgba(58,49,33,.7)'; ctx.beginPath(); ctx.moveTo(X, cy + RH + 0.5); ctx.lineTo(X + w - 28, cy + RH + 0.5); ctx.stroke(); }
+      cy += RH; };
+    row(cols.map((c) => c.h.toUpperCase()), { bg: K.headBg, ink: K.gold, font: FM(700, 11), round: 1, noLine: 1 });
+    if (!rows.length) { ctx.font = FT(500, 14); ctx.fillStyle = K.mute; ctx.textAlign = 'left'; ctx.fillText(opt.empty || 'Sin registros', X + 10, cy + RH / 2 + 1); cy += RH; }
     rows.forEach((r) => row(r.cells || r, r.st || {}));
-    if (opt.total) row(opt.total, { bg: C.tot, bold: 1, ink: C.headInk });
-    return y;
+    if (opt.total) { const g = ctx.createLinearGradient(0, cy, 0, cy + RH); g.addColorStop(0, '#F2C52A'); g.addColorStop(1, '#C8960F'); row(opt.total, { bg: g, bold: 1, ink: '#14110A', round: 1, noLine: 1 }); }
+    return y + h;
   }
-  function draw(canvas, d, maxRec = 14) {
-    const S = 2, Wd = 1480;
-    const sh = d.short;
-    const A = { cols: [{ h: 'Ruta', w: 90 }, { h: 'Transporte', w: 120 }, { h: 'Viaje', w: 55, r: 1 }, { h: 'Vehículo', w: 95 }, { h: 'Clientes', w: 75, r: 1 }, { h: 'HL', w: 85, r: 1 }] };
-    const B = { cols: [{ h: 'Ruta', w: 110 }, { h: 'Clientes', w: 80, r: 1 }, { h: 'HL', w: 95, r: 1 }] };
-    const E = { cols: [{ h: 'Acción / EDT', w: 290 }, { h: 'Clientes', w: 80, r: 1 }, { h: 'HL', w: 95, r: 1 }] };
-    const R = { cols: [{ h: 'Fecha', w: 70 }, { h: 'Ruta', w: 80 }, { h: 'Placa', w: 95 }, { h: 'Código', w: 95 }, { h: 'Cliente', w: 250 }, { h: 'Motivo del reclamo', w: 330 }, { h: 'Supervisor', w: 190 }, { h: 'EDT', w: 170 }, { h: 'Status', w: 130 }] };
-    const eRows = []; d.edtGroups.forEach((g) => { eRows.push({ cells: [g.lab, g.n, f3(g.hl)], st: { bold: 1, bg: C.grp } }); g.rows.forEach((r) => eRows.push({ cells: [r[0], r[1], f3(r[2])], st: { indent: 1 } })); });
+  function kpi(ctx, x, y, w, h, lab, val, sub, accent) {
+    panel(ctx, x, y, w, h, accent); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    ctx.font = FM(700, 11); ctx.fillStyle = K.mute; ctx.fillText(lab.toUpperCase(), x + 16, y + 30);
+    ctx.font = FD(800, 40); ctx.fillStyle = K.fg; ctx.fillText(val, x + 16, y + 72);
+    ctx.font = FT(500, 13); ctx.fillStyle = K.mute; ctx.fillText(fit(ctx, sub, w - 32), x + 16, y + 96); ctx.textBaseline = 'middle';
+  }
+  async function draw(canvas, d, maxRec = 14) {
+    const L = window.BX_LOGOS || {};
+    try { if (document.fonts) await Promise.all([document.fonts.load(FD(800, 40)), document.fonts.load(FT(500, 14)), document.fonts.load(FT(700, 14)), document.fonts.load(FM(700, 11))]); } catch (e) { /* sin fuentes web */ }
+    const [iTap, iAb, iT77, iCd] = await Promise.all([loadImg(L.tapiz), loadImg(L.ab), loadImg(L.t77), loadImg(L.cd)]);
+    const S = 2, Wd = 1480, M = 28, sh = d.short;
+    const eRows = []; d.edtGroups.forEach((g) => { const col = g.lab === 'ZT' ? K.red : g.lab === 'REPROGRAMACIÓN' ? K.amber : K.mute;
+      eRows.push({ cells: [g.lab, g.n, f3(g.hl)], st: { bold: 1, bg: 'rgba(242,197,42,.07)', bar: col } }); g.rows.forEach((r) => eRows.push({ cells: [r[0], r[1], f3(r[2])], st: { indent: 1 } })); });
     const rec = d.recl.slice(-maxRec);
-    const rh = (n, extra) => 28 + 26 * (n + 1 + (extra ? 1 : 0) + (n ? 0 : 1));
-    const top = 76, h1 = Math.max(rh(d.totalRows.length, 1), rh(d.parcRows.length, 1), rh(eRows.length, 1));
-    const H = top + 46 + h1 + 40 + 30 + rh(rec.length, 0) + 46 + (d.sinLineas.length ? 16 : 0);
+    const top = 150, kh = 112, yT = top + kh + 26;
+    const hRow = Math.max(tblH(d.totalRows.length, 1), tblH(d.parcRows.length, 1), tblH(eRows.length, 1));
+    const note = d.sinLineas.length ? 26 : 0;
+    const H = yT + hRow + 22 + note + 34 + tblH(rec.length, 0) + 56;
     canvas.width = Wd * S; canvas.height = H * S; canvas.style.aspectRatio = `${Wd} / ${H}`;
-    const ctx = canvas.getContext('2d'); ctx.setTransform(S, 0, 0, S, 0, 0);
-    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, Wd, H);
-    ctx.fillStyle = C.band; ctx.fillRect(0, 0, Wd, 58); ctx.fillStyle = C.gold; ctx.fillRect(0, 58, Wd, 3);
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillStyle = C.gold; ctx.font = FONT(700, 24); ctx.fillText(`CIERRE DEL DÍA · ${d.dia.toUpperCase()} ${d.fecha}`, 24, 30);
-    ctx.textAlign = 'right'; ctx.fillStyle = '#F4F1E8'; ctx.font = FONT(400, 14); ctx.fillText('Transportes · Delivery CD Callao', Wd - 24, 30);
-    ctx.textAlign = 'left'; ctx.fillStyle = C.ink; ctx.font = FONT(400, 14);
-    const resumen = `Viajes desplanificados: ${d.nTotal} total · ${d.nParc} parcial${d.cab ? ` · ${d.cab} cambio(s) de cabecera` : ''}   |   Clientes desplanificados: ${d.nDes} · ${f3(d.hlDes)} HL`;
-    ctx.fillText(resumen, 24, top + 6);
-    const y0 = top + 30;
-    const yA = table(ctx, 24, y0, 'DESPLANIFICACIÓN TOTAL', A.cols, d.totalRows.map((r) => [r[0], r[1], r[2], r[3], r[4], f3(r[5])]),
-      { total: ['Total general', '', '', '', sum(d.totalRows, (r) => r[4]), f3(sum(d.totalRows, (r) => r[5]))], empty: 'Sin desplanificación total' });
-    const yB = table(ctx, 24 + 520 + 30, y0, 'DESPLANIFICACIÓN PARCIAL', B.cols, d.parcRows.map((r) => [r[0], r[1], f3(r[2])]),
-      { total: ['Total general', sum(d.parcRows, (r) => r[1]), f3(sum(d.parcRows, (r) => r[2]))], empty: 'Sin parciales' });
-    const yE = table(ctx, 24 + 520 + 30 + 285 + 30, y0, 'RESUMEN POR EDT', E.cols, eRows,
+    const ctx = canvas.getContext('2d'); ctx.setTransform(S, 0, 0, S, 0, 0); ctx.textBaseline = 'middle';
+    ctx.fillStyle = K.bg; ctx.fillRect(0, 0, Wd, H);
+    if (iTap) { ctx.save(); ctx.globalAlpha = 0.22; const r = Math.max(Wd / iTap.width, H / iTap.height); ctx.drawImage(iTap, 0, 0, iTap.width * r, iTap.height * r); ctx.restore(); }
+    const vg = ctx.createLinearGradient(0, 0, Wd, 0); vg.addColorStop(0, 'rgba(10,10,11,.92)'); vg.addColorStop(0.6, 'rgba(10,10,11,.55)'); vg.addColorStop(1, 'rgba(10,10,11,.8)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, Wd, H);
+    // encabezado
+    let bx = M; if (iAb) { const h = 26, w = iAb.width * h / iAb.height; ctx.drawImage(iAb, bx, 24, w, h); bx += w + 14; }
+    if (iT77) { const h = 24, w = iT77.width * h / iT77.height; rr(ctx, bx, 21, w + 16, 32, 6); ctx.fillStyle = '#FFF'; ctx.fill(); ctx.drawImage(iT77, bx + 8, 25, w, h); bx += w + 30; }
+    ctx.fillStyle = 'rgba(242,197,42,.4)'; ctx.fillRect(bx, 24, 1, 26); bx += 14;
+    ctx.font = FM(700, 12); ctx.fillStyle = K.gold; ctx.textAlign = 'left'; ctx.fillText('CD CALLAO · DELIVERY · TRANSPORTES', bx, 38);
+    ctx.font = FD(800, 56); ctx.textBaseline = 'alphabetic'; goldText(ctx, 'CIERRE DEL DÍA', M, 112, 56);
+    const tw = ctx.measureText('CIERRE DEL DÍA').width;
+    ctx.font = FD(700, 34); ctx.fillStyle = K.fg; ctx.fillText(`${d.dia.toUpperCase()} ${d.fecha}`, M + tw + 22, 110);
+    ctx.fillStyle = K.gold2; ctx.fillRect(M, 126, 420, 2);
+    if (iCd) { const cx = Wd - M - 62, cy = 74, r = 58; ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r + 5, 0, Math.PI * 2); const rg = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r); rg.addColorStop(0, K.gold3); rg.addColorStop(0.5, K.gold); rg.addColorStop(1, '#B07E07'); ctx.strokeStyle = rg; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+      ctx.drawImage(iCd, cx - r, cy - r, r * 2, r * 2); }
+    ctx.textBaseline = 'middle';
+    // indicadores
+    const zt = d.edtGroups.find((g) => g.lab === 'ZT') || { n: 0, hl: 0 }, rp = d.edtGroups.find((g) => g.lab === 'REPROGRAMACIÓN') || { n: 0, hl: 0 };
+    const kw = (Wd - M * 2 - 16 * 4) / 5; const cards = [
+      ['Viajes desplanificados', String(d.nTotal + d.nParc), `${d.nTotal} total · ${d.nParc} parcial${d.cab ? ` · ${d.cab} cambio cabecera` : ''}`, K.gold],
+      ['HL desplanificado', f3(d.hlDes), `${d.nDes} cliente(s) desplanificado(s)`, K.gold],
+      ['ZT (rechazo)', String(zt.n), `${f3(zt.hl)} HL · ${d.hlDes ? Math.round(zt.hl / d.hlDes * 100) : 0}% del HL`, K.red],
+      ['Reprogramación', String(rp.n), `${f3(rp.hl)} HL · ${d.hlDes ? Math.round(rp.hl / d.hlDes * 100) : 0}% del HL`, K.amber],
+      ['Reclamos de ventas', String(d.recl.length), `${d.recSol} solucionado(s) · ${d.recPend} pendiente(s)`, d.recPend ? K.red : K.green]];
+    cards.forEach((c, i) => kpi(ctx, M + i * (kw + 16), top + 4, kw, kh - 4, ...c));
+    // tablas
+    const gap = 18, wA = 560, wB = 330, wE = Wd - M * 2 - wA - wB - gap * 2;
+    const yA = table(ctx, M, yT, wA, 'Desplanificación total', [{ h: 'Ruta', w: 80 }, { h: 'Transporte', w: 110 }, { h: 'Viaje', w: 50, r: 1 }, { h: 'Vehículo', w: 90 }, { h: 'Clientes', w: 75, r: 1 }, { h: 'HL', w: 85, r: 1 }],
+      d.totalRows.map((r) => [r[0], r[1], r[2], r[3], r[4], f3(r[5])]), { total: ['Total general', '', '', '', sum(d.totalRows, (r) => r[4]), f3(sum(d.totalRows, (r) => r[5]))], empty: 'Sin desplanificación total' });
+    const yB = table(ctx, M + wA + gap, yT, wB, 'Desplanificación parcial', [{ h: 'Ruta', w: 110 }, { h: 'Clientes', w: 80, r: 1 }, { h: 'HL', w: 95, r: 1 }],
+      d.parcRows.map((r) => [r[0], r[1], f3(r[2])]), { total: ['Total general', sum(d.parcRows, (r) => r[1]), f3(sum(d.parcRows, (r) => r[2]))], empty: 'Sin parciales' });
+    const yE = table(ctx, M + wA + wB + gap * 2, yT, wE, 'Resumen por EDT', [{ h: 'Acción / EDT', w: 300 }, { h: 'Clientes', w: 80, r: 1 }, { h: 'HL', w: 95, r: 1 }], eRows,
       { total: ['Total general', d.nDes, f3(d.hlDes)], empty: 'Sin clientes desplanificados' });
-    let y = Math.max(yA, yB, yE) + 34;
-    if (d.sinLineas.length) { ctx.textAlign = 'left'; ctx.font = FONT(400, 12); ctx.fillStyle = C.mute; ctx.fillText(fit(ctx, `Viajes en bitácora sin clientes en DESPLANIFICACIÓN: ${d.sinLineas.join(', ')}`, Wd - 48), 24, y - 10); y += 16; }
-    ctx.textAlign = 'left'; ctx.fillStyle = C.ink; ctx.font = FONT(400, 14);
-    const pre = `Status de reclamos de ventas: ${d.recl.length} — `; ctx.fillText(pre, 24, y);
-    const px = 24 + ctx.measureText(pre).width; const hl = `${d.recSol} solucionado(s) y ${d.recPend} pendiente(s)`;
-    ctx.font = FONT(700, 14); const hw = ctx.measureText(hl).width; ctx.fillStyle = '#FFE14D'; ctx.fillRect(px - 3, y - 11, hw + 6, 22); ctx.fillStyle = C.ink; ctx.fillText(hl, px, y);
-    if (d.recl.length > rec.length) { ctx.font = FONT(400, 12); ctx.fillStyle = C.mute; ctx.fillText(`(se muestran los ${rec.length} más recientes)`, px + hw + 14, y); }
-    const yEnd = table(ctx, 24, y + 14, 'RECLAMOS DEL DÍA Y PENDIENTES', R.cols,
-      rec.map((r) => ({ cells: [r.fecha.slice(8, 10) + '/' + r.fecha.slice(5, 7), r.ruta, r.placa.replace(/^PE/, ''), r.codigo, r.cliente, r.motivo, r.sv, sh(r.edt), r.status], st: r.status === 'SOLUCIONADO' ? {} : { bg: '#FFF4CC' } })),
-      { empty: 'Sin reclamos registrados ni pendientes' }) + 24;
+    let y = Math.max(yA, yB, yE) + 22;
+    if (note) { ctx.font = FT(500, 13); ctx.fillStyle = K.mute; ctx.textAlign = 'left'; ctx.fillText(fit(ctx, `⚠ Viajes en bitácora sin clientes en DESPLANIFICACIÓN: ${d.sinLineas.join(', ')}`, Wd - M * 2), M, y + 4); y += note; }
+    ctx.font = FT(500, 16); ctx.fillStyle = K.fg; ctx.textAlign = 'left'; const pre = `Status de reclamos de ventas: ${d.recl.length} — `; ctx.fillText(pre, M, y + 6);
+    const px = M + ctx.measureText(pre).width; const hl = `${d.recSol} solucionado(s) y ${d.recPend} pendiente(s)`; ctx.font = FT(700, 16); const hw = ctx.measureText(hl).width;
+    rr(ctx, px - 6, y - 8, hw + 12, 28, 6); ctx.fillStyle = K.gold; ctx.fill(); ctx.fillStyle = '#14110A'; ctx.fillText(hl, px, y + 6);
+    if (d.recl.length > rec.length) { ctx.font = FT(500, 12); ctx.fillStyle = K.mute; ctx.fillText(`(se muestran los ${rec.length} más recientes)`, px + hw + 18, y + 6); }
+    y += 34;
+    const yR = table(ctx, M, y, Wd - M * 2, 'Reclamos del día y pendientes', [{ h: 'Fecha', w: 60 }, { h: 'Ruta', w: 75 }, { h: 'Placa', w: 85 }, { h: 'Código', w: 90 }, { h: 'Cliente', w: 230 }, { h: 'Motivo del reclamo', w: 320 }, { h: 'Supervisor', w: 170 }, { h: 'EDT', w: 150 }, { h: 'Status', w: 120 }],
+      rec.map((r) => ({ cells: [r.fecha.slice(8, 10) + '/' + r.fecha.slice(5, 7), r.ruta, r.placa.replace(/^PE/, ''), r.codigo, r.cliente, r.motivo, r.sv, sh(r.edt), r.status], st: r.status === 'SOLUCIONADO' ? {} : { bg: 'rgba(217,166,46,.16)', bar: K.amber } })),
+      { empty: 'Sin reclamos registrados ni pendientes', accent: d.recPend ? K.red : K.green });
+    const now = new Date(Date.now() - 5 * 3600e3).toISOString();
+    ctx.font = FM(500, 11); ctx.fillStyle = '#8C7A45'; ctx.textAlign = 'left'; ctx.fillText('FUENTE: BITÁCORA COMPARTIDA · REPORTES DE DELIVERY', M, yR + 26);
+    ctx.textAlign = 'right'; ctx.fillText(`GENERADO ${now.slice(8, 10)}/${now.slice(5, 7)} ${now.slice(11, 16)} · TRANSPORTES · CD CALLAO`, Wd - M, yR + 26);
+    const yEnd = yR + 46;
     if (yEnd < H) { const img = ctx.getImageData(0, 0, Wd * S, Math.ceil(yEnd * S)); canvas.height = Math.ceil(yEnd * S); canvas.style.aspectRatio = `${Wd} / ${yEnd}`; canvas.getContext('2d').putImageData(img, 0, 0); }
     return canvas;
   }
