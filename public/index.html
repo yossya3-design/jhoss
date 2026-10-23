@@ -1105,7 +1105,10 @@ window.dash = (function () {
   }
   let parsedInc = [];
   const prevInc = () => { const f = $('n-f').value; const seen = new Set();
-    const agg = new Map(); $('n-p').value.split(/[\n;]+/).forEach((pc) => { let L = pc.trim().toUpperCase(); if (!L) return; L = L.replace(/^([A-Z])\s+(\d{3})\b/, '$1-$2');
+    const agg = new Map(); $('n-p').value.split(/[\n;]+/).forEach((pc) => { let L = pc.trim().toUpperCase(); if (!L) return;
+      if (/^FECHA\s*:/.test(L)) { const fm = pc.match(/FECHA\s*:\s*(\d{4}-\d{2}-\d{2})/i), am = pc.match(/ASISTENTE\s*:\s*([^|]*)/i), tm = pc.match(/TURNO\s*:\s*([^|]*)/i);
+        if (fm && $('n-f').value !== fm[1]) $('n-f').value = fm[1]; if (am && am[1].trim()) $('n-as').value = am[1].trim(); if (tm && tm[1].trim()) $('n-tu').value = tm[1].trim(); return; }
+      L = L.replace(/^([A-Z])\s+(\d{3})\b/, '$1-$2');
       const tk = L.split(/\s+/); const xx = normPlaca(tk[0]); if (!xx) return; const rest = tk.slice(1).join(' ');
       const o = agg.get(xx.placa) || { ...xx, cj: null, p6: 0, pl: 0, lo: 0, leido: [] }; if (xx.leido) o.leido.push(xx.leido);
       let hasPh = false; rest.replace(/(?:PH\s*[=:]?\s*)(\d+)\s*\(?\s*(6\s*X+|LT|L|3\s*X+)?\s*\)?|(\d+)\s*\(?\s*(6\s*X+|LT|L|3\s*X+)?\s*\)?\s*PH/g, (m0, a, ta, b, tb) => { hasPh = true; const n = +(a || b), t = ta || tb || ''; if (/^L/.test(t)) o.pl += n; else o.p6 += n; return ''; })
