@@ -319,6 +319,7 @@ window.dash = (function () {
 .bx-conf.edit{flex-direction:column;align-items:stretch;gap:5px;min-width:190px}
 .bx-conf select{background:var(--k-panel2);color:var(--k-fg);border:1px solid var(--k-gold2);border-radius:8px;padding:5px 8px;font:inherit;font-size:12px;color-scheme:dark}
 .bx-cbs{display:flex;gap:6px}
+.bx-foto{max-height:120px;max-width:200px;border-radius:6px;border:1px solid var(--k-line);display:block}
 .bx-csub{align-self:flex-start}.bx-csub button{font-size:13px;padding:7px 16px}
 .bx-pform{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border:1px dashed var(--k-gold2);border-radius:var(--cds-radius);background:rgba(242,197,42,.05)}.bx-pform>div:first-child{display:flex;gap:6px;flex-wrap:wrap;align-items:baseline}.bx-pform b{color:var(--k-gold)}.bx-pform>div>span{font-size:12px;color:var(--k-mute)}
 .bx-pin{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.bx-pin span{font-size:12px;color:var(--k-fg)}.bx-pin input{width:100%}
@@ -554,6 +555,10 @@ window.dash = (function () {
           <div><h3>Placas reincidentes</h3><p class="sub">Placas con 2 o más incumplimientos en el periodo, para tomar acción</p></div>
           <div class="bx-tw" id="n-tb-rei"></div>
         </div>
+        <div class="bx-card bx-wide" id="n-card-pu">
+          <div><h3>Incumplimiento por puchos de cajas</h3><p class="sub">Placas que trajeron envases sin clasificar por menos de una paleta (menos de 84 cajas)</p></div>
+          <div class="bx-tw" id="n-tb-pu"></div>
+        </div>
         <div class="bx-card bx-wide" id="n-card-det">
           <div class="bx-card-h"><div><h3>Detalle de incumplimientos</h3><p class="sub" id="n-det-sub">Cada placa registrada</p></div>
             <button class="bx-btn" type="button" id="n-dl" hidden>Descargar data acumulada (CSV)</button></div>
@@ -562,13 +567,15 @@ window.dash = (function () {
         <div class="bx-card bx-wide bx-admin" id="n-adm" hidden>
           <div><h3 style="color:var(--k-gold)">Ingresar placas de incumplimiento</h3><p class="sub">Solo administrador. Se registra el día siguiente: elige la fecha del incumplimiento (por defecto, ayer) y escribe o pega las placas, una por línea o separadas por coma. La ruta y el EDT se completan solos.</p></div>
           <div class="bx-ocr" id="n-ocr">
-            <div><b>Leer placas desde la imagen del reporte</b><span>Sube la captura o foto del reporte, o pégala aquí con Ctrl + V. Las placas encontradas se agregan a la lista para que las revises antes de registrar.</span></div>
+            <div><b>Leer placas desde la imagen del reporte</b><span>Sube la foto de la planilla de envases (o pégala con Ctrl + V). Se llenan la fecha, asistente, turno y cada placa con su total de cajas; revisa contra la foto antes de registrar.</span></div>
             <label class="bx-btn bx-solid bx-up">Subir imagen<input type="file" id="n-img" accept="image/*" hidden></label>
             <span class="bx-count" id="n-omsg"></span>
+            <a id="n-foto-a" target="_blank" rel="noopener" hidden><img id="n-foto" alt="Foto de la planilla" class="bx-foto"></a>
           </div>
           <div class="bx-aform">
             <div class="bx-f"><label for="n-f">Fecha del incumplimiento</label><input type="date" id="n-f"></div>
-            <div class="bx-f"><label for="n-p">Placas</label><textarea id="n-p" rows="5" placeholder="BWD-880&#10;PED8S-777 6&#10;CHZ-792 4   (opcional: paletas al costado)"></textarea></div>
+            <div class="bx-f"><label for="n-p">Placas</label><textarea id="n-p" rows="5" placeholder="G-732 122&#10;G-732 45&#10;D-880 16&#10;(placa y total de cajas; se suman por placa)"></textarea></div>
+            <div class="bx-f"><label for="n-as">Asistente de almacén</label><input type="text" id="n-as" maxlength="60" placeholder="Ej. Ramírez"></div><div class="bx-f"><label for="n-tu">Turno</label><input type="text" id="n-tu" maxlength="10" placeholder="Ej. 2"></div>
             <div class="bx-f"><label for="n-o">Observación (opcional)</label><input type="text" id="n-o" maxlength="140" placeholder="Ej. retornó con TT sin autorización"></div>
             <div class="bx-f"><label>Validación</label><div class="bx-prev" id="n-prev"><span class="bx-empty">Escribe las placas para validarlas.</span></div></div>
           </div>
@@ -1024,7 +1031,10 @@ window.dash = (function () {
   const flotaEdt = d3.rollup(FLOTA, (v) => v.length, (r) => r[2]);
   const byPlaca = new Map();
   FLOTA.forEach(([placa, ruta, edt]) => { const o = { placa, ruta, edt }; [placa, placa.replace(/^PE/, ''), placa.replace('-', ''), placa.replace(/^PE/, '').replace('-', '')].forEach((k) => byPlaca.set(k, o)); });
+  const byShort = new Map(), byDig = new Map(); FLOTA.forEach(([placa, ruta, edt]) => { const m0 = placa.match(/([A-Z0-9])-?(\d{3})$/); if (!m0) return; const o = { placa, ruta, edt };
+    byShort.set(m0[1] + m0[2], byShort.has(m0[1] + m0[2]) ? null : o); byDig.set(m0[2], byDig.has(m0[2]) ? null : o); });
   const normPlaca = (t) => { const s0 = t.toUpperCase().replace(/\s+/g, ''); if (!s0) return null; const f = byPlaca.get(s0); if (f) return { ...f, ok: true };
+    const sh = s0.match(/^([A-Z0-9])[-.]?(\d{3})$/); if (sh) { const a1 = byShort.get(sh[1] + sh[2]); if (a1) return { ...a1, ok: true, leido: s0 }; const a2 = byDig.get(sh[2]); if (a2) return { ...a2, ok: true, leido: s0 + ' (por número)' }; }
     const p2 = /^[A-Z0-9]{3}-?[0-9]{3}$/.test(s0) ? 'PE' + s0.replace(/^(.{3})-?/, '$1-') : s0; const g = byPlaca.get(p2); return g ? { ...g, ok: true } : { placa: p2, ruta: '', edt: 'SIN EDT', ok: false }; };
   const limaHoy = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
   const ayer = () => iso(d3.utcDay.offset(new Date(limaHoy() + 'T00:00:00Z'), -1));
@@ -1077,28 +1087,34 @@ window.dash = (function () {
     state.sort.nr = state.sort.nr || ['n', -1];
     table($('n-tb-rei'), 'nr', [{ k: 'placa', h: 'Placa' }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'n', h: 'Veces', n: 1, f: fmt, bg: () => 'rgba(201,74,67,.3)' }, { k: 'fs', h: 'Fechas' }],
       rei.map((x) => ({ ...x, edtc: short(x.edt), fs: x.fechas.map(ddmm).join(', ') })));
+    { const pu = sel.filter((r) => r.cajas != null && r.cajas < 84).sort((a, b) => b.fecha.localeCompare(a.fecha) || b.cajas - a.cajas);
+      state.sort.npu = state.sort.npu || ['fecha', -1];
+      table($('n-tb-pu'), 'npu', [{ k: 'fecha', h: 'Fecha', f: (v) => dlabel(v) }, { k: 'placa', h: 'Placa' }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'cajas', h: 'Cajas', n: 1, f: fmt, bg: (v) => (v >= 60 ? 'rgba(217,166,46,.3)' : '') }, { k: 'astu', h: 'Asistente · turno' }],
+        pu.map((r) => ({ ...r, edtc: short(r.edt), astu: [r.asistente, r.turno && 'T' + r.turno].filter(Boolean).join(' · ') || '—' })), (c, i, rs) => (i === 0 ? 'Total' : c.k === 'cajas' ? fmt(d3.sum(rs, (r) => r.cajas)) : c.k === 'placa' ? `${rs.length} placa(s)` : '')); }
     $('n-det-sub').textContent = `${fmt(sel.length)} registro(s) · más recientes primero`;
     const det = sel.slice().sort((a, b) => b.fecha.localeCompare(a.fecha) || a.placa.localeCompare(b.placa));
     const box = $('n-tb-det');
     if (!det.length) empty(box, incState === 'ok' ? 'Sin incumplimientos registrados en el periodo.' : '—');
-    else { const t = el('table'); const hr = t.insertRow(); ['Fecha', 'Placa', 'Ruta', 'EDT', 'Observación', ...(incAdmin ? [''] : [])].forEach((h) => hr.append(el('th', null, h)));
-      det.forEach((r) => { const tr = t.insertRow(); [dlabel(r.fecha), r.placa, r.ruta || '—', short(r.edt), r.obs || '—'].forEach((v) => { tr.insertCell().textContent = v; });
+    else { const t = el('table'); const hr = t.insertRow(); ['Fecha', 'Placa', 'Ruta', 'EDT', 'Total cajas', 'PH (÷84)', 'Puchos', 'Asistente · turno', 'Observación', ...(incAdmin ? [''] : [])].forEach((h) => hr.append(el('th', null, h)));
+      det.forEach((r) => { const tr = t.insertRow(); [dlabel(r.fecha), r.placa, r.ruta || '—', short(r.edt), r.cajas != null ? fmt(r.cajas) : '—', r.cajas != null ? fmt(Math.floor(r.cajas / 84)) : (r.paletas != null ? fmt(r.paletas) : '—'), r.cajas != null ? (r.cajas < 84 ? `${r.cajas} cj (pucho)` : (r.cajas % 84 ? `${r.cajas % 84} cj` : '—')) : '—', [r.asistente, r.turno && 'T' + r.turno].filter(Boolean).join(' · ') || '—', r.obs || '—'].forEach((v) => { tr.insertCell().textContent = v; });
         if (incAdmin) { const b = el('button', 'bx-btn bx-del', 'Eliminar'); b.type = 'button'; b.addEventListener('click', async () => { b.disabled = true; if (!window.confirm(`¿Eliminar ${r.placa} del ${dlabel(r.fecha)}?`)) { b.disabled = false; return; } try { await incApi('DELETE', null, r.id); } catch (err) { b.disabled = false; $('n-msg').textContent = err.message; } }); tr.insertCell().append(b); } });
       box.replaceChildren(t); }
     $('n-adm').hidden = !incAdmin; $('n-dl').hidden = !incAdmin;
   }
   let parsedInc = [];
   const prevInc = () => { const f = $('n-f').value; const seen = new Set();
-    parsedInc = $('n-p').value.split(/[\n,;]+/).map((pc) => { const mm = pc.trim().match(/^(.*?)(?:\s+(\d{1,3}))?\s*$/); const xx = normPlaca(mm ? mm[1] : pc); if (xx && mm && mm[2]) xx.pal = +mm[2]; return xx; }).filter(Boolean).filter((x) => (seen.has(x.placa) ? false : seen.add(x.placa))).map((x) => ({ ...x, dup: incRows.some((r) => r.fecha === f && r.placa === x.placa) }));
+    const agg = new Map(); $('n-p').value.split(/[\n;]+/).forEach((pc) => { const mm = pc.trim().match(/^(.*?)(?:[\s,:=]+(\d{1,5}))?\s*$/); const xx = normPlaca(mm ? mm[1] : pc); if (!xx) return;
+      const o = agg.get(xx.placa) || { ...xx, cj: null, leido: [] }; if (mm && mm[2]) o.cj = (o.cj || 0) + +mm[2]; if (xx.leido) o.leido.push(xx.leido); agg.set(xx.placa, o); });
+    parsedInc = [...agg.values()].map((x) => (x.cj != null ? { ...x, pal: Math.floor(x.cj / 84), pu: x.cj % 84 } : x)).filter((x) => (seen.has(x.placa) ? false : seen.add(x.placa))).map((x) => ({ ...x, dup: incRows.some((r) => r.fecha === f && r.placa === x.placa) }));
     const pv = $('n-prev'); if (!parsedInc.length) pv.replaceChildren(el('span', 'bx-empty', 'Escribe las placas para validarlas.'));
-    else pv.replaceChildren(...parsedInc.map((x) => el('span', 'bx-chip ' + (x.dup ? 'dup' : x.ok ? 'ok' : 'warn'), `${x.placa}${x.ruta ? ' · ' + x.ruta : ''}${x.pal ? ' · ' + x.pal + ' pal.' : ''}${x.dup ? ' · ya registrada' : x.ok ? '' : ' · no está en la flota'}`)));
+    else pv.replaceChildren(...parsedInc.map((x) => el('span', 'bx-chip ' + (x.dup ? 'dup' : x.ok ? 'ok' : 'warn'), `${x.placa}${x.ruta ? ' · ' + x.ruta : ''}${x.cj != null ? ` · ${x.cj} cj → ${x.pal ? x.pal + ' PH' + (x.pu ? ' + ' + x.pu + ' cj' : '') : 'pucho'}` : ''}${x.leido && x.leido.length ? ' · leído ' + [...new Set(x.leido)].join('/') : ''}${x.dup ? ' · ya registrada' : x.ok ? '' : ' · no está en la flota'}`)));
     $('n-go').disabled = !f || !parsedInc.some((x) => !x.dup); };
   ['n-p', 'n-f'].forEach((id) => $(id).addEventListener('input', prevInc));
   $('n-f').value = ayer(); $('n-f').max = limaHoy();
   $('n-go').addEventListener('click', async () => {
     const f = $('n-f').value, obs = $('n-o').value.trim(), todo = parsedInc.filter((x) => !x.dup); if (!f || !todo.length || !incAdmin) return;
     $('n-go').disabled = true; const msg = $('n-msg'); msg.textContent = 'Registrando…';
-    try { const j = await incApi('POST', { fecha: f, obs, items: todo.map((x) => ({ placa: x.placa, ruta: x.ruta, edt: x.edt, paletas: x.pal || null })) });
+    try { const j = await incApi('POST', { fecha: f, obs, items: todo.map((x) => ({ placa: x.placa, ruta: x.ruta, edt: x.edt, paletas: x.cj != null ? x.pal : null, cajas: x.cj })), asistente: $('n-as').value.trim(), turno: $('n-tu').value.trim() });
       msg.textContent = `Se registraron ${j.added} placa(s) del ${dlabel(f)}.`; $('n-p').value = ''; $('n-o').value = ''; prevInc(); }
     catch (e) { msg.textContent = 'No se pudo registrar: ' + e.message; $('n-go').disabled = false; }
   });
@@ -1275,19 +1291,38 @@ window.dash = (function () {
     $('n-ocr').classList.add('busy'); m.textContent = 'Preparando el lector…';
     try { const txt = await window.bxOcr.leer(file, (p) => { m.textContent = `Leyendo la imagen… ${Math.round(p * 100)}%`; });
       const r = window.bxOcr.extraer(txt, FLOTA);
-      if (!r.placas.length) { m.textContent = 'No encontré placas de la flota en la imagen. Prueba con una captura más nítida o escríbelas a mano.' + (r.dudosos.length ? ` Texto dudoso: ${r.dudosos.slice(0, 6).join(', ')}` : ''); return; }
+      if (!r.placas.length) { m.textContent = 'No pude leer placas en la imagen (la letra a mano no se lee sin la IA). Mirando la foto, escribe en Placas una línea por fila: placa y total de cajas, ej. "G-732 122".' + (r.dudosos.length ? ` Texto dudoso: ${r.dudosos.slice(0, 6).join(', ')}` : ''); return; }
       const ta = $('n-p'); const ya = new Set(ta.value.split(/[\n,;]+/).map((x) => normPlaca(x)).filter(Boolean).map((x) => x.placa));
       const nuevas = r.placas.filter((x) => !ya.has(x.placa)); ta.value = (ta.value.trim() ? ta.value.trim() + '\n' : '') + nuevas.map((x) => x.placa).join('\n'); prevInc();
       const ap = r.placas.filter((x) => x.via !== 'placa');
       m.textContent = `Se encontraron ${r.placas.length} placa(s)` + (ap.length ? `; revisa ${ap.map((x) => `${x.placa} (leído "${x.leido}")`).join(', ')}` : '') + (r.dudosos.length ? `. Sin reconocer: ${r.dudosos.slice(0, 6).join(', ')}` : '') + '. Revisa la lista y pulsa Registrar.'; }
     catch (e) { m.textContent = e.message || 'No se pudo leer la imagen.'; }
     finally { $('n-ocr').classList.remove('busy'); $('n-img').value = ''; } }
-  $('n-img').addEventListener('change', (e) => ocrImagen(e.target.files[0]));
+  const achicar = (file) => new Promise((res, rej) => { const u = URL.createObjectURL(file); const i = new Image(); i.onload = () => { const k = Math.min(1, 1600 / Math.max(i.width, i.height)); const c = document.createElement('canvas');
+    c.width = Math.round(i.width * k); c.height = Math.round(i.height * k); c.getContext('2d').drawImage(i, 0, 0, c.width, c.height); URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', 0.85)); }; i.onerror = () => rej(new Error('No se pudo abrir la imagen')); i.src = u; });
+  async function leerPlanilla(file) {
+    const m = $('n-omsg'); if (!file || !/^image\//.test(file.type)) { m.textContent = 'El archivo no es una imagen.'; return; }
+    const u = URL.createObjectURL(file); $('n-foto').src = u; $('n-foto-a').href = u; $('n-foto-a').hidden = false;
+    $('n-ocr').classList.add('busy'); m.textContent = 'Leyendo la planilla con IA…';
+    try { const img = await achicar(file);
+      const r = await fetch('/api/leer-planilla', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + incTok }, body: JSON.stringify({ imagen: img, tipo: 'image/jpeg' }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 501) { $('n-ocr').classList.remove('busy'); m.textContent = 'La lectura con IA no está activada; intento con el lector de texto…'; return ocrImagen(file); }
+      if (!r.ok) throw new Error(j.error || 'No se pudo leer la planilla');
+      if (j.fecha && /^\d{4}-\d{2}-\d{2}$/.test(j.fecha)) $('n-f').value = j.fecha;
+      if (j.asistente) $('n-as').value = j.asistente; if (j.turno) $('n-tu').value = String(j.turno);
+      const filas = (j.filas || []).filter((x) => x.placa);
+      $('n-p').value = filas.map((x) => `${x.placa}${x.total_cajas != null ? ' ' + x.total_cajas : ''}`).join('\n'); prevInc();
+      const malas = parsedInc.filter((x) => !x.ok).length;
+      m.textContent = `Leí ${filas.length} fila(s) → ${parsedInc.length} placa(s).` + (malas ? ` ${malas} no están en la flota: corrígelas.` : '') + ' Revisa contra la foto y pulsa Registrar.'; }
+    catch (e) { m.textContent = e.message || 'No se pudo leer la planilla.'; }
+    finally { $('n-ocr').classList.remove('busy'); $('n-img').value = ''; } }
+  $('n-img').addEventListener('change', (e) => leerPlanilla(e.target.files[0]));
   document.addEventListener('paste', (e) => { if (!incAdmin || $('n-adm').hidden || state.tab !== 'almacen') return;
-    const it = [...(e.clipboardData && e.clipboardData.items || [])].find((x) => x.type.startsWith('image/')); if (it) { e.preventDefault(); ocrImagen(it.getAsFile()); } });
+    const it = [...(e.clipboardData && e.clipboardData.items || [])].find((x) => x.type.startsWith('image/')); if (it) { e.preventDefault(); leerPlanilla(it.getAsFile()); } });
   const oz = $('n-ocr'); ['dragover', 'dragenter'].forEach((ev) => oz.addEventListener(ev, (e) => { e.preventDefault(); oz.classList.add('drag'); }));
   ['dragleave', 'drop'].forEach((ev) => oz.addEventListener(ev, () => oz.classList.remove('drag')));
-  oz.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) ocrImagen(f); });
+  oz.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) leerPlanilla(f); });
   // ----- incumplimiento de paletas (pestaña del cierre) -----
   let cupos = {}, cSub = 'dia', pEdt = '';
   const loadCupos = () => fetch('/api/cupos', { cache: 'no-store' }).then((r) => r.json()).then((j) => { cupos = j.cupos || {}; renderPal(); }).catch(() => {});
@@ -1300,7 +1335,8 @@ window.dash = (function () {
     return edtList().map((e) => { const real = d3.sum(tt.filter((r) => short(r.edt) === e), (r) => r.ph);
       const pl = inc.filter((r) => short(r.edt) === e).map((r) => ({ placa: r.placa, pal: r.paletas != null ? r.paletas : d3.sum(tt.filter((t) => t.placa === r.placa || (r.ruta && t.ruta === r.ruta)), (t) => t.ph) }));
       const ped = cu[e] != null ? cu[e] : null; const incP = d3.sum(pl, (x) => x.pal);
-      return { edt: e, real, ped, inc: incP, npl: pl.length, placas: pl, exc: ped != null ? Math.max(0, real - ped) : null }; }); }
+      const puch = d3.sum(inc.filter((r) => short(r.edt) === e && r.cajas != null), (r) => r.cajas % 84);
+      return { edt: e, real, ped, inc: incP, npl: pl.length, placas: pl, puch, exc: ped != null ? Math.max(0, real - ped) : null }; }); }
   function renderPal() {
     if (cSub !== 'pal' || state.tab !== 'cierre' || !window.__allRows) return;
     const pd = $('p-dia'); const tts = window.__allRows.filter((r) => r.tipo === 'Placa con TT').map((r) => r.fecha).filter((f) => f <= hoyLima()).sort();
@@ -1321,7 +1357,7 @@ window.dash = (function () {
     const tbRows = rows.filter((r) => r.real || r.ped != null || r.inc).map((r) => ({ ...r, est: r.ped != null && r.real > r.ped ? 'EXCEDE' : r.inc ? 'INCUMPLE' : r.ped == null ? 'SIN PEDIDO' : 'CUMPLE', pls: r.placas.map((x) => `${x.placa.replace(/^PE/, '')}${x.pal ? ' (' + x.pal + ')' : ''}`).join(', ') }));
     table($('p-tb-dia'), 'pd', [{ k: 'edt', h: 'Empresario' }, { k: 'ped', h: 'Pedido', n: 1, f: (v) => (v == null ? '—' : fmt(v)) }, { k: 'real', h: 'Real con TT', n: 1, f: fmt },
       { k: 'exc', h: 'Exceso', n: 1, f: (v) => (v == null ? '—' : v ? '+' + fmt(v) : '0'), bg: (v) => (v ? 'rgba(201,74,67,.35)' : v === 0 ? 'rgba(47,163,107,.2)' : '') },
-      { k: 'inc', h: 'Paletas incumpl.', n: 1, f: fmt, bg: (v) => (v ? 'rgba(201,74,67,.35)' : '') }, { k: 'npl', h: 'Placas', n: 1, f: fmt }, { k: 'pls', h: 'Placas que incumplieron' },
+      { k: 'inc', h: 'Paletas incumpl.', n: 1, f: fmt, bg: (v) => (v ? 'rgba(201,74,67,.35)' : '') }, { k: 'npl', h: 'Placas', n: 1, f: fmt }, { k: 'puch', h: 'Puchos (cj)', n: 1, f: (v) => (v ? fmt(v) : '—') }, { k: 'pls', h: 'Placas que incumplieron' },
       { k: 'est', h: 'Estado', pill: (r) => (r.est === 'CUMPLE' ? 'ok' : r.est === 'SIN PEDIDO' ? 'pend' : 'bad') }], tbRows,
       (c, i, rs) => i === 0 ? 'Total' : c.k === 'ped' ? (conPed ? fmt(ped) : '—') : c.k === 'real' ? fmt(real) : c.k === 'exc' ? (conPed ? fmt(exc) : '—') : c.k === 'inc' ? fmt(incT) : c.k === 'npl' ? fmt(npl) : '');
     // historial

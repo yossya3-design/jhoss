@@ -25,7 +25,10 @@ export default async (req) => {
       if (!placa) continue;
       const id = `${fecha}_${placa}`;
       if (have.has(id)) continue;
-      const pal = Number(x.paletas); rows.push({ id, fecha, placa, ruta: clean(x.ruta, 12).toUpperCase(), edt: clean(x.edt, 60) || "SIN EDT", obs: clean(b.obs, 140), paletas: Number.isFinite(pal) && pal > 0 && pal < 1000 ? Math.round(pal) : null, at });
+      const pal = x.paletas === null || x.paletas === undefined || x.paletas === "" ? NaN : Number(x.paletas), cj = Number(x.cajas);
+      rows.push({ id, fecha, placa, ruta: clean(x.ruta, 12).toUpperCase(), edt: clean(x.edt, 60) || "SIN EDT", obs: clean(b.obs, 140),
+        paletas: Number.isFinite(pal) && pal >= 0 && pal < 1000 ? Math.round(pal) : null, cajas: Number.isFinite(cj) && cj > 0 && cj < 100000 ? Math.round(cj) : null,
+        puchos: Number.isFinite(cj) && cj > 0 ? Math.round(cj) % 84 : null, asistente: clean(b.asistente, 60), turno: clean(b.turno, 10), at });
       have.add(id); n++;
     }
     await store().setJSON(KEY, rows);
