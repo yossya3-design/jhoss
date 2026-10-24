@@ -106,6 +106,24 @@ export function convert(buf) {
       status: s(or(g(r, iS), "")).toUpperCase(), alertado: s(or(g(r, iA), "")).toUpperCase(), viaje: pyStr(or(g(r, iT), "")), nviaje: pyStr(or(g(r, iV), "")), pedido: iP >= 0 ? pyStr(or(g(r, iP), "")) : "" });
   }
 
+  // Un cliente con varios pedidos viene en varias filas con el mismo HL y cajas del cliente:
+  // se deja una sola línea por cliente (fecha + ruta + código + viaje), con los pedidos juntos y el HL/cajas una sola vez.
+  {
+    const keep = [], idx = new Map();
+    for (const r of out) {
+      if (r.tipo !== "Cliente desplanificado" || !r.codigo) { keep.push(r); continue; }
+      const k = [r.fecha, r.ruta, r.codigo, r.viaje].join("|");
+      const g = idx.get(k);
+      if (!g) { const n = { ...r, _hl: new Set([r.hl]), _ca: new Set([r.ca]), _ped: r.pedido ? [r.pedido] : [] }; idx.set(k, n); keep.push(n); continue; }
+      if (!g._hl.has(r.hl)) { g._hl.add(r.hl); g.hl = Math.round((g.hl + r.hl) * 1000) / 1000; }
+      if (!g._ca.has(r.ca)) { g._ca.add(r.ca); g.ca += r.ca; }
+      if (r.pedido && !g._ped.includes(r.pedido)) g._ped.push(r.pedido);
+      for (const f of ["motivo", "accion", "status", "alertado", "tel", "nviaje"]) if (!g[f] || g[f] === "Sin clasificar") g[f] = r[f] || g[f];
+    }
+    keep.forEach((r) => { if (r._ped) { r.pedido = r._ped.join(", "); delete r._hl; delete r._ca; delete r._ped; } });
+    out.length = 0; out.push(...keep);
+  }
+
   for (const r of rows("LISTA DE TT", 2)) {
     const f = d(g(r, 0)), rt = ru(g(r, 1)); if (!f || !rt) continue;
     const [p, e] = info(rt);
