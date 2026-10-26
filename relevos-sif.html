@@ -445,6 +445,7 @@ footer b{color:var(--oro)}
 .rk-b b{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--f-titulo);font-size:16px;color:#fff;text-shadow:0 1px 3px #000}
 .rk-r .v{font-family:var(--f-mono);font-size:12.5px;font-weight:700;text-align:right}
 .tend-w{overflow-x:auto}
+#relBtn.listo{box-shadow:0 0 0 3px rgba(242,197,42,.45);animation:late 1.4s ease-in-out 3}
 table.rt tr.con-foto{cursor:pointer}table.rt tr.con-foto:hover td{background:rgba(242,197,42,.06)}
 table.rt tr.con-foto:focus-visible{outline:2px solid var(--oro);outline-offset:-2px}
 .chip.ver-foto{font-weight:700}
@@ -587,7 +588,7 @@ body .tg-seg .btn{padding:6px 8px;font-size:10px;min-height:32px}
         <div class="full mi-dia rl" id="miDia" hidden></div>
         <div class="full rel-foto rl">
           <label class="btn subir" for="relCam">Cámara<input type="file" id="relCam" accept="image/*" capture="environment" hidden></label>
-          <label class="btn" for="relSubir">Subir foto<input type="file" id="relSubir" accept="image/*" hidden></label>
+          <label class="btn" for="relSubir">Subir foto<input type="file" id="relSubir" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic" hidden></label>
           <span class="mut" id="relFotoTxt">Obligatoria. Primero escribe la placa: sale en la foto. Doble conductor: <b>activa el GPS</b>, la foto se marca con hora y ubicación. Movilizador: solo con la fecha.</span>
           <img id="relFotoPrev" alt="Foto del relevo con marca de agua" hidden>
         </div>
@@ -791,7 +792,7 @@ async function tomarFoto(file) {
     REL_GEO = REL_TIPO === 'doble' ? (NET ? await geo() : await geo().catch(() => null)) : null;
     const src = URL.createObjectURL(file);
     REL_FOTO = await marcarFoto(src, REL_TIPO, placa, new Date(), REL_GEO); URL.revokeObjectURL(src);
-    $('#relFotoPrev').src = REL_FOTO; $('#relFotoPrev').hidden = false; $('#relMsg').textContent = '✓ Foto lista.';
+    $('#relFotoPrev').src = REL_FOTO; $('#relFotoPrev').hidden = false; $('#relMsg').textContent = '✓ Foto lista. Ahora toca «Guardar relevo».'; $('#relBtn').classList.add('listo'); try { $('#relBtn').scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
   } catch (e) { REL_FOTO = null; $('#relFotoPrev').hidden = true; $('#relMsg').textContent = '⚠ ' + e.message; }
 }
 function miDia() {
@@ -824,7 +825,7 @@ async function guardarRelevo() {
       await cargarNet();
     } else { RELEVOS.push({ ...v, at: ahoraLima() }); renderTodo(); }
     msg(`✓ Relevo guardado: ${fmtDia(v.fecha)} · ${v.cond} · ${v.placa}${v.tipo === 'doble' ? ` · ${v.ini}–${v.fin}` : ' · movilizador'}`);
-    $('#relIni').value = ''; $('#relFin').value = ''; $('#relCom').value = ''; REL_FOTO = null; $('#relFotoPrev').hidden = true;
+    $('#relIni').value = ''; $('#relFin').value = ''; $('#relCom').value = ''; REL_FOTO = null; $('#relFotoPrev').hidden = true; $('#relBtn').classList.remove('listo');
   } catch (e) { msg('⚠ ' + e.message); }
   $('#relBtn').disabled = false;
 }
