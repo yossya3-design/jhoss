@@ -825,7 +825,7 @@ async function guardarRelevo() {
       await cargarNet();
     } else { RELEVOS.push({ ...v, at: ahoraLima() }); renderTodo(); }
     msg(`✓ Relevo guardado: ${fmtDia(v.fecha)} · ${v.cond} · ${v.placa}${v.tipo === 'doble' ? ` · ${v.ini}–${v.fin}` : ' · movilizador'}`);
-    $('#relIni').value = ''; $('#relFin').value = ''; $('#relCom').value = ''; REL_FOTO = null; $('#relFotoPrev').hidden = true; $('#relBtn').classList.remove('listo');
+    $('#relCond').value = ''; $('#relPlaca').value = ''; $('#relIni').value = ''; $('#relFin').value = ''; $('#relCom').value = ''; REL_GEO = null; miDia(); REL_FOTO = null; $('#relFotoPrev').hidden = true; $('#relBtn').classList.remove('listo');
   } catch (e) { msg('⚠ ' + e.message); }
   $('#relBtn').disabled = false;
 }
