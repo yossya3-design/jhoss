@@ -465,7 +465,9 @@ table.rt tr.con-foto:focus-visible{outline:2px solid var(--oro);outline-offset:-
 .fm-x{background:none;border:1px solid var(--borde);color:var(--blanco);border-radius:8px;width:38px;height:38px;font-size:22px;line-height:1;cursor:pointer;flex:none}
 .fm-img{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;background:#000;border-radius:8px;overflow:hidden}
 .fm-img img{max-width:100%;max-height:68vh;object-fit:contain;display:block}
-.fm-img p{padding:30px 16px;text-align:center}
+.fm-img p{padding:24px 16px 10px;text-align:center;margin:0}
+.fm-no{display:flex;flex-direction:column;align-items:center;gap:10px;padding-bottom:18px}
+.fm-add{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.fm-add .btn{min-height:42px;display:inline-flex;align-items:center;cursor:pointer}.fm-add .btn:not(.subir){color:var(--oro)}
 .fm-pie{display:flex;justify-content:space-between;align-items:center;gap:8px}.fm-pie .btn{min-height:40px}.fm-pie .btn:disabled{opacity:.35}
 @media (max-width:600px){
   .control .tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;scrollbar-width:none;padding-bottom:2px}
@@ -717,7 +719,7 @@ body .tg-seg .btn{padding:6px 8px;font-size:10px;min-height:32px}
 <div class="foto-modal" id="fotoModal" hidden role="dialog" aria-modal="true" aria-labelledby="fmTit">
   <div class="fm-caja">
     <div class="fm-cab"><div><span class="et" id="fmTipo"></span><h3 id="fmTit"></h3><p id="fmSub"></p></div><button type="button" class="fm-x" id="fmCerrar" aria-label="Cerrar">×</button></div>
-    <div class="fm-img"><img id="fmImg" alt="Foto del relevo"><p class="mut" id="fmNo" hidden>Esta foto se registró antes del almacén de fotos y quedó solo en el Drive.</p></div>
+    <div class="fm-img"><img id="fmImg" alt="Foto del relevo"><div class="fm-no" id="fmNo" hidden><p class="mut">Esta foto no llegó a la página (se tomó desde otra app o antes del almacén). Está solo en el Drive.</p><div class="fm-add" id="fmAdd" hidden><label class="btn subir" for="fmCam">Cámara<input type="file" id="fmCam" accept="image/*" capture="environment" hidden></label><label class="btn" for="fmGal">Subir foto<input type="file" id="fmGal" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic" hidden></label></div><span class="msg-carga" id="fmMsg" role="status" aria-live="polite"></span></div></div>
     <div class="fm-pie"><button type="button" class="btn" id="fmPrev">‹ Anterior</button><span class="mut" id="fmPos"></span><button type="button" class="btn" id="fmNext">Siguiente ›</button></div>
   </div>
 </div>
@@ -1227,12 +1229,28 @@ function pintarFoto() {
   $('#fmTit').textContent = `${r.placa} · ${r.cond}`;
   $('#fmSub').textContent = [f[0], f[1], tipoDe(r) === 'doble' && r.ini ? `${r.ini} – ${r.fin}` : '', r.at ? 'registrado ' + horaAt(r.at) : '', r.com || ''].filter(Boolean).join(' · ');
   const img = $('#fmImg'), yo = FM.i;
+  $('#fmAdd').hidden = !(REL_OK || CAN); $('#fmMsg').textContent = '';
   const poner = src => { if (FM.i !== yo) return; $('#fmNo').hidden = !!src; img.hidden = !src; if (src) img.src = src; else img.removeAttribute('src'); };
   img.onerror = () => { img.hidden = true; $('#fmNo').hidden = false; };
   if (u && /^data:/.test(u)) poner(u);
   else { img.hidden = true; $('#fmNo').hidden = true; fotoGuardada(r).then(g => poner(g || u)); }
   $('#fmPos').textContent = `${FM.i + 1} de ${FM.lista.length}`;
   $('#fmPrev').disabled = FM.i === 0; $('#fmNext').disabled = FM.i >= FM.lista.length - 1;
+}
+async function agregarFotoRel(file) {
+  const r = FM.lista[FM.i]; if (!file || !r || !(REL_OK || CAN)) return;
+  const m = t => { $('#fmMsg').textContent = t; };
+  m('Marcando y guardando la foto…');
+  try {
+    const src = URL.createObjectURL(file);
+    const cuando = new Date(`${r.fecha}T${horaAt(r.at) || '12:00'}:00-05:00`);
+    const foto = await marcarFoto(src, tipoDe(r), r.placa, cuando, null); URL.revokeObjectURL(src);
+    const key = claveFoto(r, horaAt(r.at));
+    if (NET) { const j = await (await fetch(FOTO_API, { method: 'POST', body: JSON.stringify({ key, foto }) })).json(); if (!j.ok) throw new Error(j.error || 'No se pudo guardar.'); }
+    FOTO_CACHE[key] = foto; if (FOTO_KEYS[r.fecha]) FOTO_KEYS[r.fecha].keys.push(key); else r.foto = foto;
+    if (!NET) r.foto = foto;
+    pintarFoto(); m('');
+  } catch (e) { m('⚠ ' + e.message); }
 }
 function cerrarFoto() { $('#fotoModal').hidden = true; document.body.style.overflow = ''; }
 let ED_R = null;
@@ -1279,6 +1297,7 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
     if (e.target.closest && e.target.closest('.btn-ed')) return;
     const tr = e.target.closest && e.target.closest('tr.con-foto'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); verFoto(+tr.dataset.ri, tr.closest('table')); } });
   $('#edCerrar').onclick = cerrarEdicion; $('#edCancel').onclick = cerrarEdicion; $('#edOk').onclick = guardarEdicion; $('#edModal').onclick = e => { if (e.target.id === 'edModal') cerrarEdicion(); };
+  ['#fmCam', '#fmGal'].forEach(x => { $(x).onchange = e => { agregarFotoRel(e.target.files[0]); e.target.value = ''; }; });
   $('#fmCerrar').onclick = cerrarFoto; $('#fotoModal').onclick = e => { if (e.target.id === 'fotoModal') cerrarFoto(); };
   $('#fmPrev').onclick = () => { if (FM.i > 0) { FM.i--; pintarFoto(); } }; $('#fmNext').onclick = () => { if (FM.i < FM.lista.length - 1) { FM.i++; pintarFoto(); } };
   $('#relBtn').onclick = guardarRelevo; $('#relEntrar').onclick = entrarRelevo; $('#relPin').onkeydown = e => { if (e.key === 'Enter') entrarRelevo(); };
