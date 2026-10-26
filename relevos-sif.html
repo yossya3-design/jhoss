@@ -445,6 +445,12 @@ footer b{color:var(--oro)}
 .rk-b b{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--f-titulo);font-size:16px;color:#fff;text-shadow:0 1px 3px #000}
 .rk-r .v{font-family:var(--f-mono);font-size:12.5px;font-weight:700;text-align:right}
 .tend-w{overflow-x:auto}
+.btn-ed{background:transparent;border:1px solid var(--oro);color:var(--oro);border-radius:999px;padding:5px 10px;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.btn-ed:hover,.btn-ed:focus-visible{background:rgba(242,197,42,.14);outline:none}
+.ed-caja{width:min(420px,100%)}
+.ed-campos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ed-campos label{display:flex;flex-direction:column;gap:6px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gris)}
+.ed-campos input{background:#000;color:var(--blanco);border:1px solid var(--borde);border-radius:8px;padding:12px;font-family:var(--f-mono);font-size:18px;color-scheme:dark;min-width:0}
 #relBtn.listo{box-shadow:0 0 0 3px rgba(242,197,42,.45);animation:late 1.4s ease-in-out 3}
 table.rt tr.con-foto{cursor:pointer}table.rt tr.con-foto:hover td{background:rgba(242,197,42,.06)}
 table.rt tr.con-foto:focus-visible{outline:2px solid var(--oro);outline-offset:-2px}
@@ -483,12 +489,50 @@ table.rt tr.con-foto:focus-visible{outline:2px solid var(--oro);outline-offset:-
   table.rt{display:block;min-width:0!important;width:100%}
   table.rt thead{display:none}
   table.rt tbody{display:flex;flex-direction:column;gap:8px}
-  table.rt tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:12px;border:1px solid var(--borde);border-radius:8px;background:var(--tarjeta)}
+  table.rt tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;padding:10px 12px;border:1px solid var(--borde);border-radius:10px;background:var(--tarjeta)}
   table.rt td{display:flex;flex-direction:column;gap:2px;padding:0!important;border:0!important;text-align:left!important;min-width:0;white-space:normal}
-  table.rt td[data-l]::before{content:attr(data-l);font-family:var(--f-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gris)}
+  table.rt td[data-l]::before{content:attr(data-l);font-family:var(--f-mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)}
+  table.rt td{font-size:12.5px;line-height:1.25}table.rt td b{font-size:13.5px}
+  table.rt td[data-l="Editar"],table.rt td[data-l="Foto"]{grid-column:span 3/span 3;flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px}
+  table.rt td[data-l="Editar"]::before,table.rt td[data-l="Foto"]::before{display:none}
+  table.rt td[data-l="Conductor"]{grid-column:span 2/span 2}
+  table.rt td .mut:only-child{display:none}
   table.rt td[colspan]{grid-column:1/-1}
   table.rt td.n{align-items:flex-start}
   table.rt td .chip{align-self:flex-start}
+  /* celular: formulario y fichas de relevo compactas */
+body .rel-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px}
+body .rel-form .rl:not(.soloD):not(.full){grid-column:1/-1}
+body .rel-form input,body .rel-form select{padding:9px 10px;font-size:14px}
+body .rel-form label{font-size:9.5px;gap:4px}
+body .rel-tipo .seg{flex-wrap:nowrap;gap:6px}body .rel-tipo .seg .btn{flex:1 1 0;padding:9px 6px;font-size:10.5px;min-height:40px}
+body .rel-form .rel-foto{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body .rel-form .rel-foto label.btn{justify-content:center;min-height:42px}
+body .rel-form .rel-foto .mut,body .rel-form .rel-foto img{grid-column:1/-1}
+body .rel-form .rel-foto .mut{font-size:12px;line-height:1.35}
+body #relBtn{grid-column:1/-1;min-height:46px;font-size:12px}
+body #relMsg{grid-column:1/-1}
+body #p1K{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px}
+body #p1K .kpi,body #p2relK .kpi{padding:8px 9px}body #p1K .kpi .et,body #p2relK .kpi .et{font-size:8px;letter-spacing:.08em}
+body #p1K .kpi .num,body #p2relK .kpi .num{font-size:22px!important}
+body table.rt tr{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto;gap:4px 10px;padding:10px 12px}
+body table.rt td[data-l]{grid-column:auto}
+body table.rt td[data-l="#"]{grid-column:1;grid-row:1;justify-content:center}
+body table.rt td[data-l="#"]::before{display:none}
+body table.rt td[data-l="#"]{font-size:11px;color:var(--gris)}
+body table.rt td[data-l="Placa"]{grid-column:2/4;grid-row:1}
+body table.rt td[data-l="Placa"]::before,body table.rt td[data-l="Conductor"]::before{display:none}
+body table.rt td[data-l="Placa"] b{font-size:16px;color:var(--oro)}
+body table.rt td[data-l="Registrado"]{grid-column:4;grid-row:1;align-items:flex-end;text-align:right}
+body table.rt td[data-l="Conductor"]{grid-column:1/-1;grid-row:2;font-weight:600;font-size:13.5px}
+body table.rt td[data-l="Fecha registro"]{grid-column:1/3}
+body table.rt td[data-l="Tipo"]{grid-column:3/-1}
+body table.rt td[data-l="Ruta"]{grid-column:1/3}
+body table.rt td[data-l="Inicio"]{grid-column:3}
+body table.rt td[data-l="Fin"]{grid-column:4;align-items:flex-end}
+body table.rt td[data-l="Foto"]{grid-column:1/3}
+body table.rt td[data-l="Editar"]{grid-column:3/-1;justify-content:flex-end}
+body table.rt td[data-l="Foto"],body table.rt td[data-l="Editar"]{margin-top:4px}
   /* celular: indicadores, podio y gráficos compactos */
 body .kpi-g{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}
 body .kpi-g .kpi{padding:10px 11px;gap:4px;min-width:0}body .kpi-g .kpi.ancho{grid-column:1/-1}
@@ -662,6 +706,14 @@ body .tg-seg .btn{padding:6px 8px;font-size:10px;min-height:32px}
     </section>
   </div>
 </div>
+<div class="foto-modal" id="edModal" hidden role="dialog" aria-modal="true" aria-labelledby="edTit">
+  <div class="fm-caja ed-caja">
+    <div class="fm-cab"><div><span class="et">Modificar hora del relevo</span><h3 id="edTit"></h3><p id="edSub"></p></div><button type="button" class="fm-x" id="edCerrar" aria-label="Cerrar">×</button></div>
+    <div class="ed-campos"><label>Inicio relevo<input type="time" id="edIni"></label><label>Fin relevo<input type="time" id="edFin"></label></div>
+    <span class="msg-carga" id="edMsg" role="status" aria-live="polite"></span>
+    <div class="fm-pie"><button type="button" class="btn" id="edCancel">Cancelar</button><button type="button" class="btn subir" id="edOk">Guardar cambio</button></div>
+  </div>
+</div>
 <div class="foto-modal" id="fotoModal" hidden role="dialog" aria-modal="true" aria-labelledby="fmTit">
   <div class="fm-caja">
     <div class="fm-cab"><div><span class="et" id="fmTipo"></span><h3 id="fmTit"></h3><p id="fmSub"></p></div><button type="button" class="fm-x" id="fmCerrar" aria-label="Cerrar">×</button></div>
@@ -736,11 +788,23 @@ async function entrarPin() {
   try { if (v !== PIN_ADMIN) { if (!NET) throw new Error('PIN incorrecto.'); await apps({ action: 'pin' }); } CAN = true; try { sessionStorage.setItem('t2pin', PIN); } catch (e) {} $('#pinIn').value = ''; $('#pinMsg').textContent = ''; pinUI(); renderAdmin(); }
   catch (e) { $('#pinMsg').textContent = e.message; }
 }
+const ED_API = '/api/ediciones';
+let EDIC = {};
+const claveRel = r => `${r.fecha}/${tipoDe(r)}/${limpiaK(r.placa)}/${limpiaK(r.cond)}/${(r.iniOrig ?? r.ini ?? '--').replace(':', '') || '--'}/${horaAt(r.at).replace(':', '') || '--'}`;
+const limpiaK = x => String(x || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9:-]+/g, '_').slice(0, 40);
+function aplicarEdiciones() {
+  RELEVOS.forEach(r => { const e = EDIC[claveRel(r)]; if (e) { if (r.iniOrig == null) { r.iniOrig = r.ini || ''; r.finOrig = r.fin || ''; } r.ini = e.ini; r.fin = e.fin; r.editado = e; } });
+}
+async function cargarEdiciones() {
+  if (!NET) return;
+  try { const j = await (await fetch(`${ED_API}?fecha=${hoyLima()}`, { cache: 'no-store' })).json(); if (j.ok) EDIC = { ...EDIC, ...j.ed }; } catch (e) {}
+}
 async function cargarNet() {
   try {
     const r = await fetch(APPS_URL + '?action=estado', { cache: 'no-store' }); if (!r.ok) return;
     const j = await r.json();
     if (Array.isArray(j.relevos)) RELEVOS = j.relevos;
+    await cargarEdiciones(); aplicarEdiciones();
     if (Array.isArray(j.conductores) && j.conductores.length) CONDS = j.conductores;
     if (Array.isArray(j.placas)) { PLACAS_EXTRA = j.placas; aplicarFlota(); }
     if (j.avance && typeof j.avance === 'object') AVANCE = j.avance;
@@ -830,9 +894,9 @@ async function guardarRelevo() {
   $('#relBtn').disabled = false;
 }
 function tablaRel(L) {
-  const cab = '<thead><tr><th class="n">#</th><th>Fecha registro</th><th>Placa</th><th>Ruta</th><th>Tipo</th><th>Conductor</th><th class="n">Inicio</th><th class="n">Fin</th><th>Foto</th><th class="n">Registrado</th></tr></thead><tbody>';
-  const f = L.map((r, i) => `<tr class="${conFoto(r) ? 'con-foto' : ''}" data-ri="${RELEVOS.indexOf(r)}" tabindex="${conFoto(r) ? 0 : -1}"><td class="n mono">${L.length - i}</td><td class="mono">${fmtDia(r.fecha)}</td><td class="mono"><b>${esc(r.placa)}</b></td><td>${esc((FLOTA[r.placa] || [''])[0])}</td><td>${tl(r)}</td><td>${esc(r.cond)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.ini)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.fin)}</td><td>${conFoto(r) ? '<span class="chip verde ver-foto">Ver foto ›</span>' : '<span class="chip rojo">sin foto</span>'}</td><td class="n mono">${esc(horaAt(r.at))}</td></tr>`).join('');
-  return cab + (f || '<tr><td colspan="10" class="mut">No hay relevos registrados ese día.</td></tr>') + '</tbody>';
+  const cab = '<thead><tr><th class="n">#</th><th>Fecha registro</th><th>Placa</th><th>Ruta</th><th>Tipo</th><th>Conductor</th><th class="n">Inicio</th><th class="n">Fin</th><th>Foto</th><th class="n">Registrado</th><th>Editar</th></tr></thead><tbody>';
+  const f = L.map((r, i) => `<tr class="${conFoto(r) ? 'con-foto' : ''}" data-ri="${RELEVOS.indexOf(r)}" tabindex="${conFoto(r) ? 0 : -1}"><td class="n mono">${L.length - i}</td><td class="mono">${fmtDia(r.fecha)}</td><td class="mono"><b>${esc(r.placa)}</b></td><td>${esc((FLOTA[r.placa] || [''])[0])}</td><td>${tl(r)}</td><td>${esc(r.cond)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.ini)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.fin)}</td><td>${conFoto(r) ? '<span class="chip verde ver-foto">Ver foto ›</span>' : '<span class="chip rojo">sin foto</span>'}</td><td class="n mono">${esc(horaAt(r.at))}</td><td>${tipoDe(r) === 'doble' && r.fecha === hoyLima() ? `<button type="button" class="btn-ed" data-ed="${RELEVOS.indexOf(r)}">✎ Modificar hora</button>` : '<span class="mut">—</span>'}${r.editado ? ' <span class="chip amar">editado</span>' : ''}</td></tr>`).join('');
+  return cab + (f || '<tr><td colspan="11" class="mut">No hay relevos registrados ese día.</td></tr>') + '</tbody>';
 }
 function kpisDia(L) {
   const nD = L.filter(r => tipoDe(r) === 'doble').length, nF = L.filter(conFoto).length, nC = new Set(L.map(r => r.cond)).size;
@@ -870,7 +934,7 @@ async function cargarLib(src, ya) {
 }
 const filaXls = r => {
   const d = durMin(r), f = FLOTA[r.placa] || ['', ''];
-  return { 'Fecha de registro': fmtDia(r.fecha), 'Hora de registro': horaAt(r.at), 'Tipo': tl(r), 'Conductor': r.cond, 'Placa': r.placa, 'Ruta': f[0], 'Empresa': f[1], 'Inicio relevo': tipoDe(r) === 'doble' ? r.ini : '', 'Fin relevo': tipoDe(r) === 'doble' ? r.fin : '', 'Duración (min)': tipoDe(r) === 'doble' && d ? d : '', 'Foto': conFoto(r) ? 'Sí' : 'No', 'GPS': r.geo ? `${r.geo.lat.toFixed(5)}, ${r.geo.lon.toFixed(5)}` : '', 'Comentario': r.com || '' };
+  return { 'Fecha de registro': fmtDia(r.fecha), 'Hora de registro': horaAt(r.at), 'Tipo': tl(r), 'Conductor': r.cond, 'Placa': r.placa, 'Ruta': f[0], 'Empresa': f[1], 'Inicio relevo': tipoDe(r) === 'doble' ? r.ini : '', 'Fin relevo': tipoDe(r) === 'doble' ? r.fin : '', 'Duración (min)': tipoDe(r) === 'doble' && d ? d : '', 'Foto': conFoto(r) ? 'Sí' : 'No', 'GPS': r.geo ? `${r.geo.lat.toFixed(5)}, ${r.geo.lon.toFixed(5)}` : '', 'Comentario': r.com || '', 'Hora corregida': r.editado ? `Sí (antes ${r.iniOrig}–${r.finOrig})` : '' };
 };
 const filaProd = (s, tipo, fecha) => ({ 'Fecha / periodo': fecha, 'Tipo': tipo === 'mov' ? 'Movilizador interno' : 'Doble conductor', 'Conductor': s.cond, 'Días con relevo': s.dias, 'Relevos': s.total, 'Promedio diario': +s.prom.toFixed(2), 'Meta diaria': META[tipo], 'Productividad %': Math.round(s.pct * 100), 'Horas en relevo': tipo === 'doble' ? +s.horas.toFixed(1) : '', 'Placas distintas': s.nPlacas });
 async function descargarXls(L, nombre, titulo) {
@@ -1169,6 +1233,28 @@ function pintarFoto() {
   $('#fmPrev').disabled = FM.i === 0; $('#fmNext').disabled = FM.i >= FM.lista.length - 1;
 }
 function cerrarFoto() { $('#fotoModal').hidden = true; document.body.style.overflow = ''; }
+let ED_R = null;
+function abrirEdicion(ri) {
+  const r = RELEVOS[ri]; if (!r) return;
+  if (!REL_OK && !CAN) { $('#relMsg').textContent = '⚠ Para modificar la hora, primero entra con tu PIN de conductor.'; $('#t6').click(); try { $('#relPin').focus(); $('#relPin').scrollIntoView({ block: 'center' }); } catch (e) {} return; }
+  ED_R = r; $('#edTit').textContent = `${r.placa} · ${r.cond}`;
+  $('#edSub').textContent = `Registrado ${horaAt(r.at)}${r.editado ? ` · ya corregido (antes ${r.iniOrig}–${r.finOrig})` : ` · hora actual ${r.ini}–${r.fin}`}`;
+  $('#edIni').value = r.ini || ''; $('#edFin').value = r.fin || ''; $('#edMsg').textContent = '';
+  $('#edModal').hidden = false; document.body.style.overflow = 'hidden'; $('#edIni').focus();
+}
+function cerrarEdicion() { $('#edModal').hidden = true; document.body.style.overflow = ''; ED_R = null; }
+async function guardarEdicion() {
+  const r = ED_R; if (!r) return; const ini = $('#edIni').value, fin = $('#edFin').value, m = t => { $('#edMsg').textContent = t; };
+  if (!ini || !fin) return m('⚠ Pon la hora de inicio y de fin.');
+  const d = durMin({ ini, fin }); if (!d || d > 240) return m('⚠ El fin debe ser después del inicio (máximo 4 h por relevo).');
+  const clave = claveRel(r); m('Guardando…'); $('#edOk').disabled = true;
+  try {
+    if (NET) { const j = await (await fetch(ED_API, { method: 'POST', body: JSON.stringify({ clave, ini, fin, por: r.cond }) })).json(); if (!j.ok) throw new Error(j.error || 'No se pudo guardar.'); }
+    EDIC[clave] = { ini, fin, por: r.cond, cuando: new Date().toISOString() }; aplicarEdiciones(); renderTodo();
+    $('#relMsg').textContent = `✓ Hora corregida: ${r.placa} · ${r.cond} · ${ini}–${fin}`; cerrarEdicion();
+  } catch (e) { m('⚠ ' + e.message); }
+  $('#edOk').disabled = false;
+}
 function renderTodo() { renderRegistro(); renderP2(); renderAdmin(); renderProd(); renderP4(); etiquetar(); $('#vivoTxt').textContent = 'En vivo · actualizado ' + new Date().toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour12: false }); }
 
 /* pestañas */
@@ -1184,10 +1270,13 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   CONDS = LS.get('rel_conds', CONDS); PLACAS_EXTRA = LS.get('rel_placas', []); aplicarFlota();
   if (!NET) RELEVOS = historialMuestra();
   renderTodo();
-  document.addEventListener('click', e => { const tr = e.target.closest('table.rt tr.con-foto'); if (tr) verFoto(+tr.dataset.ri, tr.closest('table')); });
+  document.addEventListener('click', e => { const be = e.target.closest('.btn-ed'); if (be) { e.stopPropagation(); abrirEdicion(+be.dataset.ed); return; } const tr = e.target.closest('table.rt tr.con-foto'); if (tr) verFoto(+tr.dataset.ri, tr.closest('table')); });
   document.addEventListener('keydown', e => {
+    if (!$('#edModal').hidden) { if (e.key === 'Escape') cerrarEdicion(); return; }
     if (!$('#fotoModal').hidden) { if (e.key === 'Escape') cerrarFoto(); if (e.key === 'ArrowLeft' && FM.i > 0) { FM.i--; pintarFoto(); } if (e.key === 'ArrowRight' && FM.i < FM.lista.length - 1) { FM.i++; pintarFoto(); } return; }
+    if (e.target.closest && e.target.closest('.btn-ed')) return;
     const tr = e.target.closest && e.target.closest('tr.con-foto'); if (tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); verFoto(+tr.dataset.ri, tr.closest('table')); } });
+  $('#edCerrar').onclick = cerrarEdicion; $('#edCancel').onclick = cerrarEdicion; $('#edOk').onclick = guardarEdicion; $('#edModal').onclick = e => { if (e.target.id === 'edModal') cerrarEdicion(); };
   $('#fmCerrar').onclick = cerrarFoto; $('#fotoModal').onclick = e => { if (e.target.id === 'fotoModal') cerrarFoto(); };
   $('#fmPrev').onclick = () => { if (FM.i > 0) { FM.i--; pintarFoto(); } }; $('#fmNext').onclick = () => { if (FM.i < FM.lista.length - 1) { FM.i++; pintarFoto(); } };
   $('#relBtn').onclick = guardarRelevo; $('#relEntrar').onclick = entrarRelevo; $('#relPin').onkeydown = e => { if (e.key === 'Enter') entrarRelevo(); };
