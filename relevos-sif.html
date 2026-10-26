@@ -605,7 +605,7 @@ body .tg-seg .btn{padding:6px 8px;font-size:10px;min-height:32px}
   </div>
   <div class="pagina" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
     <section>
-      <div class="sec-tit"><div><h2>Relevos <em>registrados</em></h2><p id="p2Sub">Se llena solo con lo que suben los conductores. La foto no sale aquí: va al PPT.</p></div>
+      <div class="sec-tit"><div><h2>Relevos <em>registrados</em></h2><p id="p2Sub">Se llena solo con lo que suben los conductores. Toca una ficha para ver su foto (la misma que va al PPT).</p></div>
         <label class="dia-sel">Día<input type="date" id="p2Dia"></label></div>
       <div class="kpis" id="p2relK"></div>
       <div class="acciones" id="admAcc" hidden>
@@ -692,6 +692,7 @@ const hoyLima = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Americ
 const ahoraLima = () => new Date().toLocaleString('sv-SE', { timeZone: 'America/Lima' }).slice(0, 16);
 const fmtFH = d => d.toLocaleString('es-PE', { timeZone: 'America/Lima', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', '');
 const fmtF = d => d.toLocaleDateString('es-PE', { timeZone: 'America/Lima', day: '2-digit', month: '2-digit', year: 'numeric' });
+const horaAt = a => { const m = /(\d{1,2}):(\d{2})/.exec(String(a || '')); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
 const fmtDia = iso => (iso || '').split('-').reverse().join('/');
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -706,7 +707,7 @@ const tipoDe = r => r.tipo === 'mov' ? 'mov' : 'doble';
 const tl = r => tipoDe(r) === 'mov' ? 'Movilizador interno' : 'Doble conductor';
 const conFoto = r => !!(r.foto || r.fotoUrl);
 const durMin = r => { const a = hm(r.ini), b = hm(r.fin); if (a == null || b == null) return null; let d = b - a; if (d < 0) d += 1440; return d; };
-const horaDe = r => { const m = tipoDe(r) === 'doble' && r.ini ? hm(r.ini) : hm((r.at || '').slice(11, 16)); return m == null ? null : Math.floor(m / 60); };
+const horaDe = r => { const m = tipoDe(r) === 'doble' && r.ini ? hm(r.ini) : hm(horaAt(r.at)); return m == null ? null : Math.floor(m / 60); };
 const normPlaca = s => { let p = (s || '').trim().toUpperCase(); if (p && !/^PE/.test(p)) p = 'PE' + p; return p; };
 const PLACA_OK = /^PE[A-Z0-9]{3}-\d{3}$/;
 const sem = p => p >= 1 ? 'v' : p >= 0.8 ? 'a' : 'r';
@@ -827,7 +828,7 @@ async function guardarRelevo() {
 }
 function tablaRel(L) {
   const cab = '<thead><tr><th class="n">#</th><th>Fecha registro</th><th>Placa</th><th>Ruta</th><th>Tipo</th><th>Conductor</th><th class="n">Inicio</th><th class="n">Fin</th><th>Foto</th><th class="n">Registrado</th></tr></thead><tbody>';
-  const f = L.map((r, i) => `<tr class="${conFoto(r) ? 'con-foto' : ''}" data-ri="${RELEVOS.indexOf(r)}" tabindex="${conFoto(r) ? 0 : -1}"><td class="n mono">${L.length - i}</td><td class="mono">${fmtDia(r.fecha)}</td><td class="mono"><b>${esc(r.placa)}</b></td><td>${esc((FLOTA[r.placa] || [''])[0])}</td><td>${tl(r)}</td><td>${esc(r.cond)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.ini)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.fin)}</td><td>${conFoto(r) ? '<span class="chip verde ver-foto">Ver foto ›</span>' : '<span class="chip rojo">sin foto</span>'}</td><td class="n mono">${esc((r.at || '').slice(11, 16))}</td></tr>`).join('');
+  const f = L.map((r, i) => `<tr class="${conFoto(r) ? 'con-foto' : ''}" data-ri="${RELEVOS.indexOf(r)}" tabindex="${conFoto(r) ? 0 : -1}"><td class="n mono">${L.length - i}</td><td class="mono">${fmtDia(r.fecha)}</td><td class="mono"><b>${esc(r.placa)}</b></td><td>${esc((FLOTA[r.placa] || [''])[0])}</td><td>${tl(r)}</td><td>${esc(r.cond)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.ini)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.fin)}</td><td>${conFoto(r) ? '<span class="chip verde ver-foto">Ver foto ›</span>' : '<span class="chip rojo">sin foto</span>'}</td><td class="n mono">${esc(horaAt(r.at))}</td></tr>`).join('');
   return cab + (f || '<tr><td colspan="10" class="mut">No hay relevos registrados ese día.</td></tr>') + '</tbody>';
 }
 function kpisDia(L) {
@@ -851,22 +852,26 @@ function renderRegistro() {
 const diaP2 = () => $('#p2Dia').value || hoyLima();
 function renderP2() {
   const d = diaP2(), L = ordenAt(RELEVOS.filter(r => r.fecha === d));
-  $('#p2Sub').textContent = `${diaLargo(d)}. Se llena solo con lo que suben los conductores. La foto no sale aquí: va al PPT.`;
+  $('#p2Sub').textContent = `${diaLargo(d)}. Se llena solo con lo que suben los conductores. Toca una ficha para ver su foto (la misma que va al PPT).`;
   $('#p2relK').innerHTML = kpisDia(L);
   $('#p2relTab').innerHTML = tablaRel(L);
   $('#p2pptNota').innerHTML = `PPT: primero las hojas de doble conductor y después las de movilizador interno, 2 relevos por hoja. «Armar y enviar» lo manda a <b>${DEST_PPT.join('</b> y <b>')}</b>${NET ? '' : ' (el envío se activa en Netlify con el Apps Script)'}. El Excel lleva la fecha de registro y una hoja con la productividad del día.`;
 }
 async function cargarLib(src, ya) {
   if (ya()) return;
-  await new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => no(new Error('No se pudo cargar el generador de archivos.')); document.head.appendChild(s); });
+  const fuentes = Array.isArray(src) ? src : [src];
+  for (const u of fuentes) {
+    try { await new Promise((ok, no) => { const s = document.createElement('script'); s.src = u; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); if (ya()) return; } catch (e) {}
+  }
+  throw new Error('No se pudo cargar el generador de archivos. Revisa tu conexión y vuelve a intentar.');
 }
 const filaXls = r => {
   const d = durMin(r), f = FLOTA[r.placa] || ['', ''];
-  return { 'Fecha de registro': fmtDia(r.fecha), 'Hora de registro': (r.at || '').slice(11, 16), 'Tipo': tl(r), 'Conductor': r.cond, 'Placa': r.placa, 'Ruta': f[0], 'Empresa': f[1], 'Inicio relevo': tipoDe(r) === 'doble' ? r.ini : '', 'Fin relevo': tipoDe(r) === 'doble' ? r.fin : '', 'Duración (min)': tipoDe(r) === 'doble' && d ? d : '', 'Foto': conFoto(r) ? 'Sí' : 'No', 'GPS': r.geo ? `${r.geo.lat.toFixed(5)}, ${r.geo.lon.toFixed(5)}` : '', 'Comentario': r.com || '' };
+  return { 'Fecha de registro': fmtDia(r.fecha), 'Hora de registro': horaAt(r.at), 'Tipo': tl(r), 'Conductor': r.cond, 'Placa': r.placa, 'Ruta': f[0], 'Empresa': f[1], 'Inicio relevo': tipoDe(r) === 'doble' ? r.ini : '', 'Fin relevo': tipoDe(r) === 'doble' ? r.fin : '', 'Duración (min)': tipoDe(r) === 'doble' && d ? d : '', 'Foto': conFoto(r) ? 'Sí' : 'No', 'GPS': r.geo ? `${r.geo.lat.toFixed(5)}, ${r.geo.lon.toFixed(5)}` : '', 'Comentario': r.com || '' };
 };
 const filaProd = (s, tipo, fecha) => ({ 'Fecha / periodo': fecha, 'Tipo': tipo === 'mov' ? 'Movilizador interno' : 'Doble conductor', 'Conductor': s.cond, 'Días con relevo': s.dias, 'Relevos': s.total, 'Promedio diario': +s.prom.toFixed(2), 'Meta diaria': META[tipo], 'Productividad %': Math.round(s.pct * 100), 'Horas en relevo': tipo === 'doble' ? +s.horas.toFixed(1) : '', 'Placas distintas': s.nPlacas });
 async function descargarXls(L, nombre, titulo) {
-  await cargarLib('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js', () => window.XLSX);
+  await cargarLib(['https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js', 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'], () => window.XLSX);
   const wb = XLSX.utils.book_new();
   const rows = L.slice().sort((a, b) => (a.fecha + (a.at || '')).localeCompare(b.fecha + (b.at || ''))).map(filaXls);
   const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [filaXls({ fecha: '', placa: '', cond: '' })]);
@@ -881,13 +886,19 @@ async function descargarXls(L, nombre, titulo) {
 async function aData(r) {
   if (r.foto && /^data:/.test(r.foto)) return r.foto;
   const u = r.fotoUrl; if (!u || !/^https?:/.test(u)) return null;
-  try { const b = await (await fetch(u)).blob(); return await new Promise(ok => { const f = new FileReader(); f.onload = () => ok(f.result); f.readAsDataURL(b); }); } catch (e) { return null; }
+  const id = (u.match(/[-\w]{25,}/) || [])[0];
+  const cands = id && /google/.test(u) ? [`https://lh3.googleusercontent.com/d/${id}=w1600`, `https://drive.google.com/thumbnail?id=${id}&sz=w1600`, u] : [u];
+  for (const c of cands) {
+    try { const res = await fetch(c, { mode: 'cors' }); if (!res.ok) continue; const b = await res.blob(); if (!/^image\//.test(b.type)) continue;
+      return await new Promise(ok => { const f = new FileReader(); f.onload = () => ok(f.result); f.readAsDataURL(b); }); } catch (e) {}
+  }
+  return null;
 }
 // PPT: doble conductor primero, luego movilizador interno; 2 relevos por hoja
 async function construirPpt(fecha) {
   const L = RELEVOS.filter(r => r.fecha === fecha && conFoto(r));
   if (!L.length) return null;
-  await cargarLib('https://cdnjs.cloudflare.com/ajax/libs/PptxGenJS/3.12.0/pptxgen.bundle.js', () => window.PptxGenJS);
+  await cargarLib(['https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js', 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js', 'https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'], () => window.PptxGenJS);
   const p = new PptxGenJS(); p.layout = 'LAYOUT_WIDE';
   const dm = fmtDia(fecha).replace(/\//g, '.');
   for (const [t, tit] of [['doble', 'RELEVOS · DOBLE CONDUCTOR'], ['mov', 'MOVILIZADOR INTERNO']]) {
@@ -1113,7 +1124,7 @@ const urlFoto = r => {
   if (r.foto && /^data:/.test(r.foto)) return r.foto;
   const u = r.fotoUrl || ''; if (!/^https?:/.test(u)) return null;
   const id = (u.match(/[-\w]{25,}/) || [])[0];
-  return /drive\.google\.com|googleusercontent/.test(u) && id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1600` : u;
+  return /drive\.google\.com|googleusercontent/.test(u) && id ? `https://lh3.googleusercontent.com/d/${id}=w1600` : u;
 };
 let FM = { lista: [], i: 0 };
 function verFoto(ri, tabla) {
@@ -1125,7 +1136,7 @@ function pintarFoto() {
   const r = FM.lista[FM.i]; if (!r) return; const u = urlFoto(r), f = FLOTA[r.placa] || ['', ''];
   $('#fmTipo').textContent = `${tl(r)} · ${fmtDia(r.fecha)}`;
   $('#fmTit').textContent = `${r.placa} · ${r.cond}`;
-  $('#fmSub').textContent = [f[0], f[1], tipoDe(r) === 'doble' && r.ini ? `${r.ini} – ${r.fin}` : '', r.at ? 'registrado ' + r.at.slice(11, 16) : '', r.com || ''].filter(Boolean).join(' · ');
+  $('#fmSub').textContent = [f[0], f[1], tipoDe(r) === 'doble' && r.ini ? `${r.ini} – ${r.fin}` : '', r.at ? 'registrado ' + horaAt(r.at) : '', r.com || ''].filter(Boolean).join(' · ');
   const img = $('#fmImg'); $('#fmNo').hidden = !!u; img.hidden = !u;
   img.onerror = () => { img.hidden = true; $('#fmNo').hidden = false; };
   if (u) img.src = u; else img.removeAttribute('src');
