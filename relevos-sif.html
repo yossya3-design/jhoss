@@ -737,6 +737,7 @@ const JORNADA_H = 8, RELEVO_H = 1.5;
 const META = { doble: Math.floor(JORNADA_H / RELEVO_H), mov: 5 };
 const META_SIF = Math.floor(JORNADA_H / RELEVO_H);
 const PIN_ADMIN = '031023';
+const VERSION = '20261026185109';
 const DEST_PPT = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 let REL_TIPO = 'doble', REL_FOTO = null, REL_GEO = null, REL_OK = false;
 const P3 = { per: 'dia', tg: 'dia' };
@@ -885,12 +886,17 @@ async function guardarRelevo() {
   try {
     if (NET) {
       const horaReg = ahoraLima().slice(11, 16);
-      fetch(FOTO_API, { method: 'POST', body: JSON.stringify({ key: claveFoto(v, horaReg), foto: v.foto }) }).catch(() => {});
+      let fotoOk = false;
+      for (let k = 0; k < 3 && !fotoOk; k++) {
+        try { const fr = await fetch(FOTO_API, { method: 'POST', body: JSON.stringify({ key: claveFoto(v, horaReg), foto: v.foto }) }); fotoOk = fr.ok && (await fr.json()).ok; } catch (e) {}
+      }
+      if (!fotoOk) throw new Error('No se pudo subir la foto. Revisa tu señal y vuelve a tocar «Guardar relevo».');
       const r = await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ action: 'relevo', ...v }) }); const j = await r.json();
       if (!j.ok) throw new Error(j.error || 'No se pudo guardar.');
       await cargarNet();
     } else { RELEVOS.push({ ...v, at: ahoraLima() }); renderTodo(); }
     msg(`✓ Relevo guardado: ${fmtDia(v.fecha)} · ${v.cond} · ${v.placa}${v.tipo === 'doble' ? ` · ${v.ini}–${v.fin}` : ' · movilizador'}`);
+    if (VERSION_NUEVA) setTimeout(() => location.reload(), 2500);
     $('#relCond').value = ''; $('#relPlaca').value = ''; $('#relIni').value = ''; $('#relFin').value = ''; $('#relCom').value = ''; REL_GEO = null; miDia(); REL_FOTO = null; $('#relFotoPrev').hidden = true; $('#relBtn').classList.remove('listo');
   } catch (e) { msg('⚠ ' + e.message); }
   $('#relBtn').disabled = false;
@@ -1275,6 +1281,16 @@ async function guardarEdicion() {
   } catch (e) { m('⚠ ' + e.message); }
   $('#edOk').disabled = false;
 }
+let VERSION_NUEVA = false;
+async function revisarVersion() {
+  try {
+    const t = await (await fetch('/relevos-sif.html?v=' + Date.now(), { cache: 'no-store' })).text();
+    const m = /const VERSION = '(\d+)'/.exec(t); if (!m || m[1] === VERSION) return;
+    const ocupado = $('#relPlaca').value || REL_FOTO || !$('#edModal').hidden || !$('#fotoModal').hidden;
+    if (!ocupado) { location.reload(); return; }
+    VERSION_NUEVA = true; $('#relMsg').textContent = '↻ Hay una versión nueva de la página: al terminar este registro se actualizará sola.';
+  } catch (e) {}
+}
 function renderTodo() { renderRegistro(); renderP2(); renderAdmin(); renderProd(); renderP4(); etiquetar(); $('#vivoTxt').textContent = 'En vivo · actualizado ' + new Date().toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour12: false }); }
 
 /* pestañas */
@@ -1321,7 +1337,7 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   if (!NET) { $('#relNota').hidden = false; await relevosMuestra(); }
   if (PIN === PIN_ADMIN) CAN = true; else if (NET && PIN) { try { await apps({ action: 'pin' }); CAN = true; } catch (e) {} }
   pinUI();
-  if (NET) { await cargarNet(); setInterval(cargarNet, 60000); }
+  if (NET) { await cargarNet(); setInterval(cargarNet, 60000); setInterval(revisarVersion, 120000); document.addEventListener('visibilitychange', () => { if (!document.hidden) revisarVersion(); }); }
 })();
 </script>
 </body></html>
