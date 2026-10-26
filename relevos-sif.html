@@ -664,7 +664,7 @@ body .tg-seg .btn{padding:6px 8px;font-size:10px;min-height:32px}
 <div class="foto-modal" id="fotoModal" hidden role="dialog" aria-modal="true" aria-labelledby="fmTit">
   <div class="fm-caja">
     <div class="fm-cab"><div><span class="et" id="fmTipo"></span><h3 id="fmTit"></h3><p id="fmSub"></p></div><button type="button" class="fm-x" id="fmCerrar" aria-label="Cerrar">×</button></div>
-    <div class="fm-img"><img id="fmImg" alt="Foto del relevo"><p class="mut" id="fmNo" hidden>La foto está guardada en el Drive y no se puede mostrar aquí. Sí va en el PPT.</p></div>
+    <div class="fm-img"><img id="fmImg" alt="Foto del relevo"><p class="mut" id="fmNo" hidden>Esta foto se registró antes del almacén de fotos y quedó solo en el Drive.</p></div>
     <div class="fm-pie"><button type="button" class="btn" id="fmPrev">‹ Anterior</button><span class="mut" id="fmPos"></span><button type="button" class="btn" id="fmNext">Siguiente ›</button></div>
   </div>
 </div>
@@ -817,6 +817,8 @@ async function guardarRelevo() {
   msg('Guardando…'); $('#relBtn').disabled = true;
   try {
     if (NET) {
+      const horaReg = ahoraLima().slice(11, 16);
+      fetch(FOTO_API, { method: 'POST', body: JSON.stringify({ key: claveFoto(v, horaReg), foto: v.foto }) }).catch(() => {});
       const r = await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ action: 'relevo', ...v }) }); const j = await r.json();
       if (!j.ok) throw new Error(j.error || 'No se pudo guardar.');
       await cargarNet();
@@ -883,8 +885,28 @@ async function descargarXls(L, nombre, titulo) {
   wb.Props = { Title: titulo };
   XLSX.writeFile(wb, nombre);
 }
+const FOTO_API = '/api/fotos';
+const limpia = x => String(x || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9:-]+/g, '_').slice(0, 40);
+const claveFoto = (r, hora) => `${r.fecha}/${tipoDe(r)}/${limpia(r.placa)}/${limpia(r.cond)}/${(r.ini || '--').replace(':', '')}/${(hora || '--').replace(':', '')}`;
+const FOTO_KEYS = {}, FOTO_CACHE = {};
+async function fotoGuardada(r) {
+  if (!NET || !r.fecha) return null;
+  try {
+    if (!FOTO_KEYS[r.fecha] || Date.now() - FOTO_KEYS[r.fecha].t > 60000) { const j = await (await fetch(`${FOTO_API}?fecha=${r.fecha}`, { cache: 'no-store' })).json(); FOTO_KEYS[r.fecha] = { t: Date.now(), keys: j.keys || [] }; }
+    const pre = `${r.fecha}/${tipoDe(r)}/${limpia(r.placa)}/${limpia(r.cond)}/`;
+    let c = FOTO_KEYS[r.fecha].keys.filter(k => k.startsWith(pre));
+    if (tipoDe(r) === 'doble' && r.ini) { const x = c.filter(k => k.split('/')[4] === r.ini.replace(':', '')); if (x.length) c = x; }
+    if (!c.length) return null;
+    const h = hm(horaAt(r.at)), mk = k => { const v = k.split('/')[5] || ''; return v.length === 4 ? +v.slice(0, 2) * 60 + +v.slice(2) : null; };
+    if (h != null) c.sort((a, b) => Math.abs((mk(a) ?? 9999) - h) - Math.abs((mk(b) ?? 9999) - h));
+    const k = c[0]; if (FOTO_CACHE[k]) return FOTO_CACHE[k];
+    const j = await (await fetch(`${FOTO_API}?key=${encodeURIComponent(k)}`)).json();
+    return j.foto ? (FOTO_CACHE[k] = j.foto) : null;
+  } catch (e) { return null; }
+}
 async function aData(r) {
   if (r.foto && /^data:/.test(r.foto)) return r.foto;
+  const g = await fotoGuardada(r); if (g) return g;
   const u = [r.fotoUrl, r.foto, r.url, r.link].find(x => /^https?:/.test(x || '')); if (!u) return null;
   const id = (u.match(/[-\w]{25,}/) || [])[0];
   const cands = id && /google/.test(u) ? [`https://lh3.googleusercontent.com/d/${id}=w1600`, `https://drive.google.com/thumbnail?id=${id}&sz=w1600`, u] : [u];
@@ -1137,9 +1159,11 @@ function pintarFoto() {
   $('#fmTipo').textContent = `${tl(r)} · ${fmtDia(r.fecha)}`;
   $('#fmTit').textContent = `${r.placa} · ${r.cond}`;
   $('#fmSub').textContent = [f[0], f[1], tipoDe(r) === 'doble' && r.ini ? `${r.ini} – ${r.fin}` : '', r.at ? 'registrado ' + horaAt(r.at) : '', r.com || ''].filter(Boolean).join(' · ');
-  const img = $('#fmImg'); $('#fmNo').hidden = !!u; img.hidden = !u;
+  const img = $('#fmImg'), yo = FM.i;
+  const poner = src => { if (FM.i !== yo) return; $('#fmNo').hidden = !!src; img.hidden = !src; if (src) img.src = src; else img.removeAttribute('src'); };
   img.onerror = () => { img.hidden = true; $('#fmNo').hidden = false; };
-  if (u) img.src = u; else img.removeAttribute('src');
+  if (u && /^data:/.test(u)) poner(u);
+  else { img.hidden = true; $('#fmNo').hidden = true; fotoGuardada(r).then(g => poner(g || u)); }
   $('#fmPos').textContent = `${FM.i + 1} de ${FM.lista.length}`;
   $('#fmPrev').disabled = FM.i === 0; $('#fmNext').disabled = FM.i >= FM.lista.length - 1;
 }
