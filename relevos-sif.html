@@ -785,7 +785,7 @@ function pinUI() {
 async function entrarPin() {
   const raw = $('#pinIn').value.trim(); if (!raw) return; const v = raw.replace(/\D/g, '') === PIN_ADMIN ? PIN_ADMIN : raw;
   PIN = v; $('#pinMsg').textContent = 'Verificando…';
-  try { if (v !== PIN_ADMIN) { if (!NET) throw new Error('PIN incorrecto.'); await apps({ action: 'pin' }); } CAN = true; try { sessionStorage.setItem('t2pin', PIN); } catch (e) {} $('#pinIn').value = ''; $('#pinMsg').textContent = ''; pinUI(); renderAdmin(); }
+  try { if (v !== PIN_ADMIN) { if (!NET) throw new Error('PIN incorrecto.'); await apps({ action: 'pin' }); } CAN = true; try { sessionStorage.setItem('t2pin', PIN); } catch (e) {} $('#pinIn').value = ''; $('#pinMsg').textContent = ''; pinUI(); renderTodo(); }
   catch (e) { $('#pinMsg').textContent = e.message; }
 }
 const ED_API = '/api/ediciones';
@@ -818,7 +818,7 @@ async function entrarRelevo() {
   $('#relMsg').textContent = 'Verificando…';
   try {
     if (NET) { const r = await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ action: 'pinRelevo', pin }) }); const j = await r.json(); if (!j.ok) throw new Error(j.error || 'PIN incorrecto'); }
-    REL_OK = true; $('#relForm').classList.add('ok'); $('#relMsg').textContent = NET ? '' : 'Modo muestra: cualquier PIN entra.'; pinUI();
+    REL_OK = true; $('#relForm').classList.add('ok'); renderTodo(); $('#relMsg').textContent = NET ? '' : 'Modo muestra: cualquier PIN entra.'; pinUI();
   } catch (e) { $('#relMsg').textContent = '⚠ ' + e.message; }
 }
 function tipoRel(t) {
@@ -895,7 +895,7 @@ async function guardarRelevo() {
 }
 function tablaRel(L) {
   const cab = '<thead><tr><th class="n">#</th><th>Fecha registro</th><th>Placa</th><th>Ruta</th><th>Tipo</th><th>Conductor</th><th class="n">Inicio</th><th class="n">Fin</th><th>Foto</th><th class="n">Registrado</th><th>Editar</th></tr></thead><tbody>';
-  const f = L.map((r, i) => `<tr class="${conFoto(r) ? 'con-foto' : ''}" data-ri="${RELEVOS.indexOf(r)}" tabindex="${conFoto(r) ? 0 : -1}"><td class="n mono">${L.length - i}</td><td class="mono">${fmtDia(r.fecha)}</td><td class="mono"><b>${esc(r.placa)}</b></td><td>${esc((FLOTA[r.placa] || [''])[0])}</td><td>${tl(r)}</td><td>${esc(r.cond)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.ini)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.fin)}</td><td>${conFoto(r) ? '<span class="chip verde ver-foto">Ver foto ›</span>' : '<span class="chip rojo">sin foto</span>'}</td><td class="n mono">${esc(horaAt(r.at))}</td><td>${tipoDe(r) === 'doble' && r.fecha === hoyLima() ? `<button type="button" class="btn-ed" data-ed="${RELEVOS.indexOf(r)}">✎ Modificar hora</button>` : '<span class="mut">—</span>'}${r.editado ? ' <span class="chip amar">editado</span>' : ''}</td></tr>`).join('');
+  const f = L.map((r, i) => `<tr class="${conFoto(r) ? 'con-foto' : ''}" data-ri="${RELEVOS.indexOf(r)}" tabindex="${conFoto(r) ? 0 : -1}"><td class="n mono">${L.length - i}</td><td class="mono">${fmtDia(r.fecha)}</td><td class="mono"><b>${esc(r.placa)}</b></td><td>${esc((FLOTA[r.placa] || [''])[0])}</td><td>${tl(r)}</td><td>${esc(r.cond)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.ini)}</td><td class="n mono">${tipoDe(r) === 'mov' ? '—' : esc(r.fin)}</td><td>${conFoto(r) ? '<span class="chip verde ver-foto">Ver foto ›</span>' : '<span class="chip rojo">sin foto</span>'}</td><td class="n mono">${esc(horaAt(r.at))}</td><td>${(REL_OK || CAN) && tipoDe(r) === 'doble' && r.fecha === hoyLima() ? `<button type="button" class="btn-ed" data-ed="${RELEVOS.indexOf(r)}">✎ Modificar hora</button>` : '<span class="mut">—</span>'}${r.editado ? ' <span class="chip amar">editado</span>' : ''}</td></tr>`).join('');
   return cab + (f || '<tr><td colspan="11" class="mut">No hay relevos registrados ese día.</td></tr>') + '</tbody>';
 }
 function kpisDia(L) {
@@ -1236,7 +1236,7 @@ function cerrarFoto() { $('#fotoModal').hidden = true; document.body.style.overf
 let ED_R = null;
 function abrirEdicion(ri) {
   const r = RELEVOS[ri]; if (!r) return;
-  if (!REL_OK && !CAN) { $('#relMsg').textContent = '⚠ Para modificar la hora, primero entra con tu PIN de conductor.'; $('#t6').click(); try { $('#relPin').focus(); $('#relPin').scrollIntoView({ block: 'center' }); } catch (e) {} return; }
+  if (!REL_OK && !CAN) return;
   ED_R = r; $('#edTit').textContent = `${r.placa} · ${r.cond}`;
   $('#edSub').textContent = `Registrado ${horaAt(r.at)}${r.editado ? ` · ya corregido (antes ${r.iniOrig}–${r.finOrig})` : ` · hora actual ${r.ini}–${r.fin}`}`;
   $('#edIni').value = r.ini || ''; $('#edFin').value = r.fin || ''; $('#edMsg').textContent = '';
@@ -1244,7 +1244,7 @@ function abrirEdicion(ri) {
 }
 function cerrarEdicion() { $('#edModal').hidden = true; document.body.style.overflow = ''; ED_R = null; }
 async function guardarEdicion() {
-  const r = ED_R; if (!r) return; const ini = $('#edIni').value, fin = $('#edFin').value, m = t => { $('#edMsg').textContent = t; };
+  const r = ED_R; if (!r || (!REL_OK && !CAN)) return; const ini = $('#edIni').value, fin = $('#edFin').value, m = t => { $('#edMsg').textContent = t; };
   if (!ini || !fin) return m('⚠ Pon la hora de inicio y de fin.');
   const d = durMin({ ini, fin }); if (!d || d > 240) return m('⚠ El fin debe ser después del inicio (máximo 4 h por relevo).');
   const clave = claveRel(r); m('Guardando…'); $('#edOk').disabled = true;
