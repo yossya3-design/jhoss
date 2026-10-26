@@ -885,7 +885,7 @@ async function descargarXls(L, nombre, titulo) {
 }
 async function aData(r) {
   if (r.foto && /^data:/.test(r.foto)) return r.foto;
-  const u = r.fotoUrl; if (!u || !/^https?:/.test(u)) return null;
+  const u = [r.fotoUrl, r.foto, r.url, r.link].find(x => /^https?:/.test(x || '')); if (!u) return null;
   const id = (u.match(/[-\w]{25,}/) || [])[0];
   const cands = id && /google/.test(u) ? [`https://lh3.googleusercontent.com/d/${id}=w1600`, `https://drive.google.com/thumbnail?id=${id}&sz=w1600`, u] : [u];
   for (const c of cands) {
@@ -905,16 +905,16 @@ async function construirPpt(fecha) {
     const G = L.filter(r => tipoDe(r) === t).sort((a, b) => (a.ini || a.at || '').localeCompare(b.ini || b.at || ''));
     const nh = Math.ceil(G.length / 2);
     for (let h = 0; h < nh; h++) {
-      const s = p.addSlide(); s.background = { color: '070707' };
+      const s = p.addSlide(); s.background = { color: 'FFFFFF' };
       s.addShape(p.ShapeType.rect, { x: 0, y: 0, w: 13.333, h: 0.08, fill: { color: 'F2C52A' }, line: { color: 'F2C52A' } });
-      s.addText(`${tit} · HOJA ${h + 1} DE ${nh}`, { x: 0.45, y: 0.2, w: 9, h: 0.35, fontFace: 'Consolas', fontSize: 12, bold: true, color: 'F2C52A', charSpacing: 2 });
-      s.addText(`FECHA DE REGISTRO ${dm}`, { x: 8.4, y: 0.2, w: 4.5, h: 0.35, align: 'right', fontFace: 'Consolas', fontSize: 12, color: 'A9A391' });
+      s.addText(`${tit} · HOJA ${h + 1} DE ${nh}`, { x: 0.45, y: 0.2, w: 9, h: 0.35, fontFace: 'Consolas', fontSize: 12, bold: true, color: '9A7400', charSpacing: 2 });
+      s.addText(`FECHA DE REGISTRO ${dm}`, { x: 8.4, y: 0.2, w: 4.5, h: 0.35, align: 'right', fontFace: 'Consolas', fontSize: 12, color: '555555' });
       for (const [i, r] of G.slice(h * 2, h * 2 + 2).entries()) {
         const x0 = 0.45 + i * 6.35, img = await aData(r);
         if (img) s.addImage({ data: img, x: x0, y: 0.7, w: 6.0, h: 5.0, sizing: { type: 'contain', w: 6.0, h: 5.0 } });
-        else s.addText('Foto guardada en el Drive', { x: x0, y: 0.7, w: 6.0, h: 5.0, align: 'center', fontFace: 'Consolas', fontSize: 14, color: 'A9A391', fill: { color: '1B1A16' } });
-        s.addText([{ text: 'PLACA · ' + (r.cond || '') + '\n', options: { fontSize: 10, color: 'A9A391', fontFace: 'Consolas' } }, { text: r.placa, options: { fontSize: 36, bold: true, color: 'F2C52A', fontFace: 'Arial Black' } }], { x: x0, y: 5.85, w: 3.4, h: 1.2, valign: 'top', margin: 0 });
-        if (t === 'doble') [['INICIO', r.ini, 3.5], ['FIN', r.fin, 4.8]].forEach(([k, v, dx]) => s.addText([{ text: k + '\n', options: { fontSize: 10, color: 'A9A391', fontFace: 'Consolas' } }, { text: v, options: { fontSize: 26, bold: true, color: 'F4F1E8', fontFace: 'Consolas' } }], { x: x0 + dx, y: 5.85, w: 1.25, h: 1.2, align: 'right', valign: 'top', margin: 0 }));
+        else s.addText('Foto guardada en el Drive', { x: x0, y: 0.7, w: 6.0, h: 5.0, align: 'center', fontFace: 'Consolas', fontSize: 14, color: '777777', fill: { color: 'EFEFEF' } });
+        s.addText([{ text: 'PLACA · ' + (r.cond || '') + '\n', options: { fontSize: 10, color: '666666', fontFace: 'Consolas' } }, { text: r.placa, options: { fontSize: 36, bold: true, color: '111111', fontFace: 'Arial Black' } }], { x: x0, y: 5.85, w: 3.4, h: 1.2, valign: 'top', margin: 0 });
+        if (t === 'doble') [['INICIO', r.ini, 3.5], ['FIN', r.fin, 4.8]].forEach(([k, v, dx]) => s.addText([{ text: k + '\n', options: { fontSize: 10, color: '666666', fontFace: 'Consolas' } }, { text: v, options: { fontSize: 26, bold: true, color: '111111', fontFace: 'Consolas' } }], { x: x0 + dx, y: 5.85, w: 1.25, h: 1.2, align: 'right', valign: 'top', margin: 0 }));
       }
     }
   }
