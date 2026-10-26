@@ -756,7 +756,7 @@ const semanaIni = iso => addD(iso, -((dUTC(iso).getUTCDay() + 6) % 7));
 const diaLargo = iso => `${DIAS[dUTC(iso).getUTCDay()]} ${fmtDia(iso)}`;
 const hm = s => { const m = /^(\d{1,2}):(\d{2})/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
 const hhmm = m => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
-const tipoDe = r => r.tipo === 'mov' ? 'mov' : 'doble';
+const tipoDe = r => /mov/i.test(String(r.tipo || '')) ? 'mov' : 'doble';
 const tl = r => tipoDe(r) === 'mov' ? 'Movilizador interno' : 'Doble conductor';
 const conFoto = r => !!(r.foto || r.fotoUrl);
 const durMin = r => { const a = hm(r.ini), b = hm(r.fin); if (a == null || b == null) return null; let d = b - a; if (d < 0) d += 1440; return d; };
@@ -958,8 +958,10 @@ async function fotoGuardada(r) {
   if (!NET || !r.fecha) return null;
   try {
     if (!FOTO_KEYS[r.fecha] || Date.now() - FOTO_KEYS[r.fecha].t > 60000) { const j = await (await fetch(`${FOTO_API}?fecha=${r.fecha}`, { cache: 'no-store' })).json(); FOTO_KEYS[r.fecha] = { t: Date.now(), keys: j.keys || [] }; }
-    const pre = `${r.fecha}/${tipoDe(r)}/${limpia(r.placa)}/${limpia(r.cond)}/`;
-    let c = FOTO_KEYS[r.fecha].keys.filter(k => k.startsWith(pre));
+    const P = limpia(r.placa), C = limpia(r.cond), ks = FOTO_KEYS[r.fecha].keys;
+    let c = ks.filter(k => k.startsWith(`${r.fecha}/${tipoDe(r)}/${P}/${C}/`));
+    if (!c.length) c = ks.filter(k => { const x = k.split('/'); return x[2] === P && x[3] === C; });
+    if (!c.length) c = ks.filter(k => k.split('/')[2] === P);
     if (tipoDe(r) === 'doble' && r.ini) { const x = c.filter(k => k.split('/')[4] === r.ini.replace(':', '')); if (x.length) c = x; }
     if (!c.length) return null;
     const h = hm(horaAt(r.at)), mk = k => { const v = k.split('/')[5] || ''; return v.length === 4 ? +v.slice(0, 2) * 60 + +v.slice(2) : null; };
