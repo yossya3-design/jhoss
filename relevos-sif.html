@@ -760,7 +760,7 @@ const JORNADA_H = 8, RELEVO_H = 1.5;
 const META = { doble: Math.floor(JORNADA_H / RELEVO_H), mov: 5 };
 const META_SIF = Math.floor(JORNADA_H / RELEVO_H);
 const PIN_ADMIN = '031023';
-const VERSION = '20261027002502';
+const VERSION = '20261027002906';
 const DEST_PPT = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 let REL_TIPO = 'doble', REL_FOTO = null, REL_GEO = null, REL_OK = false;
 const P3 = { per: 'dia', tg: 'dia' };
@@ -799,7 +799,8 @@ const aplicarFlota = () => { FLOTA = { ...FLOTA_BASE }; PLACAS_EXTRA.forEach(p =
 async function apps(body) {
   const r = await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ ...body, pin: PIN }) });
   const j = await r.json();
-  if (!j.ok) { if (/PIN/.test(j.error || '')) { CAN = false; PIN = ''; try { sessionStorage.removeItem('t2pin'); localStorage.removeItem('t2pin_eq'); } catch (e) {} pinUI(); } throw new Error(j.error || 'No se pudo guardar.'); }
+  if (!j.ok) { if (/PIN/i.test(j.error || '') && PIN === PIN_ADMIN) throw new Error('El Apps Script no reconoce la clave 031023, por eso el correo no salió. Sigues dentro como administradora; descarga la PPT y envíala tú mientras actualizamos el Apps Script.');
+    if (/PIN/.test(j.error || '')) { CAN = false; PIN = ''; try { sessionStorage.removeItem('t2pin'); localStorage.removeItem('t2pin_eq'); } catch (e) {} pinUI(); } throw new Error(j.error || 'No se pudo guardar.'); }
   return j;
 }
 function pinUI() {
