@@ -445,6 +445,8 @@ footer b{color:var(--oro)}
 .rk-b b{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--f-titulo);font-size:16px;color:#fff;text-shadow:0 1px 3px #000}
 .rk-r .v{font-family:var(--f-mono);font-size:12.5px;font-weight:700;text-align:right}
 .tend-w{overflow-x:auto}
+.dia-nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.dia-nav .btn{min-height:40px;padding:6px 12px}.dia-nav .btn:disabled{opacity:.35}
+@media (max-width:600px){.dia-nav{width:100%}.dia-nav .dia-sel{flex:1 1 auto}.dia-nav .dia-sel input{width:100%}}
 .btn-ed{background:transparent;border:1px solid var(--oro);color:var(--oro);border-radius:999px;padding:5px 10px;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
 .btn-ed:hover,.btn-ed:focus-visible{background:rgba(242,197,42,.14);outline:none}
 .ed-caja{width:min(420px,100%)}
@@ -645,7 +647,8 @@ body .tg-seg .btn{padding:6px 8px;font-size:10px;min-height:32px}
       <p class="mut" id="relNota" hidden>Modo muestra: lo que registres aquí no se guarda en el Sheet; el historial de días anteriores es de ejemplo, para ver los gráficos.</p>
     </section>
     <section>
-      <div class="sec-tit"><div><h2>Relevos de <em>hoy</em></h2><p id="relSub"></p></div></div>
+      <div class="sec-tit"><div><h2>Relevos <em>registrados</em></h2><p id="relSub"></p></div>
+        <div class="dia-nav"><button type="button" class="btn" id="p1Prev" aria-label="Día anterior">‹</button><label class="dia-sel">Día<input type="date" id="p1Dia"></label><button type="button" class="btn" id="p1Next" aria-label="Día siguiente">›</button><button type="button" class="btn" id="p1Hoy">Hoy</button></div></div>
       <div class="kpis" id="p1K"></div>
       <div class="tabla-wrap"><table id="relTab" class="rt simple"></table></div>
     </section>
@@ -737,7 +740,7 @@ const JORNADA_H = 8, RELEVO_H = 1.5;
 const META = { doble: Math.floor(JORNADA_H / RELEVO_H), mov: 5 };
 const META_SIF = Math.floor(JORNADA_H / RELEVO_H);
 const PIN_ADMIN = '031023';
-const VERSION = '20261026185109';
+const VERSION = '20261027001829';
 const DEST_PPT = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 let REL_TIPO = 'doble', REL_FOTO = null, REL_GEO = null, REL_OK = false;
 const P3 = { per: 'dia', tg: 'dia' };
@@ -917,8 +920,9 @@ function renderRegistro() {
   sel.innerHTML = '<option value="">Elige tu nombre</option>' + CONDS.map(c => `<option${c === cur ? ' selected' : ''}>${esc(c)}</option>`).join('');
   $('#relPlacas').innerHTML = Object.keys(FLOTA).sort().map(p => `<option value="${p}">${esc(FLOTA[p][0])} · ${esc(FLOTA[p][1])}</option>`).join('');
   const hoy = hoyLima(); $('#relFecha').value = diaLargo(hoy);
-  const L = ordenAt(RELEVOS.filter(r => r.fecha === hoy));
-  $('#relSub').textContent = `${diaLargo(hoy)} · ${L.length ? L.length + ' relevo(s) registrados.' : 'todavía no hay relevos.'}`;
+  const dv = $('#p1Dia').value || hoy, L = ordenAt(RELEVOS.filter(r => r.fecha === dv));
+  $('#relSub').textContent = `${dv === hoy ? 'Hoy · ' : ''}${diaLargo(dv)} · ${L.length ? L.length + ' relevo(s). Toca una ficha para ver su foto.' : (dv === hoy ? 'todavía no hay relevos.' : 'no hubo relevos ese día.')}`;
+  $('#p1Next').disabled = dv >= hoy; $('#p1Hoy').hidden = dv === hoy;
   $('#relTab').innerHTML = tablaRel(L); $('#p1K').innerHTML = kpisDia(L);
   miDia();
 }
@@ -1302,7 +1306,7 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
 (async () => {
   const hoy = hoyLima();
   $('#hDia').textContent = new Date().toLocaleDateString('es-PE', { timeZone: 'America/Lima', weekday: 'short', day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/[,/]/g, m => m === ',' ? '' : '.').replace(/^./, c => c.toUpperCase());
-  ['#p2Dia', '#p3Dia', '#p4Dia'].forEach(s => { $(s).value = hoy; $(s).max = hoy; });
+  ['#p1Dia', '#p2Dia', '#p3Dia', '#p4Dia'].forEach(s => { $(s).value = hoy; $(s).max = hoy; });
   CONDS = LS.get('rel_conds', CONDS); PLACAS_EXTRA = LS.get('rel_placas', []); aplicarFlota();
   if (!NET) RELEVOS = historialMuestra();
   renderTodo();
@@ -1320,6 +1324,11 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   $('#relTD').onclick = () => tipoRel('doble'); $('#relTM').onclick = () => tipoRel('mov');
   ['#relCam', '#relSubir'].forEach(s => { $(s).onchange = e => { tomarFoto(e.target.files[0]); e.target.value = ''; }; });
   $('#relCond').onchange = miDia;
+  const p1Ir = d => { const h = hoyLima(); $('#p1Dia').value = d > h ? h : d; renderRegistro(); etiquetar(); };
+  $('#p1Dia').onchange = () => p1Ir($('#p1Dia').value || hoyLima());
+  $('#p1Prev').onclick = () => p1Ir(addD($('#p1Dia').value || hoyLima(), -1));
+  $('#p1Next').onclick = () => p1Ir(addD($('#p1Dia').value || hoyLima(), 1));
+  $('#p1Hoy').onclick = () => p1Ir(hoyLima());
   $('#p2Dia').onchange = () => { renderP2(); etiquetar(); }; $('#p4Dia').onchange = () => { renderP4(); etiquetar(); };
   $('#btnXls').onclick = () => { const d = diaP2(); descargarXls(RELEVOS.filter(r => r.fecha === d), `Relevos_SIF_${fmtDia(d).replace(/\//g, '-')}.xlsx`, 'Relevos SIF ' + fmtDia(d)).then(() => nota(`✓ Excel generado del ${fmtDia(d)}.`)).catch(e => nota('⚠ ' + e.message)); };
   $('#btnPptD').onclick = () => descargarPpt().catch(e => nota('⚠ ' + e.message));
