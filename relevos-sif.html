@@ -760,7 +760,7 @@ const JORNADA_H = 8, RELEVO_H = 1.5;
 const META = { doble: Math.floor(JORNADA_H / RELEVO_H), mov: 5 };
 const META_SIF = Math.floor(JORNADA_H / RELEVO_H);
 const PIN_ADMIN = '031023';
-const VERSION = '20261027002906';
+const VERSION = '20261028120609';
 const DEST_PPT = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 let REL_TIPO = 'doble', REL_FOTO = null, REL_GEO = null, REL_OK = false;
 const P3 = { per: 'dia', tg: 'dia' };
@@ -784,7 +784,7 @@ const hm = s => { const m = /^(\d{1,2}):(\d{2})/.exec(s || ''); return m ? +m[1]
 const hhmm = m => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 const tipoDe = r => /mov/i.test(String(r.tipo || '')) ? 'mov' : 'doble';
 const tl = r => tipoDe(r) === 'mov' ? 'Movilizador interno' : 'Doble conductor';
-const conFoto = r => !!(r.foto || r.fotoUrl);
+const conFoto = r => !!(r.foto || r.fotoUrl || r.fotoKey);
 const durMin = r => { const a = hm(r.ini), b = hm(r.fin); if (a == null || b == null) return null; let d = b - a; if (d < 0) d += 1440; return d; };
 const horaDe = r => { const m = tipoDe(r) === 'doble' && r.ini ? hm(r.ini) : hm(horaAt(r.at)); return m == null ? null : Math.floor(m / 60); };
 const normPlaca = s => { let p = (s || '').trim().toUpperCase(); if (p && !/^PE/.test(p)) p = 'PE' + p; return p; };
@@ -826,11 +826,23 @@ async function cargarEdiciones() {
   if (!NET) return;
   try { const j = await (await fetch(`${ED_API}?fecha=${hoyLima()}`, { cache: 'no-store' })).json(); if (j.ok) EDIC = { ...EDIC, ...j.ed }; } catch (e) {}
 }
+const REL_API = '/api/relevos';
+let RESPALDO = [];
+function fusionarRespaldo() {
+  const igual = (a, b) => a.fecha === b.fecha && tipoDe(a) === tipoDe(b) && limpiaK(a.placa) === limpiaK(b.placa) && limpiaK(a.cond) === limpiaK(b.cond) &&
+    (tipoDe(a) === 'doble' ? (a.iniOrig ?? a.ini) === (b.iniOrig ?? b.ini) : Math.abs((hm(horaAt(a.at)) ?? -99) - (hm(horaAt(b.at)) ?? 99)) <= 6);
+  RESPALDO.forEach(x => { if (!RELEVOS.some(r => igual(r, x))) RELEVOS.push({ ...x, respaldo: true }); });
+}
+async function cargarRespaldo() {
+  try { const j = await (await fetch(`${REL_API}?dias=21`, { cache: 'no-store' })).json(); if (j.ok && Array.isArray(j.relevos)) RESPALDO = j.relevos; } catch (e) {}
+}
 async function cargarNet() {
   try {
-    const r = await fetch(APPS_URL + '?action=estado', { cache: 'no-store' }); if (!r.ok) return;
+    const r = await fetch(APPS_URL + '?action=estado', { cache: 'no-store' }).catch(() => null);
+    if (!r || !r.ok) { await cargarRespaldo(); RELEVOS = RELEVOS.filter(x => !x.respaldo); fusionarRespaldo(); await cargarEdiciones(); aplicarEdiciones(); renderTodo(); return; }
     const j = await r.json();
     if (Array.isArray(j.relevos)) RELEVOS = j.relevos;
+    await cargarRespaldo(); fusionarRespaldo();
     await cargarEdiciones(); aplicarEdiciones();
     if (Array.isArray(j.conductores) && j.conductores.length) CONDS = j.conductores;
     if (Array.isArray(j.placas)) { PLACAS_EXTRA = j.placas; aplicarFlota(); }
@@ -915,8 +927,20 @@ async function guardarRelevo() {
         try { const fr = await fetch(FOTO_API, { method: 'POST', body: JSON.stringify({ key: claveFoto(v, horaReg), foto: v.foto }) }); fotoOk = fr.ok && (await fr.json()).ok; } catch (e) {}
       }
       if (!fotoOk) throw new Error('No se pudo subir la foto. Revisa tu señal y vuelve a tocar «Guardar relevo».');
-      const r = await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ action: 'relevo', ...v }) }); const j = await r.json();
-      if (!j.ok) throw new Error(j.error || 'No se pudo guardar.');
+      const fotoKey = claveFoto(v, horaReg), at = `${v.fecha} ${horaReg}`;
+      // 1) respaldo propio del relevo (sin foto): el relevo nunca se pierde
+      let respOk = false;
+      for (let k = 0; k < 3 && !respOk; k++) {
+        try { const rr = await fetch(REL_API, { method: 'POST', body: JSON.stringify({ key: fotoKey, rel: { ...v, foto: undefined, at, fotoKey } }) }); respOk = rr.ok && (await rr.json()).ok; } catch (e) {}
+      }
+      // 2) Sheet (Apps Script). Si el Drive falla, se reintenta sin la foto.
+      let sheetOk = false, sheetErr = '';
+      try { const j = await (await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ action: 'relevo', ...v }) })).json(); sheetOk = !!j.ok; sheetErr = j.error || ''; } catch (e) { sheetErr = e.message; }
+      if (!sheetOk && /drive|l[ií]mite|quota|exception|storage/i.test(sheetErr)) {
+        try { const j = await (await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ action: 'relevo', ...v, foto: '', fotoUrl: `${location.origin}${FOTO_API}?key=${encodeURIComponent(fotoKey)}` }) })).json(); sheetOk = !!j.ok; } catch (e) {}
+      }
+      if (!sheetOk && !respOk) throw new Error('No se pudo guardar. Revisa tu señal y vuelve a tocar «Guardar relevo».');
+      if (!sheetOk) RELEVOS.push({ ...v, foto: undefined, at, fotoKey, respaldo: true });
       await cargarNet();
     } else { RELEVOS.push({ ...v, at: ahoraLima() }); renderTodo(); }
     msg(`✓ Relevo guardado: ${fmtDia(v.fecha)} · ${v.cond} · ${v.placa}${v.tipo === 'doble' ? ` · ${v.ini}–${v.fin}` : ' · movilizador'}`);
@@ -990,6 +1014,7 @@ const FOTO_KEYS = {}, FOTO_CACHE = {};
 async function fotoGuardada(r) {
   if (!NET || !r.fecha) return null;
   try {
+    if (r.fotoKey) { if (FOTO_CACHE[r.fotoKey]) return FOTO_CACHE[r.fotoKey]; const jj = await (await fetch(`${FOTO_API}?key=${encodeURIComponent(r.fotoKey)}`)).json(); if (jj.foto) return (FOTO_CACHE[r.fotoKey] = jj.foto); }
     if (!FOTO_KEYS[r.fecha] || Date.now() - FOTO_KEYS[r.fecha].t > 60000) { const j = await (await fetch(`${FOTO_API}?fecha=${r.fecha}`, { cache: 'no-store' })).json(); FOTO_KEYS[r.fecha] = { t: Date.now(), keys: j.keys || [] }; }
     const P = limpia(r.placa), C = limpia(r.cond), ks = FOTO_KEYS[r.fecha].keys;
     let c = ks.filter(k => k.startsWith(`${r.fecha}/${tipoDe(r)}/${P}/${C}/`));
