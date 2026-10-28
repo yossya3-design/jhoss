@@ -751,7 +751,9 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const FLOTA_BASE = {"PECBW-731": ["BK3401", "Transportes Adriancar"], "PEBVZ-866": ["BK3402", "Reparto Rosales"], "PED8X-851": ["BK3403", "Transportes Adriancar"], "PED8S-777": ["BK3404", "Transportes Adriancar"], "PEBML-755": ["BK3405", "Transportes Adriancar"], "PEAZQ-916": ["BK3406", "Transportes Adriancar"], "PEBWA-850": ["BK3407", "Reparto Rosales"], "PEBWD-880": ["BK3408", "Reparto Rosales"], "PEBWA-706": ["BK3409", "Reparto Rosales"], "PEAZP-760": ["BK3411", "Reparto Rosales"], "PEBWC-803": ["BK3412", "Reparto Rosales"], "PEBWA-896": ["BK3413", "Reparto Rosales"], "PEBNR-847": ["BK3416", "Reparto Rosales"], "PEBNA-867": ["BK3417", "Reparto Rosales"], "PEBMJ-889": ["BK3418", "Reparto Rosales"], "PEBNT-926": ["BK3419", "Reparto Rosales"], "PEBNP-855": ["BK3420", "Reparto Rosales"], "PEC9G-873": ["BK3421", "Reparto Rosales"], "PEBWA-819": ["BK3422", "Reparto Rosales"], "PED9B-864": ["BK3423", "Reparto Rosales"], "PED9W-771": ["BK3424", "Reparto Rosales"], "PEAYX-822": ["BK3427", "Reparto Rosales"], "PEBNM-835": ["BK3428", "Reparto Rosales"], "PEBMZ-928": ["BK3429", "Reparto Rosales"], "PEAZF-913": ["BK3430", "Reparto Rosales"], "PEBNQ-896": ["BK3431", "Reparto Rosales"], "PEC9H-937": ["BK3432", "Reparto Rosales"], "PEC9E-823": ["BK3433", "Reparto Rosales"], "PEBWA-862": ["BK3434", "Reparto Rosales"], "PEBML-817": ["BK3435", "Reparto Rosales"], "PEBWA-824": ["BK3436", "Reparto Rosales"], "PEBWB-749": ["BK3437", "Reparto Rosales"], "PEBNB-858": ["BK3439", "Reparto Rosales"], "PEAZI-878": ["BK3440", "Importaciones &"], "PEBXG-732": ["BK3443", "Reparto Rosales"], "PEBML-869": ["BK3444", "Reparto Rosales"], "PED6P-715": ["BK3445", "Reparto Rosales"], "PED8W-881": ["BK3446", "Importaciones &"], "PECHZ-792": ["BK3447", "Importaciones &"], "PEBNM-721": ["BK3448", "Importaciones &"], "PEBWB-863": ["BK3449", "Importaciones &"], "PECJJ-739": ["BK3450", "Importaciones &"], "PEF7F-804": ["BK3453", "Importaciones &"], "PEBML-859": ["BK3455", "Importaciones &"], "PEBML-790": ["BK3456", "Importaciones &"], "PEAYX-921": ["BK3457", "Importaciones &"], "PEBNP-886": ["BK3458", "Importaciones &"], "PEBMN-760": ["BK3459", "Importaciones &"], "PED9V-796": ["BK3460", "Importaciones &"], "PED9V-795": ["BK3461", "Importaciones &"], "PEBNP-831": ["BK3462", "Importaciones &"], "PEAZK-908": ["BK3464", "Importaciones &"], "PEAZE-830": ["BK3465", "Importaciones &"], "PEBNB-854": ["BK3466", "Transportes Adriancar"], "PEAZM-881": ["BK3467", "Transportes Adriancar"], "PEAZX-782": ["BK3468", "Transportes Adriancar"], "PEC1X-900": ["BK3469", "Hernández Ydrogo"], "PEC9E-804": ["BK3470", "Vargas S.R.L."]};
 let FLOTA = { ...FLOTA_BASE }, PLACAS_EXTRA = [];
-const APPS_URL = 'https://script.google.com/macros/s/AKfycbzaTS2Mi-5qZoB5b-ew0uLBlR99Vv2JB5c6PgVEuyw_rJi_xXbxzMbYO0KhBTnCBpsomQ/exec';
+const APPS_ANTIGUO = 'https://script.google.com/macros/s/AKfycbzaTS2Mi-5qZoB5b-ew0uLBlR99Vv2JB5c6PgVEuyw_rJi_xXbxzMbYO0KhBTnCBpsomQ/exec';
+const APPS_NUEVO = ''; // Apps Script de la cuenta nueva (cuando esté listo)
+const APPS_URL = APPS_NUEVO || APPS_ANTIGUO;
 const NET = /netlify\.app$/.test(location.hostname) || !!window.__NET;
 let CAN = false, PIN = ''; try { PIN = sessionStorage.getItem('t2pin') || localStorage.getItem('t2pin_eq') || ''; } catch (e) {}
 let AVANCE = {}; // placa -> { prog, av, ini } desde Foxtrot
@@ -760,7 +762,7 @@ const JORNADA_H = 8, RELEVO_H = 1.5;
 const META = { doble: Math.floor(JORNADA_H / RELEVO_H), mov: 5 };
 const META_SIF = Math.floor(JORNADA_H / RELEVO_H);
 const PIN_ADMIN = '031023';
-const VERSION = '20261028120609';
+const VERSION = '20261028125208';
 const DEST_PPT = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 let REL_TIPO = 'doble', REL_FOTO = null, REL_GEO = null, REL_OK = false;
 const P3 = { per: 'dia', tg: 'dia' };
@@ -827,10 +829,11 @@ async function cargarEdiciones() {
   try { const j = await (await fetch(`${ED_API}?fecha=${hoyLima()}`, { cache: 'no-store' })).json(); if (j.ok) EDIC = { ...EDIC, ...j.ed }; } catch (e) {}
 }
 const REL_API = '/api/relevos';
-let RESPALDO = [];
+let RESPALDO = [], RESPALDO_OLD = [];
 function fusionarRespaldo() {
   const igual = (a, b) => a.fecha === b.fecha && tipoDe(a) === tipoDe(b) && limpiaK(a.placa) === limpiaK(b.placa) && limpiaK(a.cond) === limpiaK(b.cond) &&
     (tipoDe(a) === 'doble' ? (a.iniOrig ?? a.ini) === (b.iniOrig ?? b.ini) : Math.abs((hm(horaAt(a.at)) ?? -99) - (hm(horaAt(b.at)) ?? 99)) <= 6);
+  RESPALDO_OLD.forEach(x => { if (!RELEVOS.some(r => igual(r, x))) RELEVOS.push(x); });
   RESPALDO.forEach(x => { if (!RELEVOS.some(r => igual(r, x))) RELEVOS.push({ ...x, respaldo: true }); });
 }
 async function cargarRespaldo() {
@@ -842,6 +845,7 @@ async function cargarNet() {
     if (!r || !r.ok) { await cargarRespaldo(); RELEVOS = RELEVOS.filter(x => !x.respaldo); fusionarRespaldo(); await cargarEdiciones(); aplicarEdiciones(); renderTodo(); return; }
     const j = await r.json();
     if (Array.isArray(j.relevos)) RELEVOS = j.relevos;
+    if (APPS_NUEVO) { try { const jo = await (await fetch(APPS_ANTIGUO + '?action=estado', { cache: 'no-store' })).json(); if (Array.isArray(jo.relevos)) { RESPALDO_OLD = jo.relevos; } } catch (e) {} }
     await cargarRespaldo(); fusionarRespaldo();
     await cargarEdiciones(); aplicarEdiciones();
     if (Array.isArray(j.conductores) && j.conductores.length) CONDS = j.conductores;
@@ -1077,8 +1081,12 @@ async function descargarPpt(sel) {
 }
 async function enviarPpt(sel, para) {
   if (!NET) return nota(`Modo muestra: aquí no se envía. En vivo se enviaría a <b>${esc(para.join(', '))}</b> con ${sel.length} relevo(s).`);
-  nota(`Armando y enviando el PPT a <b>${esc(para.join(', '))}</b>…`);
-  const j = await apps({ action: 'enviarPpt', fecha: diaP2(), para, destinatarios: para.join(','), relevos: sel.map(r => ({ placa: r.placa, cond: r.cond, tipo: tipoDe(r), ini: r.ini || '', fin: r.fin || '', at: r.at || '' })) });
+  nota(`Armando el PPT para <b>${esc(para.join(', '))}</b>…`);
+  const k = await construirPpt(diaP2(), sel); if (!k) return nota('⚠ Esos relevos no tienen foto para armar el PPT.');
+  const ppt = await k.p.write({ outputType: 'base64' });
+  const nd = sel.filter(r => tipoDe(r) === 'doble').length, hojas = Math.ceil(nd / 2) + Math.ceil((sel.length - nd) / 2);
+  nota(`Enviando el PPT a <b>${esc(para.join(', '))}</b>…`);
+  const j = await apps({ action: 'enviarPpt', fecha: diaP2(), para, destinatarios: para.join(','), nombre: k.fn, ppt, n: k.n, hojas, relevos: sel.map(r => ({ placa: r.placa, cond: r.cond, tipo: tipoDe(r), ini: r.ini || '', fin: r.fin || '', at: r.at || '' })) });
   nota(`✓ PPT enviado a <b>${esc(j.para || '')}</b> · ${j.hojas || 0} hoja(s)${j.prueba ? ' (modo PRUEBA: solo a ti)' : ''}.`);
 }
 
