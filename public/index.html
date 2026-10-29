@@ -479,7 +479,7 @@ window.dash = (function () {
           <div class="bx-chart sm" id="v-ch-adu"></div>
         </div>
         <div class="bx-card" id="i-card-adu" data-source="registros">
-          <div><h3>Detalle de recojos</h3><p class="sub">Cliente, material y unidades</p></div>
+          <div class="bx-card-h"><div><h3>Detalle de recojos</h3><p class="sub">Cliente, material y unidades</p></div><span class="bx-dl"><button class="bx-btn bx-solid" type="button" id="adu-xl" hidden>Descargar Excel</button><span class="bx-count" id="adu-xlmsg"></span></span></div>
           <div class="bx-tw" id="i-adu"></div>
         </div>
       </div>
@@ -1062,7 +1062,7 @@ window.dash = (function () {
   function setAdmin(t) { incTok = t || ''; role = incTok ? incTok.split('.')[0] : ''; incAdmin = role === 'admin'; canConf = role === 'admin' || role === 'dec'; try { if (incTok) sessionStorage.setItem(TK, incTok); else sessionStorage.removeItem(TK); } catch (e) { /* sin almacenamiento */ }
     $('adm-btn').textContent = incAdmin ? 'Salir de administrador' : 'Acceso administrador'; $('adm-btn').hidden = role === 'dec';
     $('dec-btn').textContent = role === 'dec' ? 'Salir (DEC)' : 'Acceso DEC'; $('dec-btn').hidden = incAdmin; $('n-login').hidden = true;
-    $('d-xl').hidden = false; window.__isAdmin = incAdmin; $('tab-cierre').hidden = !incAdmin; if (!incAdmin && state.tab === 'cierre') openTab('ventas', true); window.__decOnly = role === 'dec'; $('tab-almacen').hidden = window.__decOnly; $('tab-edt').hidden = window.__decOnly; if (window.__decOnly && state.tab !== 'ventas') openTab('ventas', true);
+    $('d-xl').hidden = false; $('adu-xl').hidden = !incAdmin; window.__isAdmin = incAdmin; $('tab-cierre').hidden = !incAdmin; if (!incAdmin && state.tab === 'cierre') openTab('ventas', true); window.__decOnly = role === 'dec'; $('tab-almacen').hidden = window.__decOnly; $('tab-edt').hidden = window.__decOnly; if (window.__decOnly && state.tab !== 'ventas') openTab('ventas', true);
     renderInc(); redraw(); }
   function renderInc() {
     const { lo, hi, edt, isDay } = incF;
@@ -1416,6 +1416,16 @@ window.dash = (function () {
     $('p-inputs').querySelectorAll('input').forEach((i) => { if (i.value !== '') body.cupos[i.dataset.edt] = +i.value; });
     m.textContent = 'Guardando…'; try { const r = await fetch('/api/cupos', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + incTok }, body: JSON.stringify(body) });
       const j = await r.json(); if (!r.ok) throw new Error(j.error || 'Error'); cupos = j.cupos || {}; m.textContent = 'Pedido guardado.'; renderPal(); } catch (e) { m.textContent = 'No se pudo guardar: ' + e.message; } });
+  $('adu-xl').addEventListener('click', () => { const rs = (window.__aduRows || []).slice().sort((a, b) => a.fecha.localeCompare(b.fecha) || a.ruta.localeCompare(b.ruta)); const m = $('adu-xlmsg');
+    if (!rs.length || !window.makeXlsx) { m.textContent = 'Sin recojos en el periodo filtrado.'; return; }
+    const fd = (f) => `${f.slice(8, 10)}/${f.slice(5, 7)}/${f.slice(0, 4)}`, num = (v) => (/^\d+$/.test(v) ? +v : v);
+    const det = [['Fecha', 'Ruta', 'Placa', 'EDT', 'Código', 'Cliente', 'Supervisor', 'Zona', 'Material', 'Unidades', 'Comentario'],
+      ...rs.map((r) => [fd(r.fecha), r.ruta, r.placa, short(r.edt), num(r.codigo), r.cliente, r.sv, r.zona, r.motivo, r.cantidad, r.obs])];
+    const grp = (key, lab) => [[lab, 'Unidades', 'Recojos', 'Clientes'], ...d3.rollups(rs, (v) => [d3.sum(v, (r) => r.cantidad), v.length, new Set(v.map((r) => r.codigo)).size], key).sort((a, b) => b[1][0] - a[1][0]).map(([k, v]) => [k || '—', ...v])];
+    const blob = window.makeXlsx([{ name: 'Detalle', rows: det, widths: [11, 9, 11, 22, 11, 34, 24, 9, 40, 10, 34] }, { name: 'Por material', rows: grp((r) => r.motivo, 'Material'), widths: [44, 11, 10, 10] },
+      { name: 'Por EDT', rows: grp((r) => short(r.edt), 'EDT'), widths: [28, 11, 10, 10] }, { name: 'Por cliente', rows: grp((r) => `${r.codigo} · ${r.cliente}`, 'Cliente'), widths: [44, 11, 10, 10] }]);
+    const [lo, hi] = window.__aduPer || ['', '']; const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `adulterado_${lo}_al_${hi}.xlsx`; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    m.textContent = `${rs.length} recojo(s) · ${fmt(d3.sum(rs, (r) => r.cantidad))} unidades`; });
   setAdmin(incTok);
 
 
@@ -1678,6 +1688,7 @@ window.dash = (function () {
           { k: 'fecha', h: 'Fecha', f: (v) => ddmm(v) }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'EDT' }, { k: 'codigo', h: 'Código' }, { k: 'cliente', h: 'Cliente' },
           { k: 'motivo', h: 'Material' }, { k: 'cantidad', h: 'Unidades', n: 1, f: fmt }, { k: 'obs', h: 'Comentario' },
         ], adus.map((r) => ({ ...r, edtc: short(r.edt) })), (c, i, rs) => i === 0 ? 'Total' : c.k === 'cantidad' ? fmt(d3.sum(rs, (r) => r.cantidad)) : '');
+        window.__aduRows = adus; window.__aduPer = [lo, hi];
       }
 
       // ===== REPORTE POR EDT =====
