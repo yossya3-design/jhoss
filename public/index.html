@@ -514,6 +514,11 @@ window.dash = (function () {
           <div><h3>Top 10 BK con TT</h3><p class="sub">PH acumulado y veces que trajo TT</p></div>
           <div class="bx-chart sm" id="t-ch-bk"></div>
         </div>
+        <div class="bx-card bx-wide" id="t-card-lista" data-source="registros">
+          <div class="bx-card-h"><div><h3>Placas que solicitaron TT</h3><p class="sub" id="t-lista-sub">Placa, ruta y empresario de cada solicitud en el periodo</p></div>
+            <div class="bx-seg" role="group" aria-label="Vista de la lista"><button type="button" data-tlv="det" aria-pressed="true">Por día</button><button type="button" data-tlv="pla" aria-pressed="false">Resumen por placa</button></div></div>
+          <div class="bx-tw" id="t-lista"></div>
+        </div>
       </div>
       </div>
       <div class="bx-sub" id="a-sub-bit" hidden>
@@ -1426,6 +1431,7 @@ window.dash = (function () {
       { name: 'Por EDT', rows: grp((r) => short(r.edt), 'EDT'), widths: [28, 11, 10, 10] }, { name: 'Por cliente', rows: grp((r) => `${r.codigo} · ${r.cliente}`, 'Cliente'), widths: [44, 11, 10, 10] }]);
     const [lo, hi] = window.__aduPer || ['', '']; const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `adulterado_${lo}_al_${hi}.xlsx`; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
     m.textContent = `${rs.length} recojo(s) · ${fmt(d3.sum(rs, (r) => r.cantidad))} unidades`; });
+  document.querySelectorAll('[data-tlv]').forEach((b) => b.addEventListener('click', () => { state.tlv = b.dataset.tlv; redraw(); }));
   setAdmin(incTok);
 
 
@@ -1614,6 +1620,15 @@ window.dash = (function () {
         const bb = d3.rollups(tts, (v) => ({ ph: d3.sum(v, (r) => r.ph), n: v.length, placa: v[0].placa, edt: v[0].edt }), (r) => r.ruta).sort((a, b) => b[1].ph - a[1].ph || b[1].n - a[1].n).slice(0, 10)
           .map(([ruta, o]) => ({ label: `${ruta} · ${o.placa || '—'}`, parts: [{ name: 'PH', c: C.zt, v: o.ph }], end: `${fmt(o.ph)} PH · ${o.n}×`, tip: [[C.zt, short(o.edt)], [null, `${fmt(o.ph)} PH en ${o.n} vez/veces`]] }));
         hbars($('t-ch-bk'), bb, fmt, 'PH');
+        { const tlv = state.tlv || 'det'; document.querySelectorAll('[data-tlv]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.tlv === tlv)));
+          $('t-lista-sub').textContent = `${fmt(tts.length)} solicitud(es) · ${fmt(new Set(tts.map((r) => r.placa || r.ruta)).size)} placa(s) · ${fmt(d3.sum(tts, (r) => r.ph))} PH en el periodo`;
+          if (tlv === 'det') { state.sort.tl = state.sort.tl || ['fecha', -1];
+            table($('t-lista'), 'tl', [{ k: 'fecha', h: 'Fecha', f: (v) => dlabel(v) }, { k: 'placa', h: 'Placa' }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'Empresario' }, { k: 'ph', h: 'PH', n: 1, f: fmt }],
+              tts.map((r) => ({ ...r, placa: r.placa || '—', edtc: short(r.edt) })), (c, i, rs) => (i === 0 ? 'Total' : c.k === 'ph' ? fmt(d3.sum(rs, (r) => r.ph)) : c.k === 'placa' ? `${new Set(rs.map((r) => r.placa)).size} placa(s)` : '')); }
+          else { state.sort.tp = state.sort.tp || ['ph', -1];
+            const pr = d3.rollups(tts, (v) => ({ placa: v[0].placa || '—', ruta: v[0].ruta, edtc: short(v[0].edt), n: v.length, ph: d3.sum(v, (r) => r.ph), ult: d3.max(v, (r) => r.fecha) }), (r) => r.placa || r.ruta).map((d) => d[1]);
+            table($('t-lista'), 'tp', [{ k: 'placa', h: 'Placa' }, { k: 'ruta', h: 'Ruta' }, { k: 'edtc', h: 'Empresario' }, { k: 'n', h: 'Veces con TT', n: 1, f: fmt, bg: (v) => (v >= 5 ? 'rgba(201,74,67,.35)' : v >= 3 ? 'rgba(217,166,46,.28)' : '') },
+              { k: 'ph', h: 'PH total', n: 1, f: fmt }, { k: 'ult', h: 'Última vez', f: (v) => dlabel(v) }], pr, (c, i, rs) => (i === 0 ? 'Total' : c.k === 'ph' ? fmt(d3.sum(rs, (r) => r.ph)) : c.k === 'n' ? fmt(d3.sum(rs, (r) => r.n)) : c.k === 'placa' ? `${rs.length} placa(s)` : '')); } }
         // ---- bitácora de viajes
         const TIP = [['DESPLANIFICACIÓN TOTAL', 'tot', C.zt, 'Desplan. total'], ['DESPLANIFICACIÓN PARCIAL', 'par', C.rp, 'Desplan. parcial'], ['CAMBIO DE CABECERA', 'cab', C.sc, 'Cambio de cabecera']];
         const pm = prev.filter((r) => r.tipo === 'Modificación de viaje'); const hasPM = hasPrev && pm.length > 0;
