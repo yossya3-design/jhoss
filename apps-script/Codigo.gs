@@ -7,7 +7,7 @@
 
 // ====== CONFIGURA AQUÍ ======
 const PIN_ADMIN = '031023';          // clave de administradora
-const PIN_CONDUCTOR = 'CAMBIAR';     // PIN que usan los conductores de relevo
+const PIN_CONDUCTOR = '2694';        // PIN que usan los conductores de relevo
 const DEST_DEFECTO = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 const CARPETA_FOTOS = 'Relevos SIF - fotos';
 // ============================

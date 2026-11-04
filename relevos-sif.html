@@ -762,7 +762,8 @@ const JORNADA_H = 8, RELEVO_H = 1.5;
 const META = { doble: Math.floor(JORNADA_H / RELEVO_H), mov: 5 };
 const META_SIF = Math.floor(JORNADA_H / RELEVO_H);
 const PIN_ADMIN = '031023';
-const VERSION = '20261028125208';
+const PIN_CONDUCTOR = '2694';
+const VERSION = '20261104111904';
 const DEST_PPT = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 let REL_TIPO = 'doble', REL_FOTO = null, REL_GEO = null, REL_OK = false;
 const P3 = { per: 'dia', tg: 'dia' };
@@ -860,7 +861,12 @@ async function entrarRelevo() {
   const pin = $('#relPin').value.trim(); if (!pin) { $('#relMsg').textContent = '⚠ Escribe tu PIN.'; return; }
   $('#relMsg').textContent = 'Verificando…';
   try {
-    if (NET) { const r = await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ action: 'pinRelevo', pin }) }); const j = await r.json(); if (!j.ok) throw new Error(j.error || 'PIN incorrecto'); }
+    const pl = pin.replace(/\D/g, '');
+    if (pl !== PIN_CONDUCTOR && pl !== PIN_ADMIN) {
+      if (!NET) throw new Error('PIN incorrecto.');
+      let ok = false; try { const j = await (await fetch(APPS_URL, { method: 'POST', body: JSON.stringify({ action: 'pinRelevo', pin }) })).json(); ok = !!j.ok; } catch (e) {}
+      if (!ok) throw new Error('PIN incorrecto.');
+    }
     REL_OK = true; $('#relForm').classList.add('ok'); renderTodo(); $('#relMsg').textContent = NET ? '' : 'Modo muestra: cualquier PIN entra.'; pinUI();
   } catch (e) { $('#relMsg').textContent = '⚠ ' + e.message; }
 }
