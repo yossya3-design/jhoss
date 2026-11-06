@@ -763,7 +763,7 @@ const META = { doble: Math.floor(JORNADA_H / RELEVO_H), mov: 5 };
 const META_SIF = Math.floor(JORNADA_H / RELEVO_H);
 const PIN_ADMIN = '031023';
 const PIN_CONDUCTOR = '2694';
-const VERSION = '20261104111904';
+const VERSION = '20261106152229';
 const DEST_PPT = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 let REL_TIPO = 'doble', REL_FOTO = null, REL_GEO = null, REL_OK = false;
 const P3 = { per: 'dia', tg: 'dia' };
@@ -841,6 +841,7 @@ async function cargarRespaldo() {
   try { const j = await (await fetch(`${REL_API}?dias=21`, { cache: 'no-store' })).json(); if (j.ok && Array.isArray(j.relevos)) RESPALDO = j.relevos; } catch (e) {}
 }
 async function cargarNet() {
+  await cargarListas();
   try {
     const r = await fetch(APPS_URL + '?action=estado', { cache: 'no-store' }).catch(() => null);
     if (!r || !r.ok) { await cargarRespaldo(); RELEVOS = RELEVOS.filter(x => !x.respaldo); fusionarRespaldo(); await cargarEdiciones(); aplicarEdiciones(); renderTodo(); return; }
@@ -849,8 +850,8 @@ async function cargarNet() {
     if (APPS_NUEVO) { try { const jo = await (await fetch(APPS_ANTIGUO + '?action=estado', { cache: 'no-store' })).json(); if (Array.isArray(jo.relevos)) { RESPALDO_OLD = jo.relevos; } } catch (e) {} }
     await cargarRespaldo(); fusionarRespaldo();
     await cargarEdiciones(); aplicarEdiciones();
-    if (Array.isArray(j.conductores) && j.conductores.length) CONDS = j.conductores;
-    if (Array.isArray(j.placas)) { PLACAS_EXTRA = j.placas; aplicarFlota(); }
+    if (!LISTAS_SITIO) { if (Array.isArray(j.conductores) && j.conductores.length) CONDS = j.conductores; if (Array.isArray(j.placas) && j.placas.length) { PLACAS_EXTRA = j.placas; aplicarFlota(); } }
+    await cargarListas();
     if (j.avance && typeof j.avance === 'object') AVANCE = j.avance;
     renderTodo();
   } catch (e) {}
@@ -1097,9 +1098,22 @@ async function enviarPpt(sel, para) {
 }
 
 /* ---------- administración de conductores y placas ---------- */
+const LISTAS_API = '/api/listas';
+let LISTAS_SITIO = false;
 async function guardarListas() {
   LS.set('rel_conds', CONDS); LS.set('rel_placas', PLACAS_EXTRA);
-  if (NET) { try { await apps({ action: 'listas', conductores: CONDS, placas: PLACAS_EXTRA }); } catch (e) { /* queda guardado en este equipo */ } }
+  if (!NET) return;
+  const j = await (await fetch(LISTAS_API, { method: 'POST', body: JSON.stringify({ pin: PIN, conductores: CONDS, placas: PLACAS_EXTRA }) })).json();
+  if (!j.ok) throw new Error(j.error || 'No se pudo guardar la lista.');
+  LISTAS_SITIO = true;
+  try { await apps({ action: 'listas', conductores: CONDS, placas: PLACAS_EXTRA }); } catch (e) { /* el sitio ya la guardó */ }
+}
+async function cargarListas() {
+  if (!NET) return;
+  try {
+    const j = await (await fetch(LISTAS_API, { cache: 'no-store' })).json();
+    if (j.ok && Array.isArray(j.conductores)) { CONDS = j.conductores; PLACAS_EXTRA = Array.isArray(j.placas) ? j.placas : []; aplicarFlota(); LISTAS_SITIO = true; LS.set('rel_conds', CONDS); LS.set('rel_placas', PLACAS_EXTRA); }
+  } catch (e) {}
 }
 const admMsg = t => { $('#admMsg').textContent = t; };
 async function cambiarLista(fn, ok) {
