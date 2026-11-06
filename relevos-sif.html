@@ -763,7 +763,7 @@ const META = { doble: Math.floor(JORNADA_H / RELEVO_H), mov: 5 };
 const META_SIF = Math.floor(JORNADA_H / RELEVO_H);
 const PIN_ADMIN = '031023';
 const PIN_CONDUCTOR = '2694';
-const VERSION = '20261106152229';
+const VERSION = '20261106154341';
 const DEST_PPT = ['manuel.huapaya@ab-inbev.com', 'jhoselyn.m.torres@ab-inbev.com'];
 let REL_TIPO = 'doble', REL_FOTO = null, REL_GEO = null, REL_OK = false;
 const P3 = { per: 'dia', tg: 'dia' };
@@ -815,7 +815,7 @@ function pinUI() {
 async function entrarPin() {
   const raw = $('#pinIn').value.trim(); if (!raw) return; const v = raw.replace(/\D/g, '') === PIN_ADMIN ? PIN_ADMIN : raw;
   PIN = v; $('#pinMsg').textContent = 'Verificando…';
-  try { if (v !== PIN_ADMIN) { if (!NET) throw new Error('PIN incorrecto.'); await apps({ action: 'pin' }); } CAN = true; try { sessionStorage.setItem('t2pin', PIN); } catch (e) {} $('#pinIn').value = ''; $('#pinMsg').textContent = ''; pinUI(); renderTodo(); }
+  try { if (v !== PIN_ADMIN) { if (!NET) throw new Error('PIN incorrecto.'); await apps({ action: 'pin' }); } CAN = true; try { sessionStorage.setItem('t2pin', PIN); } catch (e) {} $('#pinIn').value = ''; $('#pinMsg').textContent = ''; pinUI(); renderTodo(); revisarVersion(); if (NET && !LISTAS_SITIO) guardarListas().catch(() => {}); }
   catch (e) { $('#pinMsg').textContent = e.message; }
 }
 const ED_API = '/api/ediciones';
@@ -851,7 +851,6 @@ async function cargarNet() {
     await cargarRespaldo(); fusionarRespaldo();
     await cargarEdiciones(); aplicarEdiciones();
     if (!LISTAS_SITIO) { if (Array.isArray(j.conductores) && j.conductores.length) CONDS = j.conductores; if (Array.isArray(j.placas) && j.placas.length) { PLACAS_EXTRA = j.placas; aplicarFlota(); } }
-    await cargarListas();
     if (j.avance && typeof j.avance === 'object') AVANCE = j.avance;
     renderTodo();
   } catch (e) {}
@@ -1112,7 +1111,7 @@ async function cargarListas() {
   if (!NET) return;
   try {
     const j = await (await fetch(LISTAS_API, { cache: 'no-store' })).json();
-    if (j.ok && Array.isArray(j.conductores)) { CONDS = j.conductores; PLACAS_EXTRA = Array.isArray(j.placas) ? j.placas : []; aplicarFlota(); LISTAS_SITIO = true; LS.set('rel_conds', CONDS); LS.set('rel_placas', PLACAS_EXTRA); }
+    if (j.ok && Array.isArray(j.conductores) && j.conductores.length) { CONDS = j.conductores; PLACAS_EXTRA = Array.isArray(j.placas) ? j.placas : []; aplicarFlota(); LISTAS_SITIO = true; LS.set('rel_conds', CONDS); LS.set('rel_placas', PLACAS_EXTRA); }
   } catch (e) {}
 }
 const admMsg = t => { $('#admMsg').textContent = t; };
@@ -1454,7 +1453,7 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   if (!NET) { $('#relNota').hidden = false; await relevosMuestra(); }
   if (PIN === PIN_ADMIN) CAN = true; else if (NET && PIN) { try { await apps({ action: 'pin' }); CAN = true; } catch (e) {} }
   pinUI();
-  if (NET) { await cargarNet(); setInterval(cargarNet, 60000); setInterval(revisarVersion, 120000); document.addEventListener('visibilitychange', () => { if (!document.hidden) revisarVersion(); }); }
+  if (NET) { await cargarNet(); setInterval(() => { if (!document.hidden) cargarNet(); }, 120000); setInterval(() => { if (!document.hidden) revisarVersion(); }, 300000); document.addEventListener('visibilitychange', () => { if (!document.hidden) revisarVersion(); }); }
 })();
 </script>
 </body></html>
