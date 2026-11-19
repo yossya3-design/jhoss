@@ -205,6 +205,7 @@ section.blk{padding-block:44px 0}
 .leaf .ts{font-size:13.5px;font-weight:600;line-height:1.15;overflow-wrap:anywhere}
 .leaf.wip .dot{border:0;background:var(--signal)}
 .leaf.done .dot{border:0;background:var(--ok)}
+.cell:has(> .hub:empty){visibility:hidden}
 @media (max-width:860px){.cell:has(> .hub:empty){display:none}}
 @media (max-width:860px){
   .mhead{display:none}
@@ -438,8 +439,8 @@ function openSheet(code){
     <p class="req-t">${esc(r.t)}</p>
     ${LINKS[r.c]?`<a class="tool" href="${LINKS[r.c].url}" target="_blank" rel="noopener"><span class="tool-ic" aria-hidden="true">4.0</span><span class="tool-tx"><small>Herramienta vinculada</small><b>${esc(LINKS[r.c].name)}</b><span>${esc(LINKS[r.c].desc)}</span></span><span class="tool-go">Abrir ↗</span></a>`:""}
     <div class="zones">
-      <div class="zone z-wide"><div class="zl"><span class="zn">1</span>Link de la visual o carpeta</div><div data-link="link-1" data-n="Link de la visual o carpeta" data-tag="Visual vinculada"><div class="tool pend"><span class="tool-ic">🔗</span><span class="tool-tx"><small>Visual vinculada</small><b>Link de la visual o carpeta</b></span><span class="tool-go">…</span></div></div></div>
-      <div class="zone z-wide"><div class="zl"><span class="zn">2</span>Evidencias</div><div data-fxup data-cat="evid" data-t="Subir evidencias" data-s="Fotos, actas, formatos, PDF o carpetas completas, desde tu celular, PC u OneDrive"></div></div>
+      ${r.c.startsWith("1.2.2.")?"":`      <div class="zone z-wide"><div class="zl"><span class="zn">1</span>Link de la visual o carpeta</div><div data-link="link-1" data-n="Link de la visual o carpeta" data-tag="Visual vinculada"><div class="tool pend"><span class="tool-ic">🔗</span><span class="tool-tx"><small>Visual vinculada</small><b>Link de la visual o carpeta</b></span><span class="tool-go">…</span></div></div></div>`}
+      <div class="zone z-wide"><div class="zl"><span class="zn">${r.c.startsWith("1.2.2.")?1:2}</span>Evidencias</div><div data-fxup data-cat="evid" data-t="Subir evidencias" data-s="Fotos, actas, formatos, PDF o carpetas completas, desde tu celular, PC u OneDrive"></div></div>
     </div>
     <div class="page-nav"><button id="prev">← Anterior</button><span>${i+1} de ${all.length}</span><button id="next">Siguiente →</button></div>
   </div>`;
