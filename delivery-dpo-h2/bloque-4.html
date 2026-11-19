@@ -445,8 +445,8 @@ function openSheet(code){
     <p class="req-t">${esc(r.t)}</p>
     ${LINKS[r.c]?`<a class="tool" href="${LINKS[r.c].url}" target="_blank" rel="noopener"><span class="tool-ic" aria-hidden="true">4.0</span><span class="tool-tx"><small>Herramienta vinculada</small><b>${esc(LINKS[r.c].name)}</b><span>${esc(LINKS[r.c].desc)}</span></span><span class="tool-go">Abrir ↗</span></a>`:""}
     <div class="zones">
-      <div class="zone z-wide"><div class="zl"><span class="zn">1</span>Cargar información a la visual</div><div data-link="link-1" data-n="Link de la visual o carpeta" data-tag="Visual vinculada"><div class="tool pend"><span class="tool-ic">🔗</span><span class="tool-tx"><small>Visual vinculada</small><b>Link de la visual o carpeta</b></span><span class="tool-go">…</span></div></div><div data-fxup data-cat="visual" data-t="Cargar información" data-s="Excel, base de datos o archivos que alimentan la visual"></div></div>
-      <div class="zone z-wide"><div class="zl"><span class="zn">2</span>Evidencias</div><div data-fxup data-cat="evid" data-t="Subir evidencias" data-s="Actas, formatos, PDF o carpetas completas, desde tu PC u OneDrive"></div><div data-fxup data-cat="foto" data-kind="fotos" data-t="Subir fotos" data-s="Toma o sube las fotos desde tu celular o tu PC"></div></div>
+      <div class="zone z-wide"><div class="zl"><span class="zn">1</span>Link de la visual o carpeta</div><div data-link="link-1" data-n="Link de la visual o carpeta" data-tag="Visual vinculada"><div class="tool pend"><span class="tool-ic">🔗</span><span class="tool-tx"><small>Visual vinculada</small><b>Link de la visual o carpeta</b></span><span class="tool-go">…</span></div></div></div>
+      <div class="zone z-wide"><div class="zl"><span class="zn">2</span>Evidencias</div><div data-fxup data-cat="evid" data-t="Subir evidencias" data-s="Fotos, actas, formatos, PDF o carpetas completas, desde tu celular, PC u OneDrive"></div></div>
     </div>
     <div class="page-nav"><button id="prev">← Anterior</button><span>${i+1} de ${all.length}</span><button id="next">Siguiente →</button></div>
   </div>`;
