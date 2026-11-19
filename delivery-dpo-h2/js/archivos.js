@@ -42,6 +42,8 @@
     ".fx-b.ghost{background:transparent;color:#F4F1E8;border-color:#3A352B}",
     ".fx-b:disabled{opacity:.45;cursor:default}",
     ".fx-hint{grid-column:1/-1;font-size:13px;color:#A6A093;margin:0}",
+    ".fx-per{list-style:none;margin:10px 0 4px;font:700 11px var(--f-mono,monospace);letter-spacing:.12em;text-transform:uppercase;color:#F2C52A;border-bottom:1px dashed rgba(242,197,42,.4);padding-bottom:4px}",
+    ".fx-ph+.fx-per{margin-top:14px}",
     ".fx.fx-in{margin:0 0 10px;border:0;background:transparent;padding:0}",
     ".fx-in .fx-prog{margin-top:0}.fx-in .fx-bar{margin-bottom:8px}.fx-in .fx-prog:empty+.fx-bar{display:none}",
     ".fx-in .fx-nm small{display:block}",
@@ -134,6 +136,9 @@
   function safe(s) { return String(s || "").replace(/[\\:*?"<>|]+/g, "_").trim() || "archivo"; }
   function icon(e) { var t = ICON[e] || (e ? e.slice(0, 3).toUpperCase() : "?"); return '<span class="fx-ic" style="background:' + (ICOL[t] || "#3A352B") + '">' + esc(t) + "</span>"; }
   function codeOf(page) { var m = /Subbloque\s+([\d.]+)/.exec(page.getAttribute("aria-label") || ""); return m ? m[1] : null; }
+  /* Período del año: enero–junio = H1, julio–diciembre = H2 (hora de Lima) */
+  function periodo(dt) { var l = new Date(dt.getTime() - 5 * 3600e3); return l.getUTCFullYear() + " " + (l.getUTCMonth() < 6 ? "H1" : "H2"); }
+  function perOf(d) { return d.per || (d.at ? periodo(new Date(d.at)) : ""); }
   function allParts(d) { return (d.parts || []).concat(d.pdf ? [d.pdf] : []); }
   function docsFor(c) { return S.docs.filter(function (d) { return d.code === c; }); }
   function errText(e) {
@@ -183,15 +188,91 @@
     return zipLib;
   }
 
+  /* ---------- Netlify: subir y guardar en la función dpo-archivos ---------- */
+  var NET = "/.netlify/functions/dpo-archivos", PART = 4 * 1024 * 1024;
+  function rid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+  function getPin() {
+    var p = ""; try { p = sessionStorage.getItem("dpo-pin") || ""; } catch (e) { }
+    if (!p) { p = String(window.prompt("Clave de administradora para cargar o quitar archivos:") || "").replace(/\D/g, ""); if (!p) throw { code: "pin", message: "falta la clave" }; try { sessionStorage.setItem("dpo-pin", p); } catch (e) { } }
+    return p;
+  }
+  function pinFail() { try { sessionStorage.removeItem("dpo-pin"); } catch (e) { } return { code: "clave incorrecta" }; }
+  async function netPost(op, body) {
+    body.pin = getPin();
+    var r = await fetch(NET + "?op=" + op, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (r.status === 403) throw pinFail();
+    var j = await r.json().catch(function () { return {}; }); if (!r.ok || !j.ok) throw { code: j.error || ("error " + r.status) };
+    return j;
+  }
+  function netSetup(base) {
+    S.net = true;
+    var subs = [], hidden = {}, net = [];
+    function emit() {
+      var all = base.filter(function (d) { return !hidden[d._id]; }).concat(net);
+      var snap = { docs: all.map(function (d) { return { id: d._id, data: function () { return d; } }; }), metadata: { fromCache: false } };
+      subs.forEach(function (f) { f(snap); });
+    }
+    async function refresh() {
+      var r = await fetch(NET + "?op=list", { cache: "no-store" }); var j = await r.json();
+      hidden = {}; (j.hidden || []).forEach(function (h) { hidden[h] = 1; });
+      net = (j.docs || []).map(function (d) {
+        var p = String((d.parts || [])[0] || ""), m = /^(.+)~1$/.exec(p);
+        if (m && d.enc === "raw" && /^(png|jpe?g|gif|webp)$/.test(d.ext || "")) d.url = NET + "?op=part&id=" + m[1] + "&n=0&ct=image/" + (d.ext === "jpg" ? "jpeg" : d.ext);
+        return d;
+      });
+      emit();
+    }
+    S.db = { collection: function () { return {
+      onSnapshot: function (f, err) { subs.push(f); refresh().catch(function (e) { if (err) err(e); }); return function () { }; },
+      add: async function (doc) { var id = rid(); await netPost("meta", { id: id, doc: doc }); await refresh(); return { id: id }; },
+      doc: function (id) { return { delete: async function () { await netPost("del", { id: id }); await refresh(); } }; }
+    }; } };
+    S.assets = {
+      upload: async function (blob) {
+        var id = rid(), buf = await blob.arrayBuffer(), pin = getPin(), n = 0;
+        for (var o = 0; o < Math.max(buf.byteLength, 1); o += PART) {
+          var r = await fetch(NET + "?op=part&id=" + id + "&n=" + n + "&pin=" + encodeURIComponent(pin), { method: "POST", body: buf.slice(o, o + PART) });
+          if (r.status === 403) throw pinFail();
+          if (!r.ok) throw { code: r.status === 413 ? "too_large" : "error " + r.status };
+          n++;
+        }
+        return { id: id + "~" + n };
+      },
+      delete: async function () { return { deleted: true }; },
+      list: async function () { return { assets: [], usage: null }; }
+    };
+    var of = window.fetch.bind(window);
+    window.fetch = function (u, o) {
+      var m = /^\/_blob\/([A-Za-z0-9_-]+)~(\d+)$/.exec(String(u));
+      if (!m) return of(u, o);
+      return (async function () {
+        var parts = [];
+        for (var i = 0; i < +m[2]; i++) { var r = await of(NET + "?op=part&id=" + m[1] + "&n=" + i); if (!r.ok) return new Response(null, { status: 404 }); parts.push(await r.arrayBuffer()); }
+        return new Response(new Blob(parts));
+      })();
+    };
+  }
+
   /* ---------- carga de capacidades ---------- */
   (async function init() {
     var cl = window.claude;
-    /* Versión publicada fuera de Claude (Netlify): los archivos vienen de archivos.json, solo para ver y descargar */
+    /* Versión publicada fuera de Claude (Netlify): archivos de archivos.json + lo que se sube a la función dpo-archivos */
     async function estatico() {
       try {
         var r = await fetch("archivos.json", { cache: "no-store" }); if (!r.ok) return false;
-        S.docs = (await r.json()).map(function (o) { return o; }); S.static = true; S.loading = false; S.err = "";
+        var base = await r.json(); S.static = true;
         S.dl = { save: function (o) { var u = URL.createObjectURL(o.data instanceof Blob ? o.data : new Blob([o.data])); var a = document.createElement("a"); a.href = u; a.download = o.filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 4000); return Promise.resolve({ status: "saved" }); } };
+        var net = false;
+        try { var t = await fetch(NET + "?op=list", { cache: "no-store" }); net = t.ok && (await t.json()).ok; } catch (x) { net = false; }
+        if (net) {
+          netSetup(base);
+          S.db.collection("archivos").onSnapshot(function (snap) {
+            S.docs = snap.docs.map(function (d) { var o = Object.assign({}, d.data()); o._id = d.id; return o; });
+            S.loading = false; S.err = ""; paint(); paintSlots(); badges();
+          }, function () { S.loading = false; S.docs = base; paint(); paintSlots(); badges(); });
+          return true;
+        }
+        S.docs = base; S.loading = false; S.err = "";
         paint(); paintSlots(); badges(); return true;
       } catch (e) { return false; }
     }
@@ -217,8 +298,8 @@
   /* ---------- subir ---------- */
   async function uploadOne(file, code, cat, rel, lote, slot) {
     var e = ext(file.name), parts = [], enc;
-    if (RAW[e] && file.size <= MAX_RAW) {
-      var r = await S.assets.upload(file, { type: RAW[e] });
+    if ((RAW[e] && file.size <= MAX_RAW) || S.net) {
+      var r = await S.assets.upload(file, { type: RAW[e] || "application/octet-stream" });
       parts.push(r.id); enc = "raw";
     } else {
       var b64 = await readB64(file);
@@ -231,7 +312,7 @@
     }
     await S.db.collection("archivos").add({
       code: code, cat: cat, name: file.name, rel: rel || "", size: file.size, ext: e,
-      enc: enc, parts: parts, at: new Date().toISOString(), lote: lote || "", slot: slot || ""
+      enc: enc, parts: parts, at: new Date().toISOString(), per: periodo(new Date()), lote: lote || "", slot: slot || ""
     });
   }
   async function uploadMany(items, code, cat, box) {
@@ -350,7 +431,7 @@
   function viewDoc(d, title, code) {
     if (!d) return;
     loadVisor().then(function (V) {
-      V.open({ name: d.name, ext: d.pdf || d.pdfUrl ? "pdf" : d.ext, title: title || d.name, sub: (title ? d.name + " · " : "") + size(d.size || 0) + " · subido el " + fdate(d.at),
+      V.open({ name: d.name, ext: d.pdf || d.pdfUrl ? "pdf" : d.ext, title: title || d.name, sub: (title ? d.name + " · " : "") + size(d.size || 0) + " · subido el " + fdate(d.at) + " · " + perOf(d),
         getBlob: function () { return d.pdfUrl ? fetch(d.pdfUrl).then(function (r) { if (!r.ok) throw { code: "missing" }; return r.blob(); }) : d.pdf ? fetch("/_blob/" + d.pdf).then(function (r) { if (!r.ok) throw { code: "missing" }; return r.blob(); }) : fetchBlob(d); }, onDownload: S.dl ? function (b) { downloadOne(d, b, code); } : null });
     });
   }
@@ -412,8 +493,8 @@
     var st = { key: key, k: k, d: d, def: d ? "" : def, has: !!(d || def), can: !!S.assets, busy: !!S.slotBusy[k], msg: S.slotMsg[k], cat: el.dataset.cat || "evid" };
     st.name = d ? d.name : defName;
     st.ext = d ? d.ext : ext(defName);
-    st.short = st.busy ? "Subiendo…" : d ? (d.ext || "").toUpperCase() + " · " + size(d.size || 0) : def ? (ext(defName) || "").toUpperCase() + " · incluido" : (S.db && S.loading ? "Cargando…" : "Sin archivo");
-    st.meta = st.busy ? "Subiendo… no cierres esta ventana" : d ? d.name + " · " + size(d.size || 0) + " · " + fdate(d.at) : def ? defName + " · incluido en el menú"
+    st.short = st.busy ? "Subiendo…" : d ? (d.ext || "").toUpperCase() + " · " + size(d.size || 0) + " · " + fdate(d.at) + " · " + perOf(d) : def ? (ext(defName) || "").toUpperCase() + " · incluido" : (S.db && S.loading ? "Cargando…" : "Sin archivo");
+    st.meta = st.busy ? "Subiendo… no cierres esta ventana" : d ? d.name + " · " + size(d.size || 0) + " · " + fdate(d.at) + " · " + perOf(d) : def ? defName + " · incluido en el menú"
       : (S.db && S.loading ? "Cargando…" : st.can ? "Sin archivo · toca para cargarlo" : "Sin archivo cargado");
     return st;
   }
@@ -536,22 +617,27 @@
     if (S.err && !list.length) return "";
     if (can) h += (fotos ? '<input type="file" multiple hidden accept="image/*" data-in="fotos">' : '<input type="file" multiple hidden data-in="files"><input type="file" multiple hidden webkitdirectory data-in="dir">') + '<div class="fx-prog" aria-live="polite"></div><div class="fx-bar"><i></i></div>';
     if (S.flash && S.flash.code === code && (S.flash.host ? S.flash.host === hc : isFirst)) h += '<div class="fx-msg ' + S.flash.kind + '" role="status">' + esc(S.flash.text) + "</div>";
-    list.sort(function (a, b) { return fotos ? String(b.at || "").localeCompare(String(a.at || "")) : (a.rel + "/" + a.name).localeCompare(b.rel + "/" + b.name, "es"); });
+    /* lo más reciente primero, agrupado por período (H1 / H2) */
+    list.sort(function (a, b) { return String(b.at || "").localeCompare(String(a.at || "")) || (a.rel + "/" + a.name).localeCompare(b.rel + "/" + b.name, "es"); });
+    var perHead = function (d, prev) { var p = perOf(d); return p && p !== prev ? p : ""; };
     if (fotos) {
       if (list.length) {
-        h += '<div class="fx-ph">';
+        var pv = "", open = false;
         list.forEach(function (d) {
+          var ph = perHead(d, pv); if (ph) { if (open) h += "</div>"; h += '<div class="fx-per">Período ' + esc(ph.replace(" ", " · ")) + "</div><div class=\"fx-ph\">"; open = true; pv = ph; }
+          else if (!open) { h += '<div class="fx-ph">'; open = true; }
           var img = (d.enc === "raw" || d.url) && /^(png|jpe?g|gif|webp)$/.test(d.ext || "");
           h += '<figure><button type="button" data-view="' + esc(d._id) + '" title="' + esc(d.name) + '">' + (img ? '<img loading="lazy" alt="' + esc(d.name) + '" src="' + esc(d.url || "/_blob/" + d.parts[0]) + '">' : icon(d.ext)) + "</button>" + (can ? '<button type="button" class="fx-a del" data-del="' + esc(d._id) + '" aria-label="Eliminar foto">✕</button>' : "") + "</figure>";
         });
-        h += "</div>";
+        if (open) h += "</div>";
       } else if (!S.loading) h += '<div class="fx-empty">Aún no hay fotos.</div>';
       return h;
     }
     if (list.length) {
-      h += '<ul class="fx-list">';
+      h += '<ul class="fx-list">'; var pv2 = "";
       list.forEach(function (d) {
-        h += '<li class="fx-it">' + icon(d.ext) + '<div class="fx-nm"><button type="button" data-view="' + esc(d._id) + '" title="Ver ' + esc(d.name) + '">' + esc(d.name) + "</button><small>" + (d.rel ? "📁 " + esc(d.rel) + " · " : "") + size(d.size || 0) + " · " + fdate(d.at) + "</small></div>" +
+        var ph2 = perHead(d, pv2); if (ph2) { h += '<li class="fx-per">Período ' + esc(ph2.replace(" ", " · ")) + "</li>"; pv2 = ph2; }
+        h += '<li class="fx-it">' + icon(d.ext) + '<div class="fx-nm"><button type="button" data-view="' + esc(d._id) + '" title="Ver ' + esc(d.name) + '">' + esc(d.name) + "</button><small>" + (d.rel ? "📁 " + esc(d.rel) + " · " : "") + size(d.size || 0) + " · " + fdate(d.at) + (perOf(d) ? " · " + perOf(d) : "") + "</small></div>" +
           '<div class="fx-act"><button class="fx-a" data-view="' + esc(d._id) + '">Ver</button><button class="fx-a" data-get="' + esc(d._id) + '">Descargar</button>' + (can ? '<button class="fx-a del" data-del="' + esc(d._id) + '">Eliminar</button>' : "") + "</div></li>";
       });
       h += "</ul>";
