@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Validación de Carga Nocturna</title>
-<script>/* Pega aquí la URL de tu Apps Script (termina en /exec). Vacío = guarda solo en el equipo. */ window.VCN_API = "";</script>
+<script>/* Pega aquí la URL de tu Apps Script (termina en /exec). Vacío = guarda solo en el equipo. */ window.VCN_API = "/api/validaciones";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -534,7 +534,7 @@ const API = (window.VCN_API||"").trim();
 let poll = null;
 async function api(body){
   const r = await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
-  const j = await r.json(); if(!j.ok) throw Object.assign(new Error(j.error||"error"),{api:j}); return j;
+  const j = await r.json().catch(()=>({ok:false})); if(!j.ok) throw Object.assign(new Error(j.error||"error"),{api:j}); return j;
 }
 async function guardar(r){
   r.id = "r"+r.ts+Math.random().toString(36).slice(2,6);
@@ -559,7 +559,7 @@ $("formPin").addEventListener("submit", async e=>{
   e.preventDefault();
   const pin=$("pinIn").value.replace(/\D/g,"");
   if(modo==="sheet"){
-    try{ await api({accion:"borrar", id:pendienteBorrar, pin}); registros=registros.filter(r=>r.id!==pendienteBorrar); pinta(); $("modalPin").hidden=true; toast("Registro borrado."); }
+    try{ await api({accion:"borrar", id:pendienteBorrar, fecha:(registros.find(r=>r.id===pendienteBorrar)||{}).fecha||$("dia").value, pin}); registros=registros.filter(r=>r.id!==pendienteBorrar); pinta(); $("modalPin").hidden=true; toast("Registro borrado."); }
     catch(err){ $("pinErr").textContent = (err.api&&err.api.error==="pin") ? "Clave incorrecta." : "No se pudo borrar. Intenta de nuevo."; }
     return;
   }
