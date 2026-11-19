@@ -189,6 +189,12 @@ td.obs{font-size:13px;color:var(--gris);max-width:220px}
 .borrar:hover{color:var(--rojo-txt);border-color:rgba(200,16,46,.5)}
 .borrar.seguro{background:var(--rojo);color:#fff;border-color:var(--rojo)}
 tr.conf td{background:rgba(46,125,58,.06)}
+.periodos{display:inline-flex;border:1px solid rgba(242,197,42,.45);border-radius:999px;padding:3px;background:rgba(0,0,0,.45);gap:2px;flex-wrap:nowrap}
+.per{border:none;background:transparent;color:var(--gris);font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:7px 13px;border-radius:999px;white-space:nowrap}
+.per[aria-pressed="true"]{background:linear-gradient(180deg,var(--oro-claro),var(--oro));color:#111;font-weight:700;box-shadow:0 0 12px rgba(242,197,42,.35)}
+.per:focus-visible{outline:2px solid var(--oro-claro);outline-offset:2px}
+td.hr b{display:block;color:var(--blanco);font-weight:700}
+.cargando{opacity:.55;transition:opacity .2s}
 .vacio{padding:30px 20px;text-align:center}
 .adm-acc{display:contents}
 .btn-adm.on{background:var(--oro);color:#111;border-color:var(--oro)}
@@ -291,6 +297,10 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
   .kpi .num{font-size:26px}
   .kpi .det{font-size:10px;line-height:1.25}
   .mbar{height:6px;margin-top:4px}
+  /* periodos */
+  .periodos{width:100%;display:grid;grid-template-columns:repeat(4,1fr)}
+  .per{font-size:10px;padding:7px 2px;letter-spacing:.03em}
+  td.hr b{display:inline;margin-right:4px}
   /* filtros */
   .filtros{gap:5px}
   .chip{font-size:10.5px;padding:5px 9px}
@@ -349,7 +359,7 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
   </header>
 
   <div class="barra">
-    <div class="grupo"><label class="et" for="dia">Noche de carga</label><input class="campo-dia" type="date" id="dia"></div>
+    <div class="grupo"><label class="et" for="dia">Noche de carga / fecha</label><input class="campo-dia" type="date" id="dia"></div>
     <div class="grupo"><span class="punto" id="pGuardado"></span><span id="tGuardado" style="font-size:14px">Conectando…</span></div>
     <div class="acciones">
       <button class="btn btn-adm" id="btnAdm" type="button"><span aria-hidden="true">🔒</span> Administradora</button>
@@ -396,7 +406,13 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
     </form>
   </section>
 
-  <section aria-label="Resumen de la noche">
+  <section aria-labelledby="tRes">
+    <div class="sec-tit">
+      <div><h2 id="tRes">Resumen <em id="tResPer">del día</em></h2><p id="tResSub">—</p></div>
+      <div class="periodos" role="group" aria-label="Periodo del resumen" data-g="res">
+        <button class="per" data-p="dia" aria-pressed="true">Diario</button><button class="per" data-p="sem" aria-pressed="false">Semanal</button><button class="per" data-p="mes" aria-pressed="false">Mensual</button><button class="per" data-p="tri" aria-pressed="false">Trimestral</button>
+      </div>
+    </div>
     <div class="resumen">
       <div class="kpi principal" id="kConfCaja"><span class="et">Placas conformes</span><span class="num" id="kConf">—</span><span class="det" id="kConfDet">Sin placas validadas</span><div class="mbar"><i id="bConf" style="width:0"></i></div></div>
       <div class="kpi"><span class="et">Placas validadas</span><span class="num" id="kPlacas">0</span><span class="det" id="kPlacasDet">—</span></div>
@@ -408,7 +424,10 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
 
   <section aria-labelledby="tRep">
     <div class="sec-tit">
-      <div><h2 id="tRep">Reporte de la <em>noche</em></h2><p id="tRepSub">—</p></div>
+      <div><h2 id="tRep">Registro de todas las <em>incidencias</em></h2><p id="tRepSub">—</p></div>
+      <div class="periodos" role="group" aria-label="Periodo del registro" data-g="reg">
+        <button class="per" data-p="dia" aria-pressed="true">Diario</button><button class="per" data-p="sem" aria-pressed="false">Semanal</button><button class="per" data-p="mes" aria-pressed="false">Mensual</button><button class="per" data-p="tri" aria-pressed="false">Trimestral</button>
+      </div>
       <div class="filtros" role="group" aria-label="Filtrar por motivo">
         <button class="chip" data-f="Todos" aria-pressed="true">Todos</button>
         <button class="chip" data-f="Faltante" aria-pressed="false">Faltante</button>
@@ -420,14 +439,14 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
     </div>
     <div class="tabla-caja">
       <table>
-        <thead><tr><th>Hora</th><th>Placa</th><th>SKU – Producto</th><th class="c">Cant.</th><th>Motivo</th><th>Pickinero</th><th>Obs.</th><th class="ac"></th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Placa</th><th>SKU – Producto</th><th class="c">Cant.</th><th>Motivo</th><th>Pickinero</th><th>Obs.</th><th class="ac"></th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
   </section>
 
   <section aria-labelledby="tAn">
-    <div class="sec-tit"><div><h2 id="tAn">¿Dónde se <em>repite</em>?</h2><p>Cajas con observación por pickinero, por SKU y por placa. Sirve para enfocar el refuerzo.</p></div>
+    <div class="sec-tit"><div><h2 id="tAn">¿Dónde se <em>repite</em>?</h2><p id="tAnSub">Cajas con observación por pickinero, por SKU y por placa, en el periodo del resumen. Sirve para enfocar el refuerzo.</p></div>
       <div class="ley"><span><i style="background:var(--rojo-v)"></i>Faltante</span><span><i style="background:var(--oro)"></i>Sobrante</span><span><i style="background:var(--cruce)"></i>Cruce</span></div></div>
     <div class="analisis">
       <div class="panel"><h3>Por <em>pickinero</em></h3><div id="rkPick"></div></div>
@@ -454,7 +473,7 @@ let registros = [];          // registros de la noche seleccionada
 let db = null, unsub = null, modo = "cargando", downloads = null;
 let filtro = "Todos", motivo = null, sku = null, sku2 = null;
 const LKEY = "vcn-callao-registros", PKEY = "vcn-callao-pickineros", MKEY = "vcn-callao-mios";
-const VERSION = "2026-11-18-3";
+const VERSION = "2026-11-19-1";
 const mios = lsGet(MKEY, {});   // registros hechos desde este celular: se pueden borrar sin clave
 
 /* ---------- utilidades ---------- */
@@ -657,39 +676,82 @@ async function borrar(id){
   }
   const todo = lsGet(LKEY, {}); delete todo[id]; lsSet(LKEY, todo); cargaLocal();
 }
+/* ---------- periodos: diario, semanal (lun–dom), mensual, trimestral ---------- */
+let perRes = "dia", perReg = "dia", cargado = {desde:"", hasta:""};
+const aFecha = f => { const [y,m,d] = f.split("-").map(Number); return new Date(y,m-1,d); };
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const corta = d => `${d.getDate()} ${MESES[d.getMonth()].slice(0,3)}`;
+function semanaISO(d){ const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); const dn=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-dn+3); const y0=new Date(Date.UTC(t.getUTCFullYear(),0,4)); return 1+Math.round(((t-y0)/864e5-3+((y0.getUTCDay()+6)%7))/7); }
+function rango(per){
+  const a = aFecha($("dia").value || nocheDeCarga());
+  let d1 = new Date(a), d2 = new Date(a), etq, corto;
+  if(per==="sem"){ const dn=(a.getDay()+6)%7; d1.setDate(a.getDate()-dn); d2=new Date(d1); d2.setDate(d1.getDate()+6); etq=`Semana ${semanaISO(a)} · del ${corta(d1)} al ${corta(d2)}`; corto="de la semana"; }
+  else if(per==="mes"){ d1=new Date(a.getFullYear(),a.getMonth(),1); d2=new Date(a.getFullYear(),a.getMonth()+1,0); etq=`${MESES[a.getMonth()][0].toUpperCase()+MESES[a.getMonth()].slice(1)} ${a.getFullYear()}`; corto="del mes"; }
+  else if(per==="tri"){ const q=Math.floor(a.getMonth()/3); d1=new Date(a.getFullYear(),q*3,1); d2=new Date(a.getFullYear(),q*3+3,0); etq=`${q+1}.º trimestre ${a.getFullYear()} · ${MESES[q*3].slice(0,3)}–${MESES[q*3+2].slice(0,3)}`; corto="del trimestre"; }
+  else { etq = fechaLarga(iso(a)); etq = etq[0].toUpperCase()+etq.slice(1); corto="del día"; }
+  return { desde:iso(d1), hasta:iso(d2), etq, corto, per };
+}
+const enRango = (r,R) => r.fecha>=R.desde && r.fecha<=R.hasta;
+function rangoCarga(){ const a=rango(perRes), b=rango(perReg); return { desde: a.desde<b.desde?a.desde:b.desde, hasta: a.hasta>b.hasta?a.hasta:b.hasta }; }
+
 function cargaLocal(){
   if(modo==="sheet"||modo==="nube") return;
-  const f = $("dia").value; const todo = lsGet(LKEY, {});
-  registros = Object.values(todo).filter(r=>r.fecha===f); pinta();
+  const R = rangoCarga(); const todo = lsGet(LKEY, {});
+  registros = Object.values(todo).filter(r=>enRango(r,R)); pinta();
 }
 function estado(t, cls){ $("tGuardado").textContent=t; $("pGuardado").className="punto "+(cls||""); }
 function pasaALocal(txt){ modo="local"; if(unsub){unsub();unsub=null;} estado(txt||"Guardado solo en este equipo","local"); cargaLocal(); }
+const urlApi = q => API+(API.includes("?")?"&":"?")+q;
 async function leerSheet(silencio){
-  const f=$("dia").value;
+  const R = rangoCarga();
+  document.querySelector(".tabla-caja").classList.add("cargando");
   try{
-    const r = await fetch(API+(API.includes("?")?"&":"?")+"accion=listar&fecha="+encodeURIComponent(f));
+    const r = await fetch(urlApi("accion=listar&desde="+R.desde+"&hasta="+R.hasta));
+    const j = await r.json(); if(!j.ok) throw 0;
+    const R2 = rangoCarga(); if(R2.desde!==R.desde || R2.hasta!==R.hasta) return;
+    registros = j.registros||[]; cargado = R; pinta();
+    estado("Base compartida · actualizada "+hhmm(new Date()),"ok");
+  }catch(e){ estado(silencio?"Sin conexión: los datos pueden no estar al día":"No se pudo leer la base compartida","local"); }
+  finally{ document.querySelector(".tabla-caja").classList.remove("cargando"); }
+}
+/* Cada 30 s solo se refresca la noche en curso (donde se registra); el rango completo cada 5 min */
+async function refrescaNoche(){
+  const f = $("dia").value;
+  try{
+    const r = await fetch(urlApi("accion=listar&fecha="+encodeURIComponent(f)));
     const j = await r.json(); if(!j.ok) throw 0;
     if(f!==$("dia").value) return;
-    registros = j.registros||[]; pinta();
-    estado("Base compartida · se actualiza cada 30 s · "+hhmm(new Date()),"ok");
-  }catch(e){ estado(silencio?"Sin conexión: los datos pueden no estar al día":"No se pudo leer la base compartida","local"); }
+    registros = registros.filter(x=>x.fecha!==f).concat(j.registros||[]); pinta();
+    estado("Base compartida · actualizada "+hhmm(new Date()),"ok");
+  }catch(e){ estado("Sin conexión: los datos pueden no estar al día","local"); }
 }
 function suscribe(){
   if(modo==="sheet"){ estado("Cargando…",""); leerSheet(); return; }
   if(modo!=="nube" || !db){ cargaLocal(); return; }
   if(unsub) unsub();
-  const f = $("dia").value;
+  const R = rangoCarga();
   estado("Cargando…","");
   const t = setTimeout(()=>estado("Sin conexión: los datos pueden no estar al día","local"),10000);
-  unsub = db.collection("validaciones").where("fecha","==",f).onSnapshot(snap=>{
+  unsub = db.collection("validaciones").where("fecha",">=",R.desde).where("fecha","<=",R.hasta).onSnapshot(snap=>{
     if(!snap.metadata.fromCache){ clearTimeout(t); estado("Guardado en la nube · se actualiza en vivo","ok"); }
-    registros = snap.docs.map(d=>Object.assign({id:d.id}, d.data())); pinta();
+    registros = snap.docs.map(d=>Object.assign({id:d.id}, d.data())); cargado = R; pinta();
   }, err=>{ clearTimeout(t); pasaALocal("Sin acceso a la nube: guardado en este equipo"); });
 }
-$("dia").addEventListener("change", ()=>{ registros=[]; pinta(); suscribe(); });
+function recarga(){ const R=rangoCarga(); if(modo==="local"||modo==="cargando"){ cargaLocal(); return; } if(R.desde!==cargado.desde || R.hasta!==cargado.hasta) suscribe(); else pinta(); }
+$("dia").addEventListener("change", recarga);
+document.querySelectorAll(".periodos").forEach(g=>g.addEventListener("click", e=>{
+  const b = e.target.closest(".per"); if(!b) return;
+  g.querySelectorAll(".per").forEach(x=>x.setAttribute("aria-pressed", String(x===b)));
+  if(g.dataset.g==="res") perRes = b.dataset.p; else perReg = b.dataset.p;
+  recarga();
+}));
 
 (async function iniciar(){
-  if(API){ modo="sheet"; suscribe(); poll=setInterval(()=>{ if(document.visibilityState==="visible") leerSheet(true); },30000); return; }
+  if(API){
+    modo="sheet"; suscribe();
+    let n=0; poll=setInterval(()=>{ if(document.visibilityState!=="visible") return; n++; if(n%10===0) leerSheet(true); else refrescaNoche(); },30000);
+    return;
+  }
   try{
     if(window.claude && typeof window.claude.use==="function"){
       db = await window.claude.use("db");
@@ -704,33 +766,47 @@ cargaLocal();
 
 pintaAdmin(); pintaAdmin.listo = true;
 /* ---------- pintado ---------- */
+function fCorta(f){ const [y,m,d]=String(f||"").split("-"); return d+"/"+m; }
+function ordenReg(a,b){ return (b.fecha||"").localeCompare(a.fecha||"") || (b.hora||"").localeCompare(a.hora||"") || b.ts-a.ts; }
+function resumenDe(rs){
+  const obs = rs.filter(r=>MOTIVOS.includes(r.motivo));
+  const clave = r => r.fecha+"|"+r.placa;           // una placa por noche
+  const placas = new Set(rs.map(clave)), conObs = new Set(obs.map(clave));
+  const tot = placas.size, conformes = tot - [...placas].filter(k=>conObs.has(k)).length;
+  const suma = m => obs.filter(r=>r.motivo===m).reduce((s,r)=>s+(+r.cant||0),0);
+  const cuenta = m => obs.filter(r=>r.motivo===m).length;
+  return { obs, tot, conObs:conObs.size, conformes, pct: tot ? Math.round(conformes/tot*1000)/10 : null, noches:new Set(rs.map(r=>r.fecha)).size, suma, cuenta };
+}
 function pinta(){
-  registros.sort((a,b)=>(a.hora||"").localeCompare(b.hora||"") || a.ts-b.ts);
-  const obs = registros.filter(r=>MOTIVOS.includes(r.motivo));
-  const placas = new Set(registros.map(r=>r.placa));
-  const conObs = new Set(obs.map(r=>r.placa));
-  const conformes = [...placas].filter(p=>!conObs.has(p)).length;
-  const tot = placas.size;
-  const pct = tot ? Math.round(conformes/tot*1000)/10 : null;
-  $("kPlacas").textContent = tot;
-  $("kPlacasDet").textContent = tot ? `${conObs.size} con observación` : "—";
-  $("kConf").textContent = pct==null ? "—" : pct.toLocaleString("es-PE")+"%";
-  $("kConfDet").textContent = tot ? `${conformes} de ${tot} placas sin observación` : "Sin placas validadas";
-  const caja = $("kConfCaja"); caja.className = "kpi "+(pct==null?"principal":pct>=95?"verde":pct>=90?"amarillo":"rojo");
+  const RR = rango(perRes), RG = rango(perReg);
+  const enRes = registros.filter(r=>enRango(r,RR));
+  const S = resumenDe(enRes);
+  $("tResPer").textContent = RR.corto;
+  $("tResSub").textContent = `${RR.etq}${perRes!=="dia"?` · ${S.noches} noche${S.noches===1?"":"s"} con registros`:""}`;
+  $("kPlacas").textContent = S.tot.toLocaleString("es-PE");
+  $("kPlacasDet").textContent = S.tot ? `${S.conObs} con observación${perRes!=="dia"?" (placa-noche)":""}` : "—";
+  $("kConf").textContent = S.pct==null ? "—" : S.pct.toLocaleString("es-PE")+"%";
+  $("kConfDet").textContent = S.tot ? `${S.conformes} de ${S.tot} placas sin observación` : "Sin placas validadas";
+  const pct = S.pct;
+  $("kConfCaja").className = "kpi "+(pct==null?"principal":pct>=95?"verde":pct>=90?"amarillo":"rojo");
   const bar = $("bConf"); bar.style.width=(pct||0)+"%"; bar.style.background = pct==null?"var(--oro)":pct>=95?"var(--verde-claro)":pct>=90?"var(--oro)":"var(--rojo-v)";
   for(const [m,k] of [["Faltante","F"],["Sobrante","S"],["Cruce","C"]]){
-    const rs = obs.filter(r=>r.motivo===m);
-    $("k"+k).textContent = rs.reduce((s,r)=>s+(+r.cant||0),0).toLocaleString("es-PE");
-    $("k"+k+"d").textContent = `cajas · ${rs.length} registro${rs.length===1?"":"s"}`;
+    $("k"+k).textContent = S.suma(m).toLocaleString("es-PE");
+    const n = S.cuenta(m); $("k"+k+"d").textContent = `cajas · ${n} registro${n===1?"":"s"}`;
   }
-  $("tRepSub").textContent = `${fechaLarga($("dia").value)} · ${obs.length} hallazgo${obs.length===1?"":"s"} en ${conObs.size} placa${conObs.size===1?"":"s"}`;
+  $("tAnSub").textContent = `Cajas con observación por pickinero, por SKU y por placa · ${RR.etq}.`;
 
+  const enReg = registros.filter(r=>enRango(r,RG)).sort(ordenReg);
+  const G = resumenDe(enReg);
+  $("tRepSub").textContent = `${RG.etq} · ${G.obs.length} incidencia${G.obs.length===1?"":"s"} · ${G.tot} placa${G.tot===1?"":"s"} validada${G.tot===1?"":"s"}`;
   const q = norm($("buscar").value).trim();
-  const vis = registros.filter(r=>(filtro==="Todos"||r.motivo===filtro) && (!q || norm([r.placa,r.sku,r.producto,r.pickinero,r.skuCruce,r.productoCruce].join(" ")).includes(q)));
-  $("tbody").innerHTML = vis.length ? vis.map(r=>{
+  const vis = enReg.filter(r=>(filtro==="Todos"||r.motivo===filtro) && (!q || norm([r.placa,r.sku,r.producto,r.pickinero,r.skuCruce,r.productoCruce,r.empresario].join(" ")).includes(q)));
+  pinta.visibles = vis; pinta.RG = RG;
+  const LIM = 300;
+  $("tbody").innerHTML = vis.length ? vis.slice(0,LIM).map(r=>{
     const conf = r.motivo==="Conforme";
     return `<tr class="${conf?"conf":""}">
-      <td class="hr">${esc(r.hora)}</td>
+      <td class="hr"><b>${fCorta(r.fecha)}</b>${esc(r.hora)}</td>
       <td class="plc"><span class="pl">${esc(r.placa)}</span>${r.empresario?`<span class="emp">${esc(r.empresario)}</span>`:""}</td>
       <td class="sku">${conf?"Validada sin observaciones":`<span class="cod">${esc(r.sku)}</span> - ${esc(r.producto)}`}${r.skuCruce?`<span class="x">Debía ir: <b>${esc(r.skuCruce)}</b> - ${esc(r.productoCruce)}</span>`:""}</td>
       <td class="cant">${conf?"":esc(r.cant)}</td>
@@ -738,11 +814,12 @@ function pinta(){
       <td class="pk">${esc(r.pickinero)}</td>
       <td class="obs">${esc(r.obs||"")}</td>
       <td class="ac">${puedeBorrar(r)?`<button class="borrar" type="button" data-id="${esc(r.id)}">Borrar</button>`:""}</td></tr>`;
-  }).join("") : `<tr><td class="vacio" colspan="8"><strong>${registros.length?"Sin resultados":"Sin registros esta noche"}</strong><span>${registros.length?"Cambia el filtro o la búsqueda.":"Registra el primer hallazgo o marca una placa conforme."}</span></td></tr>`;
+  }).join("") + (vis.length>LIM?`<tr><td class="vacio" colspan="8"><span>Se muestran las ${LIM} más recientes de ${vis.length}. Usa la búsqueda o descarga el Excel para ver todas.</span></td></tr>`:"")
+  : `<tr><td class="vacio" colspan="8"><strong>${enReg.length?"Sin resultados":"Sin registros en este periodo"}</strong><span>${enReg.length?"Cambia el filtro o la búsqueda.":"Registra el primer hallazgo o marca una placa conforme."}</span></td></tr>`;
 
-  ranking("rkPick", obs, r=>r.pickinero, n=>esc(n));
-  ranking("rkSku", obs, r=>r.sku, (k,rs)=>`<small>${esc(k)}</small>${esc(rs[0].producto)}`);
-  ranking("rkPlaca", obs, r=>r.placa, n=>`<span class="pl" style="font-size:14px">${esc(n)}</span>`);
+  ranking("rkPick", S.obs, r=>r.pickinero, n=>esc(n));
+  ranking("rkSku", S.obs, r=>r.sku, (k,rs)=>`<small>${esc(k)}</small>${esc(rs[0].producto)}`);
+  ranking("rkPlaca", S.obs, r=>r.placa, n=>`<span class="pl" style="font-size:14px">${esc(n)}</span>`);
   pintaPickineros();
 }
 function ranking(id, obs, key, label){
@@ -778,7 +855,7 @@ setInterval(()=>{ if(document.visibilityState==="visible") revisaVersion(); }, 1
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") revisaVersion(); });
 /* ---------- exportar ---------- */
 function filasExport(){
-  return registros.map(r=>({
+  return (pinta.visibles||[]).slice().sort((a,b)=>-ordenReg(a,b)).map(r=>({
     "Fecha": r.fecha, "Hora": r.hora, "Placa": r.placa, "Empresario": r.empresario||(infoPlaca(r.placa)||{}).emp||"",
     "SKU - Producto": r.motivo==="Conforme" ? "" : skuTxt(r.sku, r.producto),
     "Cantidad (cj)": r.motivo==="Conforme" ? "" : +r.cant,
@@ -788,12 +865,12 @@ function filasExport(){
   }));
 }
 $("btnExcel").addEventListener("click", async ()=>{
-  if(!registros.length){ toast("No hay registros en esta noche."); return; }
+  if(!(pinta.visibles||[]).length){ toast("No hay registros en este periodo."); return; }
   if(!window.XLSX){ toast("No cargó el generador de Excel. Usa “Copiar tabla”."); return; }
   const ws = XLSX.utils.json_to_sheet(filasExport());
   ws["!cols"] = [{wch:11},{wch:7},{wch:10},{wch:34},{wch:44},{wch:12},{wch:10},{wch:44},{wch:26},{wch:30}];
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Validación");
-    const nombre = `Validacion_Carga_Nocturna_${$("dia").value}.xlsx`;
+    const RG = pinta.RG; const nombre = `Validacion_Carga_Nocturna_${RG.desde===RG.hasta?RG.desde:RG.desde+"_al_"+RG.hasta}.xlsx`;
   const buf = XLSX.write(wb,{bookType:"xlsx",type:"array"});
   if(!downloads){ try{ XLSX.writeFile(wb, nombre); toast("Excel descargado."); }catch(e){ toast("No se pudo descargar. Usa “Copiar tabla”."); } return; }
   try{ await downloads.save({filename:nombre, data:new Uint8Array(buf)}); toast("Excel listo."); }
@@ -804,25 +881,31 @@ async function copiar(t, ok){
   catch(e){ toast("No se pudo copiar en este navegador."); }
 }
 $("btnTabla").addEventListener("click", ()=>{
-  const f = filasExport(); if(!f.length){ toast("No hay registros en esta noche."); return; }
+  const f = filasExport(); if(!f.length){ toast("No hay registros en este periodo."); return; }
   const cols = Object.keys(f[0]);
   copiar([cols.join("\t"), ...f.map(r=>cols.map(c=>String(r[c]).replace(/\t|\n/g," ")).join("\t"))].join("\n"), "Tabla copiada: pégala en Excel.");
 });
 $("btnWsp").addEventListener("click", ()=>{
-  if(!registros.length){ toast("No hay registros en esta noche."); return; }
-  const obs = registros.filter(r=>MOTIVOS.includes(r.motivo));
-  const placas = new Set(registros.map(r=>r.placa)), conObs = new Set(obs.map(r=>r.placa));
-  const pct = placas.size ? Math.round((placas.size-conObs.size)/placas.size*1000)/10 : 0;
-  const suma = m => obs.filter(r=>r.motivo===m).reduce((s,r)=>s+(+r.cant||0),0);
-  const L = [`*VALIDACIÓN DE CARGA NOCTURNA – CD CALLAO*`, `Noche: ${fechaLarga($("dia").value)}`, ``,
-    `✅ Placas conformes: *${pct.toLocaleString("es-PE")}%* (${placas.size-conObs.size}/${placas.size})`,
-    `🔴 Faltante: ${suma("Faltante")} cj · 🟡 Sobrante: ${suma("Sobrante")} cj · 🟠 Cruce: ${suma("Cruce")} cj`, ``];
-  const porPlaca = new Map(); obs.forEach(r=>{ if(!porPlaca.has(r.placa)) porPlaca.set(r.placa,[]); porPlaca.get(r.placa).push(r); });
-  porPlaca.forEach((rs,p)=>{
-    const em=(infoPlaca(p)||{}).emp; L.push(`🚚 *${p}*${em?` (${em})`:""} – Pickinero: ${[...new Set(rs.map(r=>r.pickinero))].join(", ")}`);
-    rs.forEach(r=>L.push(`• ${skuTxt(r.sku,r.producto)} | ${r.cant} cj | ${r.motivo.toUpperCase()}${r.skuCruce?` (debía ir ${skuTxt(r.skuCruce,r.productoCruce)})`:""}${r.obs?` – ${r.obs}`:""}`));
-    L.push("");
-  });
+  const RR = rango(perRes); const rs = registros.filter(r=>enRango(r,RR));
+  if(!rs.length){ toast("No hay registros en el periodo del resumen."); return; }
+  const S = resumenDe(rs);
+  const L = [`*VALIDACIÓN DE CARGA NOCTURNA – CD CALLAO*`, `${perRes==="dia"?"Noche":"Periodo"}: ${RR.etq}`, ``,
+    `✅ Placas conformes: *${(S.pct||0).toLocaleString("es-PE")}%* (${S.conformes}/${S.tot})`,
+    `🔴 Faltante: ${S.suma("Faltante")} cj · 🟡 Sobrante: ${S.suma("Sobrante")} cj · 🟠 Cruce: ${S.suma("Cruce")} cj`, ``];
+  if(perRes==="dia"){
+    const porPlaca = new Map(); S.obs.forEach(r=>{ if(!porPlaca.has(r.placa)) porPlaca.set(r.placa,[]); porPlaca.get(r.placa).push(r); });
+    porPlaca.forEach((rs,p)=>{
+      const em=(infoPlaca(p)||{}).emp; L.push(`🚚 *${p}*${em?` (${em})`:""} – Pickinero: ${[...new Set(rs.map(r=>r.pickinero))].join(", ")}`);
+      rs.forEach(r=>L.push(`• ${skuTxt(r.sku,r.producto)} | ${r.cant} cj | ${r.motivo.toUpperCase()}${r.skuCruce?` (debía ir ${skuTxt(r.skuCruce,r.productoCruce)})`:""}${r.obs?` – ${r.obs}`:""}`));
+      L.push("");
+    });
+  } else {
+    const top = (key, lab) => { const g=new Map(); S.obs.forEach(r=>{ const k=key(r); g.set(k,(g.get(k)||0)+(+r.cant||0)); }); return [...g.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v],i)=>`${i+1}. ${lab(k)} – ${v} cj`); };
+    L.push(`Noches con registro: ${S.noches} · Incidencias: ${S.obs.length}`, ``);
+    L.push(`*Top pickineros con observación*`, ...top(r=>r.pickinero, k=>k), ``);
+    L.push(`*Top SKUs*`, ...top(r=>r.sku, k=>skuTxt(k,(S.obs.find(r=>r.sku===k)||{}).producto||"")), ``);
+    L.push(`*Top placas*`, ...top(r=>r.placa, k=>{ const em=(infoPlaca(k)||{}).emp; return k+(em?` (${em})`:""); }));
+  }
   copiar(L.join("\n").trim(), "Resumen copiado: pégalo en WhatsApp.");
 });
 })();

@@ -1,5 +1,5 @@
 // Validación de Carga Nocturna – CD Callao (Netlify Blobs).
-// GET  ?fecha=YYYY-MM-DD                       -> { ok, registros }
+// GET  ?fecha=YYYY-MM-DD  o  ?desde=&hasta=     -> { ok, registros }
 // POST { accion:"agregar", registro }           -> guarda un hallazgo o placa conforme
 // POST { accion:"borrar", fecha, id, pin|tk }   -> borra (administradora, o quien lo registró desde su celular)
 import { getStore } from "@netlify/blobs";
@@ -42,10 +42,26 @@ export default async (req) => {
       }
       return json({ ok: false, error: "accion" }, 400);
     }
-    const fecha = new URL(req.url).searchParams.get("fecha");
-    if (!okFecha(fecha)) return json({ ok: false, error: "fecha" }, 400);
-    const { blobs } = await store.list({ prefix: `${fecha}/` });
-    const registros = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(({ tk, ...r }) => r);
+    const sp = new URL(req.url).searchParams;
+    const fecha = sp.get("fecha");
+    let desde = sp.get("desde"), hasta = sp.get("hasta");
+    if (okFecha(fecha)) { desde = fecha; hasta = fecha; }
+    if (!okFecha(desde) || !okFecha(hasta) || desde > hasta) return json({ ok: false, error: "fecha" }, 400);
+    // Un solo día: listado por prefijo. Rango (semana, mes, trimestre): por prefijo de mes y filtro por fecha.
+    const meses = [];
+    for (let d = new Date(desde.slice(0, 7) + "-01T00:00:00Z"); d.toISOString().slice(0, 7) <= hasta.slice(0, 7); d.setUTCMonth(d.getUTCMonth() + 1)) meses.push(d.toISOString().slice(0, 7));
+    if (meses.length > 13) return json({ ok: false, error: "rango" }, 400);
+    const prefijos = desde === hasta ? [`${desde}/`] : meses.map((m) => `${m}-`);
+    const keys = [];
+    for (const prefix of prefijos) {
+      const { blobs } = await store.list({ prefix });
+      for (const x of blobs) { const f = x.key.slice(0, 10); if (f >= desde && f <= hasta) keys.push(x.key); }
+    }
+    const registros = [];
+    for (let i = 0; i < keys.length; i += 50) {
+      const lote = await Promise.all(keys.slice(i, i + 50).map((k) => store.get(k, { type: "json" })));
+      for (const r of lote) if (r) { const { tk, ...resto } = r; registros.push(resto); }
+    }
     return json({ ok: true, registros });
   } catch (e) {
     return json({ ok: false, error: String((e && e.message) || e) }, 500);
