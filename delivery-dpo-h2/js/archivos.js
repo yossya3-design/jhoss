@@ -113,6 +113,8 @@
     ".fxr-main em{font-style:normal;font-weight:700;color:#F2C52A;white-space:nowrap}",
     "a.fxs-main{color:inherit;text-decoration:none}",
     ".fxl .tool-ic{font-size:20px}",
+    ".fxl{position:relative}.fxl-x{position:absolute;top:8px;right:8px;z-index:2;width:30px;height:30px;border-radius:50%;border:1px solid #5A2A2F;background:rgba(7,7,7,.75);color:#FF8A96;font:800 15px/1 Arial,sans-serif;cursor:pointer;display:grid;place-items:center}.fxl-x:hover{background:#C8102E;color:#fff}.fxl .fxs-main .tool-tx{padding-right:34px}",
+    ".fxq{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between;margin-top:12px;padding:8px 12px;border:1px dashed #5A2A2F;border-radius:12px;color:#A6A093;font-size:13px}.fxq b{color:#F4F1E8;font-weight:600}.fxq button{cursor:pointer;border-radius:8px;padding:5px 10px;font:700 12.5px var(--f-body,Barlow,Arial,sans-serif);border:1px solid #F2C52A;background:transparent;color:#F2C52A}",
     ".fxl-f{display:grid;gap:10px;padding:14px 16px}.fxl-f label{display:grid;gap:4px;font:600 12px var(--f-mono,monospace);color:var(--muted,#A6A093)}",
     ".fxl-f input{box-sizing:border-box;width:100%;padding:10px 12px;border-radius:10px;border:1px solid #3A352B;background:#0E0E0D;color:#F4F1E8;font:15px var(--f-body,Barlow,Arial,sans-serif)}",
     ".fxl-f input:focus{outline:2px solid #F2C52A;border-color:#F2C52A}.fxl-f .fxs-act{padding:0;justify-content:flex-start}",
@@ -551,8 +553,27 @@
     if (url) await S.db.collection("archivos").add({ code: code, cat: "link", kind: "link", name: title, title: title, url: url, slot: key, ext: "link", enc: "link", parts: [], size: 0, rel: "", lote: "", at: new Date().toISOString() });
     for (var i = 0; i < old.length; i++) { try { await S.db.collection("archivos").doc(old[i]._id).delete(); } catch (x) { } }
   }
+  async function quitarLink(code, key, title) {
+    var old = S.docs.filter(function (d) { return d.code === code && d.slot === key; });
+    await S.db.collection("archivos").add({ code: code, cat: "link", kind: "quitar", name: title, title: title, url: "", slot: key, ext: "link", enc: "link", parts: [], size: 0, rel: "", lote: "", at: new Date().toISOString() });
+    for (var i = 0; i < old.length; i++) { try { await S.db.collection("archivos").doc(old[i]._id).delete(); } catch (x) { } }
+  }
+  async function ponerLink(code, key) {
+    var old = S.docs.filter(function (d) { return d.code === code && d.slot === key && d.kind === "quitar"; });
+    for (var i = 0; i < old.length; i++) { try { await S.db.collection("archivos").doc(old[i]._id).delete(); } catch (x) { } }
+  }
   function renderLink(el, code) {
-    var key = el.dataset.link, d = slotDoc(code, key), url = d ? d.url : (el.dataset.def || ""), can = !!S.db && !!S.assets, k = code + "|" + key;
+    var key = el.dataset.link, d = slotDoc(code, key), can = !!S.db && !!S.assets, k = code + "|" + key;
+    if (d && d.kind === "quitar") {
+      el.dataset.fxOn = "1";
+      if (!can) { el.hidden = true; el.innerHTML = ""; return; }
+      el.hidden = false; el.className = "fxq-w";
+      el.innerHTML = '<div class="fxq"><span>Quitado de esta visual: <b>' + esc(el.dataset.n || d.title || "") + '</b></span><button type="button" data-a="back">↺ Volver a poner</button></div>';
+      el.querySelector('[data-a="back"]').onclick = async function (ev) { ev.target.disabled = true; ev.target.textContent = "Guardando…"; try { await ponerLink(code, key); } catch (x) { ev.target.disabled = false; ev.target.textContent = "↺ Volver a poner"; S.slotMsg[k] = { kind: "bad", text: errText(x) }; } paintSlots(); };
+      return;
+    }
+    el.hidden = false;
+    var url = d ? d.url : (el.dataset.def || "");
     var title = (d && d.title) || el.dataset.n || "Link de la visual", busy = !!S.slotBusy[k], msg = S.slotMsg[k];
     var host = ""; try { host = url ? new URL(url).hostname.replace(/^www\./, "") : ""; } catch (e) { host = url; }
     el.dataset.fxOn = "1"; el.className = "fxs fxl" + (url ? "" : " empty") + (busy ? " busy" : "");
@@ -574,9 +595,17 @@
     }
     var inner = '<span class="tool-ic" aria-hidden="true">' + esc(el.dataset.ic || "🔗") + '</span><span class="tool-tx"><small>' + esc(el.dataset.tag || "Visual vinculada") + "</small><b>" + esc(title) + "</b>" + (el.dataset.d ? "<span>" + esc(el.dataset.d) + "</span>" : "") +
       '<span class="fxs-file">🔗 ' + esc(busy ? "Guardando…" : url ? host : can ? "Sin link · toca para pegarlo" : "Sin link") + '</span></span><span class="fxs-go">' + (url ? "Abrir ↗" : can ? "🔗 Cargar link" : "Pendiente") + "</span>";
-    el.innerHTML = (url ? '<a class="fxs-main" href="' + esc(url) + '" target="_blank" rel="noopener">' + inner + "</a>" : '<button type="button" class="fxs-main" data-a="edit"' + (can ? "" : " disabled") + ">" + inner + "</button>") +
+    el.innerHTML = (can && !busy ? '<button type="button" class="fxl-x" data-a="quitar" title="Quitar de esta visual" aria-label="Quitar ' + esc(title) + ' de esta visual">✕</button>' : "") + (url ? '<a class="fxs-main" href="' + esc(url) + '" target="_blank" rel="noopener">' + inner + "</a>" : '<button type="button" class="fxs-main" data-a="edit"' + (can ? "" : " disabled") + ">" + inner + "</button>") +
       (can && url ? '<div class="fxs-act"><button type="button" data-a="edit">✎ Cambiar link</button></div>' : "") + (msg ? '<div class="fxs-msg ' + msg.kind + '" role="status">' + esc(msg.text) + "</div>" : "");
     el.querySelectorAll('[data-a="edit"]').forEach(function (b) { b.onclick = function () { el.dataset.edit = "1"; S.slotMsg[k] = null; renderLink(el, code); }; });
+    var qx = el.querySelector('[data-a="quitar"]');
+    if (qx) qx.onclick = async function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      if (!window.confirm("¿Quitar «" + title + "» de este subbloque?\nPuedes volver a ponerlo cuando quieras.")) return;
+      S.slotBusy[k] = true; renderLink(el, code);
+      try { await quitarLink(code, key, title); S.slotMsg[k] = null; } catch (x) { S.slotMsg[k] = { kind: "bad", text: errText(x) }; }
+      S.slotBusy[k] = false; paintSlots();
+    };
   }
 
   /* ---------- barras de carga (archivos, evidencias, fotos) ---------- */
@@ -681,7 +710,7 @@
   }
   function badges() {
     var cnt = {}; S.docs.forEach(function (d) { cnt[d.code] = (cnt[d.code] || 0) + 1; });
-    try { if (window.fxEstado) { var set = new Set(); S.docs.forEach(function (d) { if (d.code) set.add(d.code); }); window.fxEstado(set); } } catch (e) { }
+    try { if (window.fxEstado) { var set = new Set(); S.docs.forEach(function (d) { if (d.code && d.kind !== "quitar") set.add(d.code); }); window.fxEstado(set); } } catch (e) { }
     document.querySelectorAll(".leaf[data-c]").forEach(function (el) {
       var n = cnt[el.dataset.c] || 0, b = el.querySelector(".fx-cnt"), host = el.querySelector(".ts") || el;
       if (!n) { if (b) b.remove(); return; }
