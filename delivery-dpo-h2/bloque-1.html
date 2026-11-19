@@ -98,6 +98,11 @@ section.blk{padding-block:44px 0}
 .dots a[aria-current="page"]{background:var(--c);border-color:var(--c);color:#fff}
 .bhead{margin-top:20px;border-radius:18px;color:#fff;padding:24px 26px;position:relative;overflow:hidden;
   background:linear-gradient(120deg,var(--c),color-mix(in srgb,var(--c) 70%,#000))}
+.bhead .htools{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;position:relative}
+.bhead .htool{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:14px;border:1.5px solid #F2C52A;background:rgba(7,7,7,.72);color:#F4F1E8;text-decoration:none;cursor:pointer;font:inherit;text-align:left;transition:transform .15s,background .15s}
+.bhead .htool:hover{background:#070707;transform:translateY(-2px)}
+.bhead .htool .hi{font-size:22px}.bhead .htool small{display:block;font:700 10.5px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:#F2C52A}.bhead .htool b{display:block;font-size:16px;font-weight:700}
+@media (max-width:560px){.bhead .htool{flex:1 1 100%}}
 .bhead .awning{position:absolute;inset:0 0 auto 0;opacity:.9}
 .bhead .row{display:flex;gap:14px 24px;align-items:end;margin-top:18px}
 .bhead .nums{margin-top:18px}
@@ -481,6 +486,10 @@ html,body{overflow-x:clip}
       <div style="flex:1;min-width:0"><div class="eyebrow">Parada 1 de 5 · Delivery DPO</div><h1>PROCESO DE EJECUCIÓN DE ENTREGA</h1></div>
     </div>
     <div class="nums"><div><b>4</b>procesos</div><div><b>21</b>subbloques</div><div><b>0</b>listos</div></div>
+    <div class="htools">
+      <button type="button" class="htool" id="btnRaci"><span class="hi" aria-hidden="true">🧰</span><span><small>Herramienta</small><b>RACI Delivery</b></span></button>
+      <a class="htool" href="https://seguimiento-delivery-t2.netlify.app/pi-pre-ruta/#t=res" target="_blank" rel="noopener"><span class="hi" aria-hidden="true">📊</span><span><small>Indicadores · con clave</small><b>PIs del Bloque 1</b></span></a>
+    </div>
   </header>
   <section class="metro" aria-label="Mapa de madurez del bloque">
     <div class="mhead"><span class="mh0">Línea / proceso</span><span>Nivel 1</span><span>Nivel 2</span><span class="now">Nivel 3<small>Fase implementada</small></span><span class="goal">Nivel 4<small>Siguiente meta</small></span></div>
@@ -704,5 +713,6 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheet.hidden)close
 const m=location.hash.match(/^#s(\d+)-(\d+)-(\d+)-(\d+)$/); if(m) openSheet(m.slice(1).join("."));
 </script>
 <script src="js/archivos.js"></script>
+<script>(function(){var b=document.getElementById("btnRaci");if(!b)return;b.onclick=function(){if(window.fxVerUrl)window.fxVerUrl("docs/RACIS-Delivery.pdf","RACIS Delivery.pdf","Herramienta RACI · Delivery");else location.href="docs/RACIS-Delivery.pdf";};})();</script>
 </body>
 </html>

@@ -585,7 +585,8 @@
     try {
       await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", function () { return window.XLSX && window.XLSX.read; }, 7000);
       var wb = window.XLSX.read(buf, { type: "array", cellDates: true });
-      sheets = wb.SheetNames.map(function (n) {
+      var hid = {}; ((wb.Workbook && wb.Workbook.Sheets) || []).forEach(function (x) { if (x && x.Hidden) hid[x.name] = 1; });
+      sheets = wb.SheetNames.filter(function (n) { return !hid[n]; }).map(function (n) {
         var ws = wb.Sheets[n], ref = ws["!ref"]; if (!ref) return { name: n, rows: [] };
         var rg = window.XLSX.utils.decode_range(ref), rows = [];
         for (var r = rg.s.r; r <= Math.min(rg.e.r, rg.s.r + 1999); r++) {
