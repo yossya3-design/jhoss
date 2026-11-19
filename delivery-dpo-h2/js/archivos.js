@@ -376,7 +376,10 @@
     if (!S.dl) throw { code: "unavailable" };
     return S.dl.save({ filename: name, data: blob });
   }
+  function directDl(url, name) { var a = document.createElement("a"); a.href = url; a.download = name || ""; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove(); }
+  function rawOf(d) { return !window.claude && d && d.url && !/^blob:/.test(d.url) ? d.url : ""; }
   async function downloadOne(d, btn, code) {
+    if (rawOf(d)) { directDl(rawOf(d), d.name); return; }
     var old = btn ? btn.textContent : "", failed = "";
     if (btn) { btn.disabled = true; btn.textContent = "Preparando…"; }
     try {
@@ -434,6 +437,7 @@
     if (!d) return;
     loadVisor().then(function (V) {
       V.open({ name: d.name, ext: d.pdf || d.pdfUrl ? "pdf" : d.ext, title: title || d.name, sub: (title ? d.name + " · " : "") + size(d.size || 0) + " · subido el " + fdate(d.at) + " · " + perOf(d),
+        rawUrl: (!window.claude && (d.pdfUrl || rawOf(d))) || "", rawDl: rawOf(d), rawName: d.name,
         getBlob: function () { return d.pdfUrl ? fetch(d.pdfUrl).then(function (r) { if (!r.ok) throw { code: "missing" }; return r.blob(); }) : d.pdf ? fetch("/_blob/" + d.pdf).then(function (r) { if (!r.ok) throw { code: "missing" }; return r.blob(); }) : fetchBlob(d); }, onDownload: S.dl ? function (b) { downloadOne(d, b, code); } : null });
     });
   }

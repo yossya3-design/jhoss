@@ -739,7 +739,8 @@
       else body.innerHTML = '<div class="vw-st"><b>Este formato no tiene vista previa</b>Descárgalo para abrirlo en tu computadora.' + (/^(ppt|doc|xls)$/.test(e) ? "<br>Si lo guardas como ." + e + "x (formato nuevo de Office) se verá aquí mismo." : "") + "</div>";
     } catch (err) {
       if (ctx.closed) return;
-      body.innerHTML = '<div class="vw-st"><b>No se pudo mostrar la vista previa</b>El archivo está guardado bien: descárgalo para abrirlo.' + (o.onDownload ? '<br><br><button class="vw-b" type="button" data-dl2>⬇ Descargar</button>' : "") + "</div>";
+      if (o.rawUrl && /\.pdf$/i.test(o.rawUrl)) { body.innerHTML = '<iframe title="' + esc(o.name || "PDF") + '" src="' + esc(o.rawUrl) + '" style="display:block;width:100%;height:calc(100vh - 140px);border:0;border-radius:10px;background:#fff"></iframe><p style="text-align:center;margin:10px 0"><a class="vw-b" href="' + esc(o.rawUrl) + '" target="_blank" rel="noopener">↗ Abrir en otra pestaña</a>' + (o.rawDl ? ' <a class="vw-b" href="' + esc(o.rawDl) + '" download="' + esc(o.rawName || "") + '">⬇ Descargar original</a>' : "") + '</p>'; if (window.console) console.warn("visor:", err); return; }
+      body.innerHTML = '<div class="vw-st"><b>No se pudo mostrar la vista previa aquí</b>El archivo está guardado bien. Ábrelo en otra pestaña o descárgalo.<br><br>' + (o.rawUrl ? '<a class="vw-b" href="' + esc(o.rawUrl) + '" target="_blank" rel="noopener">↗ Abrir en otra pestaña</a> ' : "") + (o.rawDl ? '<a class="vw-b" href="' + esc(o.rawDl) + '" download="' + esc(o.rawName || "") + '">⬇ Descargar</a>' : o.onDownload ? '<button class="vw-b" type="button" data-dl2>⬇ Descargar</button>' : "") + "</div>";
       var d2 = body.querySelector("[data-dl2]"); if (d2) d2.onclick = function () { o.onDownload(d2); };
       if (window.console) console.warn("visor:", err);
     }
