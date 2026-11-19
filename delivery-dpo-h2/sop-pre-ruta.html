@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOP Pre Ruta CD Callao</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: Tapiz Backus (noche). Portada del SOP → línea de tiempo de la mañana (5 paradas) → seguridad en una mirada → quién hace qué → indicadores y anexos. */
+:root{
+  --bg:#070707; --card:rgba(17,17,16,.9); --card2:rgba(12,12,11,.92);
+  --ink:#F4F1E8; --muted:#A6A093; --line:#2B2822;
+  --gold:#F2C52A; --gold-hi:#FFE97A; --gold-lo:#C8960F; --golddeep:#B07E07;
+  --red:#C8102E; --red-tx:#FF8A96; --green:#2E7D3A; --green-tx:#7FD99A; --sea:#1F84A0; --brick:#A3472A;
+  --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --f-body:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:clip}
+body{background:#070707 url(img/tapiz-noche.svg) center/cover fixed;color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:clamp(16px,3vw,32px)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.01em}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* barra superior */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(7,7,7,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
+.back{display:inline-flex;align-items:center;gap:8px;font-weight:700;text-decoration:none;border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:999px;font-size:14px}
+.back:hover{border-color:var(--gold)}
+.jump{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.jump a{font:700 12px var(--f-mono);text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card2)}
+.jump a:hover{color:var(--gold);border-color:var(--gold)}
+
+.navl{display:flex;gap:8px}
+.back.home{color:var(--gold)}
+@media (max-width:520px){.back.home{display:none}}
+.wordbtn{margin-top:22px;max-width:640px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border-radius:14px;text-decoration:none;color:var(--ink);
+  background:linear-gradient(120deg,rgba(242,197,42,.2),rgba(242,197,42,.05));border:1px solid rgba(242,197,42,.65);box-shadow:0 0 0 4px rgba(242,197,42,.08)}
+.wordbtn:hover{background:linear-gradient(120deg,rgba(242,197,42,.3),rgba(242,197,42,.08))}
+.w-ic{width:52px;height:52px;border-radius:10px;display:grid;place-items:center;background:#2B579A;color:#fff;font:900 28px var(--f-display);box-shadow:inset 0 -4px 0 rgba(0,0,0,.25)}
+.w-tx{display:flex;flex-direction:column;min-width:0}
+.w-tx small{font:700 10px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.w-tx b{font-family:var(--f-display);font-size:26px;text-transform:uppercase;line-height:1.05}
+.w-tx span{font-size:13px;color:var(--muted)}
+.w-go{font-weight:700;color:var(--gold);white-space:nowrap}
+.wordbtn.pend{cursor:default}.wordbtn.pend .w-go{color:var(--muted);font-size:13px;border:1px dashed var(--muted);padding:4px 10px;border-radius:999px}
+@media (max-width:520px){.wordbtn{grid-template-columns:auto minmax(0,1fr)}.w-go{grid-column:1/-1}}
+/* portada */
+.hero{position:relative;padding-block:26px 0}
+.hero::before{content:"";position:absolute;inset:-20px -80px -40px -100px;z-index:-1;background:radial-gradient(ellipse at 30% 45%,rgba(7,7,7,.94) 0%,rgba(7,7,7,.78) 45%,rgba(7,7,7,0) 78%)}
+.brandbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.peru{display:inline-flex;width:30px;height:18px;margin-right:12px;vertical-align:-4px;border:1px solid #3a3a3a}
+.peru i{flex:1;background:#D91023}.peru i:nth-child(2){background:#fff}
+.logos{display:flex;align-items:center;gap:14px}
+.logos img{display:block;height:auto}
+.lg-ab{width:132px}.lg-badge{width:70px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.hero h1{margin-top:22px;font-size:clamp(50px,9vw,112px);line-height:.86;font-weight:900;text-transform:uppercase;
+  background:linear-gradient(180deg,var(--gold-hi) 0%,var(--gold) 45%,var(--gold-lo) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 18px rgba(229,178,28,.25))}
+.hero h1 .l2{display:block;font-size:.5em;line-height:1.05;margin-top:6px;-webkit-text-fill-color:var(--ink);color:var(--ink)}
+.hero h1 .l2 b{-webkit-text-fill-color:var(--gold);color:var(--gold)}
+.goldrule{height:3px;width:min(520px,70%);margin-top:18px;background:linear-gradient(90deg,var(--gold),rgba(242,197,42,0))}
+.lead{max-width:62ch;margin:16px 0 0;font-size:18px;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:13.5px}
+.chip b{font:700 11px var(--f-mono);color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+
+section{padding-block:52px 0}
+.sec-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:8px 20px;margin-bottom:20px}
+.sec-head h2{font-size:clamp(32px,4.6vw,50px);font-weight:900;text-transform:uppercase;line-height:.95}
+.sec-head h2 em{font-style:normal;color:var(--gold)}
+.sec-head p{margin:0;color:var(--muted);max-width:52ch}
+
+/* reloj de la mañana */
+.clock{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:26px}
+.clock::before{content:"";position:absolute;left:6%;right:6%;top:23px;height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,#2A2A2A 0 18px,#F2D36B 18px 30px);opacity:.85}
+.clock a{position:relative;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;min-width:0}
+.clock .pin{position:relative;z-index:1;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;font:900 26px var(--f-display);border:4px solid var(--bg);box-shadow:0 0 0 2px var(--c)}
+.clock .t{font:700 15px var(--f-mono);color:var(--gold);font-variant-numeric:tabular-nums}
+.clock .n{font-family:var(--f-display);font-weight:800;font-size:18px;text-transform:uppercase;line-height:1.05}
+.clock a:hover .pin{transform:translateY(-3px)}
+.clock .pin{transition:transform .15s}
+.truckdot{position:absolute;z-index:2;top:16px;left:6%;width:20px;height:20px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 5px rgba(242,197,42,.25),0 0 18px rgba(242,197,42,.7);animation:ride 10s linear infinite}
+@keyframes ride{from{left:6%}to{left:calc(94% - 20px)}}
+@media (prefers-reduced-motion:reduce){.truckdot{animation:none}}
+
+/* paradas */
+.stops{display:grid;gap:16px}
+.stop{--c:var(--red);position:relative;display:grid;grid-template-columns:150px minmax(0,1fr);background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:16px;overflow:hidden;backdrop-filter:blur(4px);scroll-margin-top:70px}
+.stop .side{padding:18px 16px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 26%,transparent),transparent 80%);border-right:1px solid var(--line)}
+.stop .num{font:900 64px/0.8 var(--f-display);color:var(--c);filter:brightness(1.35)}
+.stop .time{font:700 22px var(--f-mono);color:var(--gold);font-variant-numeric:tabular-nums}
+.stop .dur{font:600 12px var(--f-mono);color:var(--muted)}
+.stop .body{padding:18px 20px 20px;display:grid;gap:14px;min-width:0}
+.stop h3{font-size:clamp(26px,3.4vw,36px);font-weight:900;text-transform:uppercase;line-height:1}
+.stop .req{font:700 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:6px}
+.stop .req::before{content:"";width:10px;height:10px;border-radius:2px;background:var(--gold)}
+.who{display:flex;flex-wrap:wrap;gap:6px}
+.who span{font-size:13px;border-radius:999px;padding:3px 10px;border:1px solid var(--line);background:var(--card2)}
+.who span b{font:700 10px var(--f-mono);letter-spacing:.08em;margin-right:6px;color:var(--muted)}
+.who span.r{border-color:color-mix(in srgb,var(--c) 70%,var(--line))}
+.who span.r b{color:var(--ink)}
+.do{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px}
+.do li{position:relative;padding-left:28px;min-width:0}
+.do li::before{content:"";position:absolute;left:0;top:3px;width:18px;height:18px;border-radius:5px;border:2px solid var(--gold);background:linear-gradient(135deg,rgba(242,197,42,.18),transparent)}
+.do li::after{content:"";position:absolute;left:6px;top:7px;width:5px;height:9px;border:solid var(--gold);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.do li b{color:var(--ink)}
+.do li small{display:block;color:var(--muted);font-size:13.5px}
+.stopif{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--red) 16%,transparent);border:1px solid color-mix(in srgb,var(--red) 55%,transparent);font-size:14.5px}
+.stopif .ic{flex:none;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;background:var(--red);color:#fff;font:900 11px var(--f-mono)}
+.agenda{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;counter-reset:ag}
+.agenda div{counter-increment:ag;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px;line-height:1.25;min-width:0}
+.agenda div::before{content:counter(ag);display:block;font:900 22px var(--f-display);color:var(--gold)}
+.ind{display:flex;flex-wrap:wrap;gap:6px}
+.ind span{font:600 12px var(--f-mono);padding:3px 9px;border-radius:6px;background:rgba(242,197,42,.1);color:var(--gold);border:1px solid rgba(242,197,42,.35)}
+.lbl{font:700 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.veedores{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.veedor{position:relative;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 12px 12px 14px;min-width:0}
+.veedor .vn{font:900 15px var(--f-display);text-transform:uppercase;letter-spacing:.04em;color:var(--v)}
+.veedor ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+.veedor::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:2px;background:var(--v)}
+
+/* seguridad */
+.safety{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 20px;backdrop-filter:blur(4px);min-width:0}
+.panel h3{font-size:26px;font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:14px}
+.rules{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rules li{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;align-items:center}
+.rules svg{width:48px;height:48px}
+.rules b{display:block;font-family:var(--f-display);font-size:20px;text-transform:uppercase;line-height:1.05}
+.rules span{font-size:14px;color:var(--muted)}
+.epp{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.epp i{font-style:normal;font-size:12.5px;padding:2px 8px;border-radius:999px;border:1px solid rgba(242,197,42,.4);color:var(--ink)}
+.nogo{border-color:color-mix(in srgb,var(--red) 60%,var(--line));background:linear-gradient(170deg,rgba(200,16,46,.22),var(--card) 60%)}
+.nogo h3{color:#fff}
+.nogo h3 small{display:block;font:700 11px var(--f-mono);letter-spacing:.12em;color:var(--red-tx);margin-bottom:4px}
+.nogo ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.nogo li{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.nogo li::before{content:"✕";flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--red);color:#fff;font:700 12px var(--f-mono);margin-top:1px}
+.nogo .note{margin-top:14px;font-size:13.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+
+/* quién hace qué */
+.tblwrap{overflow-x:auto;border-radius:16px;border:1px solid var(--line);background:var(--card);backdrop-filter:blur(4px)}
+table{width:100%;border-collapse:collapse;min-width:620px;font-size:14.5px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--card2)}
+td:first-child{font:700 13px var(--f-mono);color:var(--gold);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;font:700 10px var(--f-mono);padding:1px 6px;border-radius:4px;margin-right:6px}
+.tag.R{background:var(--red);color:#fff}.tag.A{background:var(--green);color:#fff}
+
+/* kpis y anexos */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card2);min-width:0}
+.kpi b{display:block;font-family:var(--f-display);font-size:20px;text-transform:uppercase;line-height:1.05}
+.kpi span{font-size:13px;color:var(--muted)}
+.docs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.docs a{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;text-decoration:none;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card2);font-size:14px}
+.docs a:hover{border-color:var(--gold)}
+.docs a i{font:700 10px var(--f-mono);font-style:normal;color:#070707;background:var(--gold);padding:2px 6px;border-radius:4px}
+.docs a span{overflow-wrap:anywhere}
+.docs a em{font:600 11px var(--f-mono);font-style:normal;color:var(--muted)}
+
+/* pie: ciclo de entrega */
+.flow{margin-top:60px;display:flex;align-items:flex-end;gap:18px;padding-top:14px}
+.fl-castle{width:44px;height:auto;flex:none;opacity:.85}
+.steps{list-style:none;margin:0;padding:0;flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative;counter-reset:st}
+.steps::before{content:"";position:absolute;left:0;right:0;top:20px;border-top:2px dashed rgba(242,197,42,.5)}
+.steps li{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;counter-increment:st;min-width:0}
+.steps img{height:30px;width:auto;opacity:.85;background:var(--bg);padding:0 8px;position:relative}
+.steps b{font-family:var(--f-display);font-weight:800;font-size:17px;text-transform:uppercase;margin-top:6px;line-height:1}
+.steps b::before{content:counter(st) " · ";color:var(--gold)}
+.steps span{font-size:12px;color:var(--muted)}
+footer{padding-block:28px 36px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+footer .mono{font-family:var(--f-mono);font-size:12px}
+
+@media (max-width:900px){
+  .agenda{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .safety,.two{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:720px){
+  .stop{grid-template-columns:minmax(0,1fr)}
+  .stop .side{flex-direction:row;align-items:center;gap:14px;border-right:0;border-bottom:1px solid var(--line);padding:12px 16px}
+  .stop .num{font-size:44px}
+  .do,.veedores{grid-template-columns:minmax(0,1fr)}
+  .clock{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+  .clock .n{font-size:13px}
+  .clock .t{font-size:11px}
+  .clock .pin{width:40px;height:40px;font-size:20px}
+  .clock::before{top:18px}
+  .truckdot{top:11px}
+  .jump{display:none}
+}
+@media (max-width:520px){
+  .clock .n{display:none}
+  .agenda{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpis{grid-template-columns:minmax(0,1fr)}
+  .lg-ab{width:96px}.lg-badge{width:48px}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:16px}
+  .steps::before{display:none}.fl-castle{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="navl"><a class="back" href="bloque-1.html#s1-1-1-2">← <span>Bloque 1 · Pre Ruta</span></a><a class="back home" href="index.html">Menú DPO</a></div>
+    <nav class="jump" aria-label="Secciones">
+      <a href="#manana">La mañana</a>
+      <a href="#seguridad">Seguridad</a>
+      <a href="#roles">Quién hace qué</a>
+      <a href="#apoyo">KPIs y anexos</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+<header class="hero">
+  <div class="brandbar">
+    <div class="eyebrow"><span class="peru" aria-hidden="true"><i></i><i></i><i></i></span>Bloque 1 · Capacitación Pre Ruta · Subbloque 1.1.1.2</div>
+    <div class="logos" aria-label="Logos">
+      <img src="img/abinbev-blanco.png" alt="AB InBev" class="lg-ab">
+      <img src="img/cd-callao.png" alt="CD Callao" class="lg-badge">
+      <img src="img/dpo.png" alt="DPO Perú" class="lg-badge">
+    </div>
+  </div>
+  <h1>SOP Pre Ruta<span class="l2">Salida de unidades · CD <b>Callao</b></span></h1>
+  <div class="goldrule"></div>
+  <p class="lead">Del ingreso al CD a la salida al mercado en cinco paradas: la tripulación llega, recoge su ruta, se alinea en la matinal, valida su carga y pasa el doble check. Así sale cada unidad: segura, completa y a tiempo.</p>
+  <div class="chips">
+    <span class="chip"><b>ID</b>R.1.1.1 · Unique ID 584</span>
+    <span class="chip"><b>Aplica a</b>Tripulaciones T2 y personal T77 / ABI</span>
+    <span class="chip"><b>Duración</b>≈ 50 minutos</span>
+    <span class="chip"><b>Meta</b>Unidades fuera antes de las 07:30</span>
+  </div>
+  <a class="wordbtn" id="wordbtn" href="#" target="_blank" rel="noopener">
+    <span class="w-ic" aria-hidden="true">W</span>
+    <span class="w-tx"><small>Documento oficial · versión completa del SOP</small><b>Ver SOP en Word</b><span>SOP Salida de Unidades · CD Callao 2026 · Rev. 15 · 25/10/2026</span></span>
+    <span class="w-go" id="wordgo">Abrir ↗</span>
+  </a>
+</header>
+
+<section id="manana">
+  <div class="sec-head">
+    <h2>La mañana en <em>5 paradas</em></h2>
+    <p>Las paradas 2 y 4 corren en paralelo con otras tareas de la tripulación. Si el conductor es también liquidador, el EDT o su supervisor cubre las tareas del liquidador.</p>
+  </div>
+
+  <nav class="clock" aria-label="Línea de tiempo">
+    <span class="truckdot" aria-hidden="true"></span>
+    <a href="#p1" style="--c:#C8102E"><span class="pin">1</span><span class="t">06:15</span><span class="n">Registro de entrada</span></a>
+    <a href="#p2" style="--c:#B07E07"><span class="pin">2</span><span class="t">06:15</span><span class="n">Recopilación de ruta</span></a>
+    <a href="#p3" style="--c:#2E7D3A"><span class="pin">3</span><span class="t">06:30</span><span class="n">Reunión matinal</span></a>
+    <a href="#p4" style="--c:#1F84A0"><span class="pin">4</span><span class="t">06:40</span><span class="n">Carga y calidad</span></a>
+    <a href="#p5" style="--c:#A3472A"><span class="pin">5</span><span class="t">06:40</span><span class="n">Seguridad y salida</span></a>
+  </nav>
+
+  <div class="stops">
+    <!-- 1 -->
+    <article class="stop" id="p1" style="--c:#C8102E">
+      <div class="side"><span class="num">1</span><span class="time">06:15</span><span class="dur">≈ 10 min</span></div>
+      <div class="body">
+        <div class="req">Registro de entrada</div>
+        <h3>Llego, me registro y entro seguro</h3>
+        <div class="who"><span class="r"><b>HACE</b>Agente de seguridad (vigilancia)</span><span><b>APRUEBA</b>Empresario de transporte</span></div>
+        <ul class="do">
+          <li><b>Uniforme y EPP completo</b><small>Si algo falta o está dañado, se repone en la oficina del EDT (Anexo 9).</small></li>
+          <li><b>DNI escaneado con Zebra</b><small>Queda la hora de ingreso; el reporte se comparte cada día.</small></li>
+          <li><b>Paso por el arco de seguridad</b><small>Zona de ingreso a matinales y a liquidación.</small></li>
+          <li><b>Apto para trabajar</b><small>Prueba de alcohol según procedimiento (Anexo 10).</small></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 2 -->
+    <article class="stop" id="p2" style="--c:#B07E07">
+      <div class="side"><span class="num">2</span><span class="time">06:15</span><span class="dur">en paralelo</span></div>
+      <div class="body">
+        <div class="req">Recopilación de ruta</div>
+        <h3>Recojo mi kit y confirmo mi ruta</h3>
+        <div class="who"><span class="r"><b>HACE</b>Responsable de reparto T2</span><span><b>VERIFICA</b>Supervisor EDT</span><span><b>APRUEBA</b>Empresario de transporte</span></div>
+        <ul class="do">
+          <li><b>Smartphone con BEES Delivery</b><small>Ruta cargada a nombre del conductor del día (Anexo 1).</small></li>
+          <li><b>Impresora portátil y papel</b><small>Probada antes de salir de la oficina BO.</small></li>
+          <li><b>Hoja de ruta</b><small>Clientes, zona y ruta crítica del día.</small></li>
+          <li><b>Guías de remisión correctas</b><small>N.° de transporte, ruta y placa coinciden con la unidad.</small></li>
+        </ul>
+        <div class="stopif"><span class="ic">!</span><span>¿Cambió el conductor o la placa no coincide? Avisa al Supervisor T2: él coordina con almacén la corrección y la nueva guía antes de la salida.</span></div>
+      </div>
+    </article>
+
+    <!-- 3 -->
+    <article class="stop" id="p3" style="--c:#2E7D3A">
+      <div class="side"><span class="num">3</span><span class="time">06:30</span><span class="dur">≈ 10–15 min</span></div>
+      <div class="body">
+        <div class="req">Reunión matinal</div>
+        <h3>Nos alineamos en la rutina matinal</h3>
+        <div class="who"><span class="r"><b>DIRIGE</b>Empresario de transporte</span><span><b>APRUEBA</b>Supervisor T2</span><span><b>ASISTE</b>Toda la tripulación, uniformada y con EPP</span></div>
+        <div>
+          <div class="lbl">Agenda fija</div>
+          <div class="agenda">
+            <div>Saludo y pausa activa</div>
+            <div>Credo y alerta de seguridad</div>
+            <div>Días sin LTI y ruta crítica (zona N3)</div>
+            <div>Tablero de indicadores y Action Log</div>
+            <div>Novedades del día (cajas, rutas cerradas)</div>
+            <div>10 principios y arenga</div>
+          </div>
+        </div>
+        <div>
+          <div class="lbl">Indicadores que se revisan</div>
+          <div class="ind"><span>Cobro N3 &gt; 3 500</span><span>Reclamos</span><span>Unidades &gt; 07:30</span><span>Rotura por BK</span><span>MR pedido</span><span>MR volumen</span><span>Modulación</span></div>
+        </div>
+        <ul class="do">
+          <li><b>Indicador en rojo = acción en el Action Log</b><small>Con cliente, tripulación y acción concreta.</small></li>
+          <li><b>Pasa el disparador = 5 porqués</b><small>Hasta llegar a la causa raíz. Lo que está en meta se celebra.</small></li>
+        </ul>
+      </div>
+    </article>
+
+    <!-- 4 -->
+    <article class="stop" id="p4" style="--c:#1F84A0">
+      <div class="side"><span class="num">4</span><span class="time">06:40</span><span class="dur">en paralelo</span></div>
+      <div class="body">
+        <div class="req">Verificación de inventario y calidad</div>
+        <h3>Mi carga está completa y en buen estado</h3>
+        <div class="who"><span class="r"><b>HACE</b>Auxiliar T2 con personal de almacén</span><span><b>EVIDENCIA</b>Vigilancia</span><span><b>APRUEBA</b>Supervisor T2</span></div>
+        <ul class="do">
+          <li><b>Inventario de camión = alistamiento de carga</b><small>Primero se cruzan N.° de transporte y N.° de ruta.</small></li>
+          <li><b>Producto sin rotura ni envase dañado</b><small>Pallets segregados según criterio (Anexo 4).</small></li>
+          <li><b>Productos Marketplace identificados</b><small>Con el maestro de códigos del supervisor del EDT.</small></li>
+          <li><b>Fotos de la carga de ambos lados</b><small>En rampa de salida, motor apagado y cortina abierta.</small></li>
+        </ul>
+        <div class="stopif"><span class="ic">!</span><span>¿Hay diferencia? Si es de sistema, se avisa a back office y almacén. Si es física, auxiliar y almacén la resuelven en el momento (sobrante o faltante) antes de cerrar la cortina.</span></div>
+      </div>
+    </article>
+
+    <!-- 5 -->
+    <article class="stop" id="p5" style="--c:#A3472A">
+      <div class="side"><span class="num">5</span><span class="time">06:40</span><span class="dur">≈ 25 min</span></div>
+      <div class="body">
+        <div class="req">Checklist de seguridad</div>
+        <h3>Doble check y salgo a ruta</h3>
+        <div class="who"><span class="r"><b>HACE</b>Conductor T2</span><span><b>APRUEBA</b>Supervisor de flota</span><span><b>LIBERA</b>Agente de seguridad</span></div>
+        <ul class="do">
+          <li><b>Recojo llaves con QR o carné</b><small>En la caseta de vigilancia. La llave se queda conmigo.</small></li>
+          <li><b>1.er check en Vec Fleet</b><small>Mínimos vitales y kilometraje. Anomalía = reporte al encargado de flota.</small></li>
+          <li><b>Documentos al día en cabina</b><small>Tarjeta de propiedad, SOAT, tarjeta MTC, revisión técnica, licencia y DNI.</small></li>
+          <li><b>Unidad limpia y ordenada (5S)</b><small>Por dentro y por fuera (Anexo 3).</small></li>
+        </ul>
+        <div>
+          <div class="lbl">2.º check · tres veedores antes de la salida</div>
+          <div class="veedores">
+            <div class="veedor" style="--v:#5BA7E0"><div class="vn">Veedor 1</div><ul><li>Luces altas y bajas</li><li>Claxon y limpiaparabrisas</li><li>Cinturón (elasticidad)</li></ul></div>
+            <div class="veedor" style="--v:#7FD99A"><div class="vn">Veedor 2</div><ul><li>Luces de freno y traseras</li><li>Lado derecho y cortina</li><li>Falla = unidad a taller</li></ul></div>
+            <div class="veedor" style="--v:#F2C52A"><div class="vn">Veedor 3</div><ul><li>Revisión de la carga</li><li>Enganche de carretillas</li><li>Autorización final de salida</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="seguridad">
+  <div class="sec-head">
+    <h2>Seguridad <em>en una mirada</em></h2>
+    <p>Cinco reglas para toda la tripulación y una lista corta de motivos por los que una unidad no sale.</p>
+  </div>
+  <div class="safety">
+    <div class="panel">
+      <h3>Las 5 reglas de oro</h3>
+      <ul class="rules">
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><path d="M12 28a12 12 0 0 1 24 0z" fill="#F2C52A"/><rect x="10" y="28" width="28" height="4" rx="2" fill="#F2C52A"/><rect x="22" y="14" width="4" height="8" fill="#1a1608"/></svg>
+          <div><b>EPP completo, siempre</b><span>Desde el arco de seguridad hasta la salida.</span>
+            <div class="epp"><i>Casco con barbiquejo</i><i>Lentes</i><i>Chaleco o polo reflectivo</i><i>Botas punta de acero</i><i>Guantes anticorte N5</i></div></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><circle cx="24" cy="13" r="4" fill="#F2C52A"/><path d="M24 18v12M24 30l-6 9M24 30l6 9M17 24h14" stroke="#F2C52A" stroke-width="3.5" stroke-linecap="round" fill="none"/></svg>
+          <div><b>Camino por la vía peatonal</b><span>A 5 m de los montacargas y sin usar el celular.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><text x="24" y="31" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="22" fill="#F2C52A">3</text></svg>
+          <div><b>Tres puntos de apoyo</b><span>Subo de frente, bajo de espaldas. Cortina con las dos manos.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><path d="M14 14l20 20" stroke="#F2C52A" stroke-width="5" stroke-linecap="round"/><circle cx="34" cy="34" r="3" fill="#F2C52A"/></svg>
+          <div><b>Cinturón puesto en marcha</b><span>Toda la tripulación, dentro y fuera del CD.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><text x="24" y="29" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="14" fill="#F2C52A">18</text><text x="24" y="38" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="6" fill="#F2C52A">KM/H</text></svg>
+          <div><b>18 km/h, sin reversa</b><span>Solo por el flujo de salida señalizado, nunca en sentido contrario.</span></div>
+        </li>
+      </ul>
+    </div>
+    <div class="panel nogo">
+      <h3><small>ALTO</small>La unidad no sale si…</h3>
+      <ul>
+        <li>No registró el kilometraje en Vec Fleet.</li>
+        <li>Falla algún mínimo vital en el doble check.</li>
+        <li>Falta un documento o está vencido.</li>
+        <li>La caja fuerte falla o no está cerrada.</li>
+        <li>La guía de remisión no coincide con la placa o la carga.</li>
+        <li>Algún tripulante no tiene EPP completo o no está apto.</li>
+      </ul>
+      <p class="note">El supervisor del EDT revisa la caja fuerte en cada salida. Toda observación se corrige antes de autorizar la salida.</p>
+    </div>
+  </div>
+</section>
+
+<section id="roles">
+  <div class="sec-head">
+    <h2>Quién <em>hace qué</em></h2>
+    <p>Resumen de la matriz RACI. <span class="tag R">R</span>ejecuta · <span class="tag A">A</span>aprueba.</p>
+  </div>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Parada</th><th>Actividad</th><th>Ejecuta</th><th>Aprueba</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Registro de ingreso del personal</td><td><span class="tag R">R</span>Agente de seguridad</td><td><span class="tag A">A</span>Empresario</td></tr>
+        <tr><td>2</td><td>Verificación de kit de reparto</td><td><span class="tag R">R</span>Reparto T2</td><td><span class="tag A">A</span>Empresario</td></tr>
+        <tr><td>3</td><td>Rutina matinal</td><td><span class="tag R">R</span>Empresario</td><td><span class="tag A">A</span>Supervisor T2</td></tr>
+        <tr><td>4</td><td>Revisión de carga e inventario</td><td><span class="tag R">R</span>Auxiliar T2 + almacén</td><td><span class="tag A">A</span>Supervisor T2</td></tr>
+        <tr><td>5</td><td>Recojo de llaves e inspección de unidad</td><td><span class="tag R">R</span>Conductor T2</td><td><span class="tag A">A</span>Empresario</td></tr>
+        <tr><td>5</td><td>Mínimos vitales (doble check)</td><td><span class="tag R">R</span>Conductor T2</td><td><span class="tag A">A</span>Supervisor de flota</td></tr>
+        <tr><td>5</td><td>Control de salida y vigilancia</td><td><span class="tag R">R</span>Agente de seguridad</td><td><span class="tag A">A</span>Supervisor T2</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="apoyo">
+  <div class="sec-head">
+    <h2>Cómo lo <em>medimos</em></h2>
+    <p>Indicadores del proceso y documentos de apoyo para cada parada.</p>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <h3>Indicadores</h3>
+      <div class="kpis">
+        <div class="kpi"><b>Llegada a tiempo al CD</b><span>Personas que llegan antes de la hora establecida</span></div>
+        <div class="kpi"><b>Asistencia a matinal</b><span>Personas que asisten a la rutina matinal</span></div>
+        <div class="kpi"><b>Salida antes de 07:30</b><span>Unidades que salen del CD antes de las 07:30 (viaje 1)</span></div>
+        <div class="kpi"><b>Tiempo medio de liberación</b><span>Desde la llegada al CD hasta la salida a reparto</span></div>
+        <div class="kpi"><b>Ausentismo</b><span>Personas que no asisten a laborar</span></div>
+        <div class="kpi"><b>Adherencia OWD</b><span>OWD diaria a 1–2 unidades al azar por el EDT</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Documentos de apoyo</h3>
+      <ul class="docs">
+        <li><a href="https://anheuserbuschinbev-my.sharepoint.com/:p:/r/personal/jhoselyn_m_torres_gmodelo_com_mx/Documents/Desktop/DEP%20CD%20CALLAO%20-%20H2/BLOQUE_1%20PROCESOS%20DE%20EJECUCI%C3%93N%20DE%20LA%20EMPRESA/1.1%20PRE-RUTA/OPLs/OPLs%20Delivery%20Pre%20ruta..pptx?d=wf84e51013c88425c9fd165c76e94cb9c&csf=1&web=1&e=DTvFET" target="_blank" rel="noopener"><i>OPL</i><span>Actividades con el smartphone e inconsistencias de carga</span><em>Anexos 1–2</em></a></li>
+        <li><a href="https://anheuserbuschinbev-my.sharepoint.com/:p:/r/personal/jhoselyn_m_torres_gmodelo_com_mx/Documents/Desktop/DEP%20CD%20CALLAO%20-%20H2/BLOQUE_1%20PROCESOS%20DE%20EJECUCI%C3%93N%20DE%20LA%20EMPRESA/1.1%20PRE-RUTA/OPLs/OPLs%20REFERENCIA/OPLs%20Ejecuci%C3%B3n%205s..pptx?d=wc5d54514307745d3be45baca0005f8f5&csf=1&web=1&e=BBSgLg" target="_blank" rel="noopener"><i>OPL</i><span>5S en las unidades de reparto</span><em>Anexo 3</em></a></li>
+        <li><a href="https://anheuserbuschinbev-my.sharepoint.com/:p:/r/personal/jhoselyn_m_torres_gmodelo_com_mx/Documents/Desktop/DEP%20CD%20CALLAO%20-%20H2/BLOQUE_1%20PROCESOS%20DE%20EJECUCI%C3%93N%20DE%20LA%20EMPRESA/1.1%20PRE-RUTA/OPLs/OPLs%20SALIDAS%20DE%20T2%20-%20CD%20CALLAO.pptx?d=wd08dc48a925645cf80e59cd847df9fa0&csf=1&web=1&e=sPWF7w" target="_blank" rel="noopener"><i>OPL</i><span>Salida de unidades T2 y segregación de pallets</span><em>Anexos 4 y 8</em></a></li>
+        <li><a href="https://anheuserbuschinbev-my.sharepoint.com/:p:/r/personal/jhoselyn_m_torres_gmodelo_com_mx/Documents/Desktop/DEP%20CD%20CALLAO%20-%20H2/BLOQUE_1%20PROCESOS%20DE%20EJECUCI%C3%93N%20DE%20LA%20EMPRESA/1.1%20PRE-RUTA/OPLs/OPLs%20SEGURIDAD/OPLs%20EPPs%20..pptx?d=wf4512fa3271d483d98681998e6b23699&csf=1&web=1&e=OkCEkA" target="_blank" rel="noopener"><i>OPL</i><span>Reposición de EPP</span><em>Anexo 9</em></a></li>
+        <li><a href="https://anheuserbuschinbev-my.sharepoint.com/:p:/r/personal/jhoselyn_m_torres_gmodelo_com_mx/Documents/Desktop/DEP%20CD%20CALLAO%20-%20H2/BLOQUE_1%20PROCESOS%20DE%20EJECUCI%C3%93N%20DE%20LA%20EMPRESA/1.1%20PRE-RUTA/OPLs/OPLs%20REFERENCIA/OPLs%20Procedimiento%20Alcoholtest..pptx?d=wa881f8098980405eb59ebb3641af86e2&csf=1&web=1&e=Ow56nH" target="_blank" rel="noopener"><i>OPL</i><span>Procedimiento de alcotest</span><em>Anexo 10</em></a></li>
+        <li><a href="https://ab-inbev-pe.vecfleet.io/" target="_blank" rel="noopener"><i>APP</i><span>Checklist de inspección de flota T2 (Vec Fleet)</span><em>Anexo 11</em></a></li>
+        <li><a href="https://app.powerbi.com/groups/a96bc930-831f-4176-8d43-26b4909b6c93/reports/16d13d5d-d99a-4deb-b6fb-57a184ed49b0/b5b9630a2d93322c641e?ctid=cef04b19-7776-4a94-b89b-375c77a8f936&amp;experience=power-bi" target="_blank" rel="noopener"><i>BI</i><span>Dashboard OWD salida de unidades</span><em>Power BI</em></a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="flow" aria-label="Ciclo de entrega">
+  <img src="img/ico-castillo-oro.png" alt="" class="fl-castle">
+  <ol class="steps">
+    <li><img src="img/ico-montacargas-oro.png" alt=""><b>Carga</b><span>Pre ruta en el CD</span></li>
+    <li><img src="img/ico-camion-oro.png" alt=""><b>En ruta</b><span>Salida antes de 07:30</span></li>
+    <li><img src="img/ico-carretilla-oro.png" alt=""><b>Entrega</b><span>Cliente atendido</span></li>
+    <li><img src="img/ico-camioneta-oro.png" alt=""><b>Retorno</b><span>Liquidación en el CD</span></li>
+  </ol>
+</div>
+<footer>
+  <span>SOP Pre Ruta · Salida de unidades · Pilar Delivery DPO · CD Callao</span>
+  <span class="mono">Elaboró: Jhoselyn Torres · Asistente de Transporte T2</span>
+</footer>
+</div>
+<script>
+/* Link del SOP oficial en Word (SharePoint / OneDrive). Pegar aquí el enlace. */
+const WORD_URL = "";
+const wb = document.getElementById("wordbtn");
+if (WORD_URL) { wb.href = WORD_URL; }
+else { wb.removeAttribute("href"); wb.removeAttribute("target"); wb.classList.add("pend"); wb.setAttribute("aria-disabled","true"); document.getElementById("wordgo").textContent = "Link por vincular"; }
+</script>
+</body>
+</html>

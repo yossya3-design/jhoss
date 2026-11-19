@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bloque 1 · Ejecución de entrega</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: portada = CD Callao → ruta de entrega → 5 bodegas (bloques). Cada bloque abre su página con árbol proceso → subbloque. */
+:root{
+  --bg:#F6F5F1; --surface:#FFFFFF; --surface2:#F0EEE7; --ink:#141414; --muted:#5F5B53; --line:#DDD9CE;
+  --gold:#E5B21C; --golddeep:#9A6F05; --red:#C8102E;
+  --sea:#9A6F05; --signal:#C8102E; --ok:#2E7D3A; --okbg:#E1F0E2;
+  --c1:#C8102E; --c2:#B07E07; --c3:#2E7D3A; --c4:#1E1E1E; --c5:#A3472A;
+  --wall:#F3EBD6; --road:#2A2A2A; --lane:#F2D36B;
+  --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --f-body:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:clamp(16px,3vw,32px)}
+h1,h2,h3,h4{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.01em}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+button{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+footer{padding-block:40px 32px;color:var(--muted);font-size:13px}
+
+/* ---------- PORTADA ---------- */
+.hero{padding-block:28px 0}
+.hero-top{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:end}
+.hero h1{font-size:clamp(46px,8.4vw,108px);line-height:.86;font-weight:900;text-transform:uppercase}
+.hero h1 .l2{display:block;color:var(--sea)}
+.hero h1 .l2 b{color:var(--signal);font-weight:900}
+.lead{color:var(--muted);margin:14px 0 0;font-size:17px}
+.gauge{width:230px;text-align:center}
+.gauge svg{width:100%;height:auto;display:block}
+.gauge .gnum{font-family:var(--f-display);font-weight:900;font-size:48px;line-height:1;margin-top:-4px}
+.gauge .lbl{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.scene{margin-top:22px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#030508;box-shadow:0 30px 60px -30px rgba(255,122,47,.25)}
+.scene svg{display:block;width:100%;height:auto}
+.scene a{cursor:pointer}
+.scene a .shop{transition:transform .2s ease;transform-box:fill-box;transform-origin:bottom center}
+.scene a:hover .shop,.scene a:focus .shop{transform:translateY(-6px)}
+.truck{animation:drive 18s linear infinite}
+@keyframes drive{0%{transform:translateX(-280px)}100%{transform:translateX(1280px)}}
+.lanes{animation:lanes 1.2s linear infinite}
+@keyframes lanes{to{stroke-dashoffset:-60}}
+.blink{animation:blink 1.6s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+.smoke{animation:smoke 3s ease-out infinite;opacity:0}
+@keyframes smoke{0%{opacity:.5;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(-30px,-24px) scale(1.4)}}
+@media (prefers-reduced-motion:reduce){.truck,.lanes,.blink,.smoke{animation:none}}
+
+.fill{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 18px;align-items:center}
+.fill b{font-family:var(--f-display);font-size:40px;line-height:1;font-weight:900;font-variant-numeric:tabular-nums}
+.fill b small{font-size:22px;color:var(--muted)}
+.fill .track{height:12px;border-radius:6px;background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 12px);overflow:hidden}
+.fill .track i{display:block;height:100%;width:0;background:var(--ok)}
+.fill .cap{grid-column:2;font-size:13px;color:var(--muted)}
+.phase{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.phase .step{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px}
+.phase .step i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-family:var(--f-mono);font-size:12px;font-weight:700;background:var(--surface2);border:1px solid var(--line)}
+.phase .step.done i{background:var(--sea);color:var(--surface);border-color:var(--sea)}
+.phase .step.now{border-color:var(--signal)}
+.phase .step.now i{background:var(--signal);color:#fff;border-color:var(--signal)}
+
+section.blk{padding-block:44px 0}
+.sec-head{margin-bottom:18px}
+.sec-head h2{font-size:clamp(30px,4.4vw,46px);font-weight:800;text-transform:uppercase;line-height:.95}
+
+/* ruta de paradas = bloques */
+.route{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.route::before{content:"";position:absolute;left:4%;right:4%;top:30px;height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--road) 0 18px,var(--lane) 18px 30px)}
+.stopc{position:relative;display:flex;flex-direction:column;text-decoration:none;color:var(--ink);min-width:0}
+.pin{position:relative;z-index:1;width:64px;height:64px;border-radius:50%;margin-inline:auto;background:var(--c);color:#fff;display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:36px;border:5px solid var(--bg);box-shadow:0 0 0 2px var(--c)}
+.storecard{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;flex:1;transition:transform .15s ease,box-shadow .15s ease}
+.stopc:hover .storecard,.stopc:focus-visible .storecard{transform:translateY(-4px);box-shadow:0 10px 24px -14px var(--c)}
+.awning{height:22px;background:repeating-linear-gradient(90deg,var(--c) 0 22px,var(--wall) 22px 44px);border-bottom:3px solid var(--c);
+  -webkit-mask:radial-gradient(circle 11px at 11px 22px,transparent 10px,#000 11px) 0 0/22px 100% repeat-x;mask:radial-gradient(circle 11px at 11px 22px,transparent 10px,#000 11px) 0 0/22px 100% repeat-x}
+.storecard .in{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.storecard .nm{font-family:var(--f-display);font-weight:800;font-size:22px;line-height:1;text-transform:uppercase}
+.storecard .meta{font-size:13px;color:var(--muted)}
+.storecard .go{margin-top:auto;font-weight:700;font-size:14px;color:var(--c);display:flex;justify-content:space-between;padding-top:8px;border-top:1px dashed var(--line)}
+
+/* ---------- PÁGINA DE BLOQUE ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:12px;justify-content:space-between;padding-block:10px}
+.back{display:inline-flex;align-items:center;gap:8px;font-weight:700;text-decoration:none;border:1px solid var(--line);background:var(--surface);padding:7px 14px;border-radius:999px}
+.dots{display:flex;gap:6px}
+.dots a{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;text-decoration:none;font:700 13px var(--f-mono);border:2px solid var(--line);color:var(--muted)}
+.dots a[aria-current="page"]{background:var(--c);border-color:var(--c);color:#fff}
+.bhead{margin-top:20px;border-radius:18px;color:#fff;padding:24px 26px;position:relative;overflow:hidden;
+  background:linear-gradient(120deg,var(--c),color-mix(in srgb,var(--c) 70%,#000))}
+.bhead .awning{position:absolute;inset:0 0 auto 0;opacity:.9}
+.bhead .row{display:flex;gap:14px 24px;align-items:end;margin-top:18px}
+.bhead .nums{margin-top:18px}
+.bhead .bn{font-family:var(--f-display);font-weight:900;font-size:clamp(64px,10vw,120px);line-height:.8}
+.bhead h1{font-size:clamp(34px,5.4vw,64px);font-weight:900;text-transform:uppercase;line-height:.92}
+.bhead .eyebrow{color:rgba(255,255,255,.85)}
+.bhead .nums{display:flex;gap:22px;font-family:var(--f-mono);font-size:13px}
+.bhead .nums b{display:block;font-family:var(--f-display);font-size:36px;line-height:1}
+
+/* árbol */
+.tree{margin-top:34px;padding-bottom:10px}
+.root{display:flex;justify-content:center}
+.root .node{background:var(--c);color:#fff;border-radius:12px;padding:10px 20px;text-align:center;font-family:var(--f-display);font-weight:800;font-size:22px;text-transform:uppercase;line-height:1.05;box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 22%,transparent)}
+.root .node small{display:block;font-family:var(--f-mono);font-size:11px;font-weight:700;opacity:.85;letter-spacing:.1em}
+.stem{width:3px;height:26px;background:var(--c);margin-inline:auto}
+.branches{--n:4;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:16px;position:relative}
+.branches::before{content:"";position:absolute;top:0;height:3px;background:var(--c);left:calc(100%/var(--n)/2);right:calc(100%/var(--n)/2)}
+.branch{position:relative;padding-top:26px;min-width:0}
+.branch::before{content:"";position:absolute;top:0;left:50%;width:3px;height:26px;background:var(--c);transform:translateX(-50%)}
+.pnode{background:var(--surface);border:3px solid var(--c);border-radius:12px;padding:10px 12px;text-align:center}
+.pnode .pc{font:700 12px var(--f-mono);color:var(--c)}
+.pnode .pn{display:block;font-family:var(--f-display);font-weight:800;font-size:20px;text-transform:uppercase;line-height:1.05}
+.pnode .pk{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.leaves{list-style:none;margin:0 0 0 18px;padding:12px 0 0 0;position:relative;display:grid;gap:8px}
+.leaves::before{content:"";position:absolute;left:0;top:0;bottom:22px;width:3px;background:color-mix(in srgb,var(--c) 55%,var(--line))}
+.leaves li{position:relative;padding-left:16px}
+.leaves li::before{content:"";position:absolute;left:0;top:50%;width:14px;height:3px;background:color-mix(in srgb,var(--c) 55%,var(--line))}
+.leaf{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;text-align:left;cursor:pointer;background:var(--surface);border:2px dashed var(--line);border-radius:10px;padding:8px 10px;transition:border-color .15s,transform .15s}
+.leaf:hover{border-color:var(--c);transform:translateX(3px)}
+.leaf .tc{font:700 11px var(--f-mono);color:var(--c)}
+.leaf .tl{font:700 10px var(--f-mono);color:var(--muted);align-self:center;grid-row:1/3;grid-column:2}
+.leaf .ts{font-size:14px;font-weight:600;line-height:1.2;overflow-wrap:anywhere}
+.leaf.wip{border-style:solid;border-color:var(--signal)}
+.leaf.done{border-style:solid;border-color:var(--ok);background:var(--okbg)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin-top:22px;justify-content:center}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{flex:none;width:16px;height:16px;border-radius:4px;display:inline-block}
+.sw.empty{border:2px dashed var(--muted)}.sw.wip{background:var(--signal)}.sw.done{background:var(--ok)}
+
+/* casillero (página del libro) */
+.sheet{position:fixed;inset:0;z-index:20;display:flex;justify-content:flex-end;background:color-mix(in srgb,#000 45%,transparent)}
+.page{width:min(760px,100%);height:100%;overflow:auto;background:var(--surface);border-left:8px solid var(--c);padding:calc(env(safe-area-inset-top,0px) + 18px) 24px calc(env(safe-area-inset-bottom,0px) + 24px);animation:turn .28s ease-out}
+@keyframes turn{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.page{animation:none}}
+.page-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.x{border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:700}
+.crumbs{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.crumbs span{color:var(--c);padding-inline:4px}
+.slot-title{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:14px}
+.slot-title .big{font:700 15px var(--f-mono);color:#fff;background:var(--c);padding:4px 10px;border-radius:6px}
+.slot-title h3{font-size:clamp(28px,4vw,40px);font-weight:900;text-transform:uppercase;line-height:1;flex-basis:100%}
+.state{font:700 12px var(--f-mono);padding:4px 10px;border-radius:999px;border:2px dashed var(--muted);color:var(--muted)}
+.state.wip{border:0;background:var(--signal);color:#fff}.state.done{border:0;background:var(--ok);color:#fff}
+.state.lv{border:1px solid var(--line);color:var(--ink)}
+.req-t{margin:10px 0 0;color:var(--muted);font-size:14.5px}
+.zones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+.zone{border:2px dashed var(--line);border-radius:14px;padding:14px;min-height:160px;display:flex;flex-direction:column;gap:12px;background:var(--surface2)}
+.zone.z-kpi{grid-column:1/-1;min-height:230px}
+.zl{font:700 12px var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.zh{font-size:13px;color:var(--muted);margin-top:auto}
+.ph-chart{flex:1;display:flex;align-items:flex-end;gap:6%;padding:10px 5% 0;border-left:2px solid var(--line);border-bottom:2px solid var(--line);position:relative;min-height:140px}
+.ph-chart::after{content:"META";position:absolute;left:0;right:0;top:28%;border-top:2px dashed var(--signal);font:700 10px var(--f-mono);color:var(--signal);text-align:right;padding-right:4px}
+.ph-chart i{flex:1;background:var(--line);border-radius:4px 4px 0 0}
+.ph-chart i:nth-child(1){height:40%}.ph-chart i:nth-child(2){height:55%}.ph-chart i:nth-child(3){height:48%}.ph-chart i:nth-child(4){height:66%}.ph-chart i:nth-child(5){height:72%}.ph-chart i:nth-child(6){height:80%}
+.ph-rows{display:grid;gap:7px}
+.ph-rows i{height:14px;border-radius:4px;background:var(--line)}
+.ph-rows i:first-child{background:color-mix(in srgb,var(--c) 35%,var(--line))}
+.ph-rows i:nth-child(2){width:92%}.ph-rows i:nth-child(3){width:78%}.ph-rows i:nth-child(4){width:85%}
+.ph-files{display:flex;flex-wrap:wrap;gap:8px}
+.ph-files i{font-style:normal;font:700 11px var(--f-mono);color:var(--muted);width:54px;height:64px;border:2px solid var(--line);border-radius:6px 14px 6px 6px;display:grid;place-items:end center;padding-bottom:6px;background:var(--surface)}
+.page-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;font:13px var(--f-mono);color:var(--muted)}
+.page-nav button{border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600;font-family:var(--f-body)}
+.page-nav button:disabled{opacity:.4;cursor:default}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:36px}
+.pager a{flex:1;max-width:48%;text-decoration:none;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 16px}
+.pager a b{display:block;font-family:var(--f-display);font-size:22px;text-transform:uppercase;line-height:1.05}
+.pager a.nx{text-align:right;margin-left:auto}
+
+/* metro de madurez */
+.metro{margin-top:30px}
+.mhead,.mline{display:grid;grid-template-columns:190px repeat(4,minmax(0,1fr));gap:0 10px}
+.mhead{position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:3;background:var(--bg);padding-block:8px;border-bottom:2px solid var(--line)}
+.mhead span{font:700 12px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;text-align:center;color:var(--muted)}
+.mhead span.mh0{text-align:left}
+.mhead small{display:block;font-size:10px;letter-spacing:.06em;font-weight:500}
+.mhead .now{color:var(--signal)}
+.mhead .goal{color:var(--ink)}
+.mline{position:relative;padding-block:22px;border-bottom:1px dashed var(--line);align-items:center}
+.mline::before{content:"";position:absolute;left:180px;right:6px;top:50%;height:10px;margin-top:-5px;border-radius:5px;background:var(--c)}
+.mline .endcap{position:absolute;right:0;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:var(--surface);border:5px solid var(--c)}
+.term{position:relative;z-index:1;background:var(--c);color:#fff;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.term .badge{font:700 12px var(--f-mono);background:rgba(255,255,255,.22);align-self:flex-start;padding:1px 8px;border-radius:999px}
+.term b{font-family:var(--f-display);font-weight:800;font-size:20px;line-height:1.02;text-transform:uppercase}
+.term small{font-size:12px;opacity:.9}
+.cell{position:relative;z-index:1;display:flex;justify-content:center;min-width:0}
+.cell[data-lv="4"]::after{content:"";position:absolute;inset:-22px -5px;z-index:-1;background:repeating-linear-gradient(135deg,transparent 0 8px,color-mix(in srgb,var(--line) 45%,transparent) 8px 10px)}
+.cell .tick{width:14px;height:14px;border-radius:50%;background:var(--surface);border:3px solid var(--c)}
+.hub{width:100%;background:var(--surface);border:4px solid var(--c);border-radius:18px;padding:6px;display:grid;gap:4px;box-shadow:0 6px 16px -12px var(--c)}
+.leaf{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 8px;align-items:center;text-align:left;cursor:pointer;background:transparent;border:2px dashed transparent;border-radius:10px;padding:5px 6px;transition:background .15s}
+.leaf:hover{background:color-mix(in srgb,var(--c) 12%,transparent)}
+.leaf .dot{grid-row:1/3;width:16px;height:16px;border-radius:50%;background:var(--surface);border:3px dashed var(--muted)}
+.leaf .tc{font:700 11px var(--f-mono);color:var(--c)}
+.leaf .ts{font-size:13.5px;font-weight:600;line-height:1.15;overflow-wrap:anywhere}
+.leaf.wip .dot{border:0;background:var(--signal)}
+.leaf.done .dot{border:0;background:var(--ok)}
+@media (max-width:860px){
+  .mhead{display:none}
+  .mline{display:block;padding:16px 0 16px 0}
+  .mline::before{left:22px;right:auto;top:60px;bottom:30px;width:8px;height:auto;margin:0}
+  .mline .endcap{left:15px;right:auto;top:auto;bottom:16px;margin:0}
+  .term{margin-bottom:6px}
+  .cell{display:block;padding:8px 0 8px 52px}
+  .cell.empty{display:none}
+  .cell[data-lv="3"] .hub::before{content:"Nivel 3 · fase implementada";}
+  .hub::before{content:"Nivel " attr(data-lv);font:700 10px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:2px 6px}
+  .cell[data-lv="4"]::after{inset:0 0 0 44px;border-radius:18px}
+}
+
+.brandbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.logos{display:flex;gap:10px}
+.logo{width:76px;height:76px;border-radius:14px;border:2px dashed var(--line);display:grid;place-items:center;text-align:center;font:700 10px/1.25 var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2)}
+.logos.sm .logo{width:auto;height:32px;padding:0 10px;border-radius:8px;font-size:9.5px}
+.hero h1{color:var(--ink)}
+.smoke{animation:smoke 3s ease-out infinite}
+@media (max-width:640px){.logo{width:60px;height:60px;font-size:9px}.logos.sm{display:none}}
+
+.logos{align-items:center;gap:14px}
+.logos img{display:block;height:auto}
+.lg-ab{width:150px}
+.lg-badge{width:84px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.18))}
+.logos.sm{gap:10px}
+.logos.sm .lg-ab{width:84px}.logos.sm .lg-badge{width:34px;filter:none}
+.hero h1 .l2{color:var(--golddeep)}
+.hero h1 .l2 b{color:var(--red)}
+.strip{display:block;width:100%;max-width:1180px;height:auto;margin:40px auto 0;opacity:.85}
+.fill .track i{background:var(--ok)}
+.phase .step.done i{background:var(--ink);border-color:var(--ink);color:#fff}
+.phase .step.now{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 35%,transparent)}
+.phase .step.now i{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.mhead .now{color:var(--golddeep)}
+@media (max-width:640px){.lg-ab{width:110px}.lg-badge{width:60px}}
+
+/* tapiz: mapa de rutas */
+body{background:var(--bg) url(img/tapiz.svg) center/cover fixed}
+/* banda del ciclo de entrega */
+.flow{margin-top:48px;display:flex;align-items:flex-end;gap:18px;padding:14px 0 0;position:relative}
+.flow::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:8px;opacity:.5;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='8'%3E%3Cpath d='M0 4 q6 -4 12 0 t12 0' fill='none' stroke='%239A6F05' stroke-width='1.3'/%3E%3C/svg%3E") repeat-x}
+.fl-castle{width:44px;height:auto;flex:none;opacity:.85}
+.steps{list-style:none;margin:0;padding:0;flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative;counter-reset:st}
+.steps::before{content:"";position:absolute;left:0;right:0;top:20px;border-top:2px dashed color-mix(in srgb,var(--golddeep) 55%,transparent)}
+.steps li{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;counter-increment:st;min-width:0}
+.steps img{height:30px;width:auto;opacity:.8;background:var(--bg);padding:0 8px;position:relative}
+.steps b{font-family:var(--f-display);font-weight:800;font-size:17px;text-transform:uppercase;margin-top:6px;line-height:1}
+.steps b::before{content:counter(st) " · ";color:var(--golddeep)}
+.steps span{font-size:12px;color:var(--muted)}
+.steps::after{content:"";position:absolute;top:16px;left:0;width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 20%,transparent);animation:travel 9s linear infinite}
+@keyframes travel{from{left:0}to{left:calc(100% - 10px)}}
+@media (prefers-reduced-motion:reduce){.steps::after{animation:none}}
+@media (max-width:640px){.steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:16px}.steps::before,.steps::after{display:none}.fl-castle{display:none}}
+
+.h1row{display:flex;justify-content:space-between;align-items:baseline;font:600 12px var(--f-mono);color:var(--muted);margin-top:4px}
+.h1row b{font-family:var(--f-display);font-size:24px;color:var(--ink)}
+.h1bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.h1bar i{display:block;height:100%;background:var(--c)}
+.h1tot{color:var(--ink)}
+
+.leaf .h1d{grid-row:1/3;grid-column:3;display:flex;flex-direction:column;gap:3px}
+.h1d i,.lg2 i{font:700 8.5px var(--f-mono);font-style:normal;padding:1px 4px;border-radius:4px;text-align:center;letter-spacing:.03em}
+.h1d i.ok,.lg2 i.ok{background:color-mix(in srgb,var(--ok) 22%,transparent);color:#6FDB95}
+.h1d i.no,.lg2 i.no{background:color-mix(in srgb,#E0213F 28%,transparent);color:#FF8A96}
+.mtools{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-bottom:12px}
+.lg2{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+.gapbtn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:1px solid #5A2A2F;background:rgba(17,17,16,.9);color:var(--ink);border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px}
+.gapbtn .sq{width:12px;height:12px;border-radius:3px;border:2px solid #FF8A96}
+.gapbtn[aria-pressed="true"]{background:#5A1620;border-color:#E0213F}
+.gapbtn[aria-pressed="true"] .sq{background:#FF8A96}
+body.only-gaps .leaf:not(.gap){opacity:.18;filter:grayscale(1)}
+body.only-gaps .leaf.gap{background:color-mix(in srgb,#E0213F 14%,transparent)}
+.state.okk{border:0;background:color-mix(in srgb,var(--ok) 25%,transparent);color:#6FDB95}
+.state.noo{border:0;background:color-mix(in srgb,#E0213F 28%,transparent);color:#FF8A96}
+.upd{margin:8px 0 0;font:12px var(--f-mono);color:var(--muted)}
+.upd b{color:#F2C52A}
+
+.lk{display:inline-block;margin-left:6px;font:700 9px var(--f-mono);font-style:normal;letter-spacing:.06em;color:#070707;background:#F2C52A;padding:1px 6px;border-radius:999px;vertical-align:2px}
+.tool{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;margin-top:16px;padding:14px 16px;border-radius:14px;text-decoration:none;color:var(--ink);
+  background:linear-gradient(120deg,rgba(242,197,42,.16),rgba(242,197,42,.04));border:1px solid rgba(242,197,42,.55)}
+.tool:hover{background:linear-gradient(120deg,rgba(242,197,42,.26),rgba(242,197,42,.08))}
+.tool-ic{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;background:#F2C52A;color:#070707;font:900 20px var(--f-display)}
+.tool-tx{display:flex;flex-direction:column;min-width:0}
+.tool-tx small{font:700 10px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:#F2C52A}
+.tool-tx b{font-family:var(--f-display);font-size:24px;text-transform:uppercase;line-height:1.05}
+.tool-tx span{font-size:13px;color:var(--muted)}
+.tool-go{font-weight:700;color:#F2C52A;white-space:nowrap}
+.zone.z-wide{grid-column:1/-1}
+.upbtn{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;text-decoration:none;color:var(--ink);padding:10px 14px;border-radius:12px;background:linear-gradient(120deg,rgba(242,197,42,.22),rgba(242,197,42,.06));border:1px solid rgba(242,197,42,.7)}
+.upbtn:hover{background:linear-gradient(120deg,rgba(242,197,42,.32),rgba(242,197,42,.1))}
+.up-ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:#0F6CBD;color:#fff;font-size:20px;font-weight:700}
+.up-tx{display:flex;flex-direction:column;min-width:0}
+.up-tx b{font-family:var(--f-display);font-size:20px;text-transform:uppercase;line-height:1.05}
+.up-tx small{font:600 11px var(--f-mono);color:var(--muted);overflow-wrap:anywhere}
+.up-go{font-weight:700;color:#F2C52A}
+.zone.ctrl{min-height:0;border-style:solid;border-color:rgba(242,197,42,.35)}
+.ctl{margin:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.ctl div{min-width:0}
+.ctl dt{font:700 10px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ctl dd{margin:2px 0 0;font-family:var(--f-display);font-weight:800;font-size:20px;line-height:1.05;text-transform:uppercase}
+.ctl .nx dd{color:#F2C52A}
+.ctl.c4{grid-template-columns:1.3fr repeat(3,minmax(0,1fr))}
+.ctl .big dd{font-size:34px;color:#F2C52A}
+.ctl dd small{font-size:.6em;color:var(--muted)}
+.ctl .lnk{color:#F2C52A;text-decoration:none}
+.ctl .pendtx{font:600 12px var(--f-mono);text-transform:none;color:var(--muted);border:1px dashed var(--muted);padding:2px 8px;border-radius:999px;display:inline-block;margin-top:4px}
+.ses{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ses li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 14px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.ses li.tpl{border-style:dashed;opacity:.75}
+.ses li{display:grid;grid-template-columns:auto minmax(0,1fr) auto}
+.snum{font-family:var(--f-display);font-weight:800;font-size:22px;color:#F2C52A;width:44px;height:44px;border-radius:10px;border:1px solid rgba(242,197,42,.55);display:grid;place-items:center}
+.ses li.tpl .snum{color:var(--muted);border-style:dashed;border-color:var(--line)}
+.ctl.c5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.cbar{position:relative;height:22px;border-radius:999px;background:rgba(242,197,42,.12);overflow:hidden}
+.cbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#9A6F05,#F2C52A)}
+.cbar span{position:relative;font:700 11px var(--f-mono);line-height:22px;padding-left:10px;color:var(--ink)}
+.cresp{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding-top:10px;border-top:1px solid var(--line)}
+.cresp span{font:700 10px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cresp b{font-family:var(--f-display);font-size:18px;text-transform:uppercase;color:#F2C52A}
+.cresp em{font-size:13px;color:var(--muted);font-style:normal}
+.flujo{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.flujo li{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;border:1px solid var(--line)}
+.flujo b{flex:none;width:22px;height:22px;border-radius:50%;background:#F2C52A;color:#111;display:grid;place-items:center;font-size:12px}
+@media (max-width:640px){.ctl.c5{grid-template-columns:repeat(2,minmax(0,1fr))}.flujo{grid-template-columns:minmax(0,1fr)}.ses li{grid-template-columns:auto minmax(0,1fr)}.ses li .sbs{grid-column:1/-1}}
+.sf{display:flex;flex-direction:column;min-width:0}
+.sf b{font-family:var(--f-display);font-size:20px;text-transform:uppercase;line-height:1.05}
+.sf span{font-size:13px;color:var(--muted)}
+.sbs{display:flex;flex-wrap:wrap;gap:6px}
+.sb{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;text-decoration:none;padding:5px 10px;border-radius:999px;border:1px solid rgba(242,197,42,.55);color:var(--ink)}
+.sb b{color:#F2C52A}
+a.sb:hover{background:rgba(242,197,42,.12)}
+.sb.off{border-style:dashed;border-color:var(--line);color:var(--muted)}.sb.off b{color:var(--muted)}
+@media (max-width:640px){.ctl.c4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.ctl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.evid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.evid a{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;text-decoration:none;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:13.5px}
+.evid a:hover{border-color:#F2C52A}
+.evid i{font:700 10px var(--f-mono);font-style:normal;color:#070707;background:#F2C52A;padding:2px 6px;border-radius:4px}
+.evid span{overflow-wrap:anywhere;line-height:1.2}
+.evid em{font:600 11px var(--f-mono);font-style:normal;color:#F2C52A;white-space:nowrap}
+@media (max-width:640px){.evid{grid-template-columns:minmax(0,1fr)}}
+.tool-ic.word{background:#2B579A;color:#fff;font-size:26px}
+.tool.pend{cursor:default}.tool.pend .tool-go{color:var(--muted);font-size:13px;border:1px dashed var(--muted);padding:4px 10px;border-radius:999px}
+@media (max-width:520px){.tool{grid-template-columns:auto minmax(0,1fr)}.tool-go{grid-column:1/-1}}
+
+@media (max-width:980px){
+  .route{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .route::before{display:none}
+}
+@media (max-width:760px){
+  .branches{grid-template-columns:minmax(0,1fr)!important;gap:22px;margin-left:12px;padding-left:18px;border-left:3px solid var(--c)}
+  .branches::before{display:none}
+  .stem{margin-left:12px}
+  .root{justify-content:flex-start}
+  .branch{padding-top:0}
+  .branch::before{left:-18px;top:24px;width:18px;height:3px;transform:none}
+  .pnode{text-align:left}
+}
+@media (max-width:640px){
+  .hero-top{grid-template-columns:minmax(0,1fr)}
+  .gauge{width:200px}
+  .route{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stopc:last-child{grid-column:1/-1}
+  .zones{grid-template-columns:minmax(0,1fr)}
+  .page{padding-inline:16px}
+  .dots a{width:26px;height:26px;font-size:12px}
+  .back span.t{display:none}
+  .topbar .eyebrow{display:none}
+  .bhead .row{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<style>
+:root{--bg:#070707;--surface:#111110;--surface2:#0C0C0B;--ink:#F4F1E8;--muted:#A6A093;--line:#2B2822;--golddeep:#E5B21C;--c4:#1F84A0;--wall:#EDE6D6;color-scheme:dark}
+body{background:#070707 url(img/tapiz-noche.svg) center/cover fixed}
+.hero h1{background:linear-gradient(180deg,#FFE97A 0%,#F2C52A 45%,#C8960F 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 18px rgba(229,178,28,.25))}
+.hero h1 .l2{-webkit-text-fill-color:#F4F1E8;color:#F4F1E8}
+.hero h1 .l2 b{-webkit-text-fill-color:#F2C52A;color:#F2C52A}
+.peru{display:inline-flex;width:30px;height:18px;margin-right:12px;vertical-align:-4px;border:1px solid #3a3a3a}
+.peru i{flex:1;background:#D91023}.peru i:nth-child(2){background:#fff}
+.goldrule{height:3px;width:min(520px,70%);margin-top:18px;background:linear-gradient(90deg,#F2C52A,rgba(242,197,42,0))}
+.scene{border-color:#3A3220;box-shadow:0 0 0 1px rgba(229,178,28,.15),0 30px 70px -30px rgba(229,178,28,.35)}
+.fill,.phase .step,.storecard{background:rgba(17,17,16,.88);backdrop-filter:blur(4px)}
+.phase .step.done i{background:#F4F1E8;border-color:#F4F1E8;color:#070707}
+.phase .step.now i{color:#070707}
+.sec-head h2{color:#F4F1E8}
+.pin{border-color:#070707}
+.hero-top{position:relative}
+.hero-top::before{content:"";position:absolute;inset:-40px -60px -30px -80px;z-index:-1;background:radial-gradient(ellipse at 30% 50%,rgba(7,7,7,.92) 0%,rgba(7,7,7,.75) 45%,rgba(7,7,7,0) 75%)}
+.hero{position:relative;z-index:0;overflow-x:clip}
+html,body{overflow-x:clip}
+.steps b::before{color:#F2C52A}
+.flow::after{filter:brightness(1.6)}
+</style>
+<style>
+.topbar{background:rgba(7,7,7,.82);border-bottom-color:#2B2822}
+.back,.dots a{background:rgba(17,17,16,.9)}
+.mhead{background:rgba(7,7,7,.92)}
+.mhead .now{color:#F2C52A}
+.mhead .goal{color:#F4F1E8}
+.mline{border-bottom-color:#24211C}
+.hub{background:rgba(17,17,16,.95)}
+.leaf .ts{color:#F4F1E8}
+.leaf .dot{background:#111110;border-color:#8A8478}
+.tpi{margin-top:8px;display:flex;flex-wrap:wrap;gap:4px}.tpi small{width:100%;font:700 9.5px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;opacity:.9}.tpi a{font:600 11.5px var(--f-body);color:#fff;text-decoration:none;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:2px 8px;line-height:1.3}.tpi a:hover{background:rgba(0,0,0,.5)}
+.ctl .px{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;font:700 11px var(--f-mono);color:#fff}.ctl .px.ok{background:#2E7D3A}.ctl .px.al{background:#D9A400;color:#070707}.ctl .px.no{background:#C8102E}
+.leaf.done{background:color-mix(in srgb,#E0213F 16%,#0E0E0D);border:2px dashed #E0213F}.leaf.done .ts{color:#F4F1E8}.leaf.done .tc{color:#FF5C72}.leaf.done .dot{border:0;background:#E0213F}.leaf.done:hover{background:color-mix(in srgb,#E0213F 26%,#0E0E0D)}.state.done{background:#E0213F;color:#fff}.sw.done{background:color-mix(in srgb,#E0213F 22%,#0E0E0D);border:2px dashed #E0213F}
+.cell .tick{background:#111110}
+.pnode,.pager a{background:rgba(17,17,16,.92)}
+.legend{color:#A6A093}
+.page{background:#0E0E0D}
+.zone{background:#141412;border-color:#2E2B25}
+.ph-chart i,.ph-rows i{background:#2A2722}
+.ph-files i{background:#111110;border-color:#2E2B25}
+.term .badge{background:rgba(255,255,255,.18)}
+.dots a[aria-current="page"]{color:#fff}
+</style>
+<style>
+/* ===== 1.1.1.4 · Patio T2 ===== */
+.pk-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 14px}
+.pk-head .zl{color:#F2C52A}
+.pk-meta{font:600 11px var(--f-mono);color:var(--muted)}
+.pk-meta b{color:#F2C52A}
+.pchart{position:relative;height:150px;display:flex;align-items:flex-end;gap:5px;padding:0 0 0 36px;border-bottom:2px solid #2E2B25}
+.pchart .ax{position:absolute;left:0;font:600 10px var(--f-mono);color:var(--muted);transform:translateY(50%)}
+.pchart .ml{position:absolute;left:36px;right:0;border-top:2px dashed #F2C52A}
+.pchart .ml span{position:absolute;right:0;top:-16px;font:700 10px var(--f-mono);color:#F2C52A}
+.pchart .b{flex:1;max-width:38px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#6FDB95,#2E7D3A);position:relative;min-height:3px}
+.pchart .b.no{background:linear-gradient(180deg,#FF8A96,#C8102E)}
+.pchart .b.ghost{background:#2A2722}
+.pchart .b em{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font:600 9px var(--f-mono);font-style:normal;color:var(--muted);white-space:nowrap}
+.pchart-wrap{padding-bottom:18px}
+.pk-empty{font-size:13px;color:var(--muted);text-align:center}
+.ptab{width:100%;border-collapse:collapse;font-size:13.5px}
+.ptab th{font:700 10px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.ptab td{padding:7px 8px;border-bottom:1px solid #24211C;font-variant-numeric:tabular-nums}
+.ptab td.n,.ptab th.n{text-align:right}
+.ptab tr.tpl td{color:#5E594F;font-style:italic}
+.ptab .ok{color:#6FDB95;font-weight:700}.ptab .no{color:#FF8A96;font-weight:700}
+.ptab-wrap{overflow-x:auto}
+.evid .pend{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;border:1px dashed var(--line);font-size:13.5px;color:var(--muted)}
+.evid .pend i{background:#2A2722;color:#A6A093}
+.evid .pend em{color:var(--muted)}
+.pcap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pcap > div{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.pcap h4{font-size:22px;text-transform:uppercase;line-height:1;color:#F4F1E8}
+.pcap h4 small{display:block;font:600 12px var(--f-body);text-transform:none;color:var(--muted);margin-top:4px;letter-spacing:0}
+.pcap dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pcap dt{font:700 10px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pcap dd{margin:2px 0 0;font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1;color:#F2C52A}
+.pcap dd small{font-size:.6em;color:var(--muted)}
+.pcap dd.tx{font-size:17px;color:#F4F1E8}
+.pplan-c{display:flex;gap:8px;flex-wrap:wrap}
+.pplan-c span{font:700 11px var(--f-mono);padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
+.pplan-c .ab{border-color:#C8102E;color:#FF8A96}.pplan-c .ce{border-color:#2E7D3A;color:#6FDB95}
+.est{font:700 10px var(--f-mono);padding:2px 8px;border-radius:999px;text-transform:uppercase}
+.est.abierto{background:rgba(200,16,46,.25);color:#FF8A96}.est.cerrado{background:rgba(46,125,58,.25);color:#6FDB95}
+.zn{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:#F2C52A;color:#070707;font:800 12px var(--f-mono);margin-right:8px;vertical-align:1px}
+@media (max-width:640px){.pcap{grid-template-columns:minmax(0,1fr)}.pchart .b em{display:none}}
+</style>
+<style>:root{--c:var(--c1)}</style>
+<div>
+<div class="topbar"><div class="wrap">
+  <a class="back" href="index.html">← <span class="t">Inicio</span></a>
+  <div class="logos sm" aria-label="Logos"><img src="img/abinbev-blanco.png" alt="AB InBev" class="lg-ab"><img src="img/cd-callao.png" alt="CD Callao" class="lg-badge"><img src="img/dpo.png" alt="DPO Perú" class="lg-badge"></div>
+  <nav class="dots" aria-label="Bloques"><a href="bloque-1.html" style="--c:var(--c1)" aria-current="page" aria-label="Bloque 1">1</a><a href="bloque-2.html" style="--c:var(--c2)"  aria-label="Bloque 2">2</a><a href="bloque-3.html" style="--c:var(--c3)"  aria-label="Bloque 3">3</a><a href="bloque-4.html" style="--c:var(--c4)"  aria-label="Bloque 4">4</a><a href="bloque-5.html" style="--c:var(--c5)"  aria-label="Bloque 5">5</a></nav>
+</div></div>
+<div class="wrap">
+  <header class="bhead"><span class="awning"></span>
+    <div class="row">
+      <span class="bn" aria-hidden="true">1</span>
+      <div style="flex:1;min-width:0"><div class="eyebrow">Parada 1 de 5 · Delivery DPO</div><h1>PROCESO DE EJECUCIÓN DE ENTREGA</h1></div>
+    </div>
+    <div class="nums"><div><b>4</b>procesos</div><div><b>21</b>subbloques</div><div><b>0</b>listos</div></div>
+  </header>
+  <section class="metro" aria-label="Mapa de madurez del bloque">
+    <div class="mhead"><span class="mh0">Línea / proceso</span><span>Nivel 1</span><span>Nivel 2</span><span class="now">Nivel 3<small>Fase implementada</small></span><span class="goal">Nivel 4<small>Siguiente meta</small></span></div>
+    <div class="mline">
+      <div class="term"><span class="badge">1.1.1</span><b>PRE RUTA</b><small>7 subbloques</small></div>
+      <div class="cell" data-lv="1"><div class="hub" data-lv="1"><button class="leaf" data-c="1.1.1.1"><span class="dot"></span><span class="tc">1.1.1.1</span><span class="ts">SOP Pre Ruta</span></button><button class="leaf" data-c="1.1.1.2"><span class="dot"></span><span class="tc">1.1.1.2</span><span class="ts">Capacitación Pre Ruta</span></button></div></div><div class="cell" data-lv="2"><div class="hub" data-lv="2"><button class="leaf" data-c="1.1.1.3"><span class="dot"></span><span class="tc">1.1.1.3</span><span class="ts">Registro de entrada y matinal</span></button><button class="leaf" data-c="1.1.1.4"><span class="dot"></span><span class="tc">1.1.1.4</span><span class="ts">Ubicación y acceso a camiones<em class="lk">Layout 4.0</em></span></button><button class="leaf" data-c="1.1.1.5"><span class="dot"></span><span class="tc">1.1.1.5</span><span class="ts">Inspección de seguridad vehicular</span></button><button class="leaf" data-c="1.1.1.6"><span class="dot"></span><span class="tc">1.1.1.6</span><span class="ts">Verificación de carga</span></button></div></div><div class="cell" data-lv="3"><div class="hub" data-lv="3"><button class="leaf" data-c="1.1.1.7"><span class="dot"></span><span class="tc">1.1.1.7</span><span class="ts">PI hora de salida</span></button></div></div><div class="cell empty" data-lv="4"><span class="tick"></span></div>
+      <span class="endcap" aria-hidden="true"></span>
+    </div><div class="mline">
+      <div class="term"><span class="badge">1.1.2</span><b>EN RUTA</b><small>6 subbloques</small></div>
+      <div class="cell" data-lv="1"><div class="hub" data-lv="1"><button class="leaf" data-c="1.1.2.1"><span class="dot"></span><span class="tc">1.1.2.1</span><span class="ts">SOP En Ruta</span></button><button class="leaf" data-c="1.1.2.2"><span class="dot"></span><span class="tc">1.1.2.2</span><span class="ts">Capacitación En Ruta</span></button></div></div><div class="cell" data-lv="2"><div class="hub" data-lv="2"><button class="leaf" data-c="1.1.2.3"><span class="dot"></span><span class="tc">1.1.2.3</span><span class="ts">Aviso al próximo cliente</span></button><button class="leaf" data-c="1.1.2.4"><span class="dot"></span><span class="tc">1.1.2.4</span><span class="ts">Ejecución de ruta de conducción</span></button><button class="leaf" data-c="1.1.2.5"><span class="dot"></span><span class="tc">1.1.2.5</span><span class="ts">Entrega en el POC</span></button></div></div><div class="cell" data-lv="3"><div class="hub" data-lv="3"><button class="leaf" data-c="1.1.2.6"><span class="dot"></span><span class="tc">1.1.2.6</span><span class="ts">PI puerta a puerta</span></button></div></div><div class="cell empty" data-lv="4"><span class="tick"></span></div>
+      <span class="endcap" aria-hidden="true"></span>
+    </div><div class="mline">
+      <div class="term"><span class="badge">1.1.3</span><b>POST RUTA</b><small>4 subbloques</small></div>
+      <div class="cell" data-lv="1"><div class="hub" data-lv="1"><button class="leaf" data-c="1.1.3.1"><span class="dot"></span><span class="tc">1.1.3.1</span><span class="ts">SOP Post Ruta</span></button><button class="leaf" data-c="1.1.3.2"><span class="dot"></span><span class="tc">1.1.3.2</span><span class="ts">Capacitación Post Ruta</span></button></div></div><div class="cell" data-lv="2"><div class="hub" data-lv="2"><button class="leaf" data-c="1.1.3.3"><span class="dot"></span><span class="tc">1.1.3.3</span><span class="ts">Ejecución Post Ruta</span></button></div></div><div class="cell" data-lv="3"><div class="hub" data-lv="3"><button class="leaf" data-c="1.1.3.4"><span class="dot"></span><span class="tc">1.1.3.4</span><span class="ts">PI retorno al CD</span></button></div></div><div class="cell empty" data-lv="4"><span class="tick"></span></div>
+      <span class="endcap" aria-hidden="true"></span>
+    </div><div class="mline">
+      <div class="term"><span class="badge">1.1.4</span><b>ENTREGANDO PRODUCTOS DE CALIDAD</b><small>4 subbloques</small></div>
+      <div class="cell" data-lv="1"><div class="hub" data-lv="1"><button class="leaf" data-c="1.1.4.1"><span class="dot"></span><span class="tc">1.1.4.1</span><span class="ts">Capacitación en calidad</span></button></div></div><div class="cell" data-lv="2"><div class="hub" data-lv="2"><button class="leaf" data-c="1.1.4.2"><span class="dot"></span><span class="tc">1.1.4.2</span><span class="ts">Reporte de roturas</span></button></div></div><div class="cell" data-lv="3"><div class="hub" data-lv="3"><button class="leaf" data-c="1.1.4.3"><span class="dot"></span><span class="tc">1.1.4.3</span><span class="ts">Índice DQI y plan</span></button><button class="leaf" data-c="1.1.4.4"><span class="dot"></span><span class="tc">1.1.4.4</span><span class="ts">Tendencia DQI</span></button></div></div><div class="cell empty" data-lv="4"><span class="tick"></span></div>
+      <span class="endcap" aria-hidden="true"></span>
+    </div>
+    <div class="legend"><span><i class="sw empty"></i>Por llenar</span><span><i class="sw wip"></i>En construcción</span><span><i class="sw done"></i>Listo</span></div>
+  </section>
+  <nav class="pager"><a href="index.html"><span class="eyebrow">← Volver</span><b>Inicio</b></a><a class="nx" href="bloque-2.html"><span class="eyebrow">Bloque 2 →</span><b>Equipos empoderados</b></a></nav>
+  <div class="flow" aria-label="Ciclo de entrega del CD Callao">
+  <img class="fl-castle" src="img/ico-castillo-oro.png" alt="Callao">
+  <ol class="steps">
+    <li><img src="img/ico-montacargas-oro.png" alt=""><b>Carga</b><span>Pre ruta</span></li>
+    <li><img src="img/ico-camion-oro.png" alt=""><b>En ruta</b><span>Ruta de entrega</span></li>
+    <li><img src="img/ico-carretilla-oro.png" alt=""><b>Entrega</b><span>Cliente · POC</span></li>
+    <li><img src="img/ico-camioneta-oro.png" alt=""><b>Retorno</b><span>Post ruta</span></li>
+  </ol>
+</div>
+  <footer>Backus · CD Callao · DPO 2026 Delivery Pillar · Bloque 1</footer>
+</div>
+</div>
+<div class="sheet" id="sheet" hidden></div>
+<script>const B={"n":1,"name":"PROCESO DE EJECUCIÓN DE ENTREGA","procs":[{"n":1,"name":"PRE RUTA","reqs":[{"c":"1.1.1.1","lv":1,"s":"SOP Pre Ruta","t":"El SOP del proceso de entrega previo a la ruta se actualiza e incluye todos los pasos operativos críticos (registro de entrada, reunión, recopilación de ruta, verificación de inventario/calidad, lista de verificación de seguridad, como mínimo).","dl":true,"d3":true},{"c":"1.1.1.2","lv":1,"s":"Capacitación Pre Ruta","t":"Todos los profesionales de entrega están capacitados y tienen conocimientos sobre los procedimientos operativos estándar previos a la ruta.","dl":true,"d3":true},{"c":"1.1.1.3","lv":2,"s":"Registro de entrada y matinal","t":"El equipo de entrega registra su entrada en el centro de distribución a tiempo, asiste a la reunión diaria siguiendo el TOR y revisa el desempeño del día anterior.","dl":true,"d3":true},{"c":"1.1.1.4","lv":2,"s":"Ubicación y acceso a camiones","t":"El DC garantiza que el equipo de entrega pueda localizar y acceder rápidamente a sus camiones para permitir una salida eficiente, respaldado por un diseño de estacionamiento bien organizado y claramente señalizado.","dl":true,"d3":true},{"c":"1.1.1.5","lv":2,"s":"Inspección de seguridad vehicular","t":"Las inspecciones de seguridad del vehículo cubren todos los elementos obligatorios; el DC realiza un seguimiento de los tiempos de la lista de verificación, administra los camiones devueltos y aborda las anomalías con planes de acción.","dl":true,"d3":false},{"c":"1.1.1.6","lv":2,"s":"Verificación de carga","t":"Se verifica la mercancía cargada; el centro de distribución registra el tiempo de verificación, gestiona las devoluciones de camiones y soluciona las anomalías con planes de acción. (Se valida automáticamente si el camión sale precintado (Sellado)).","dl":true,"d3":true},{"c":"1.1.1.7","lv":3,"s":"PI hora de salida","t":"El PI de entrega previo a la ruta (hora de salida) está dentro del objetivo o, si no cumple, hay un plan de acción implementado que muestra una tendencia positiva, mejoras o resultados consistentes.","dl":true,"d3":true}]},{"n":2,"name":"EN RUTA","reqs":[{"c":"1.1.2.1","lv":1,"s":"SOP En Ruta","t":"El SOP del proceso de entrega en ruta se actualiza e incluye todos los pasos operativos críticos y los pasos únicos comunes en el proceso en ruta.","dl":true,"d3":true},{"c":"1.1.2.2","lv":1,"s":"Capacitación En Ruta","t":"Todos los profesionales de entrega están capacitados y tienen conocimientos del SOP en ruta.","dl":true,"d3":true},{"c":"1.1.2.3","lv":2,"s":"Aviso al próximo cliente","t":"El DC se asegura de que el equipo de entrega seleccione y notifique adecuadamente el próximo POC, garantizando el cumplimiento de la secuencia óptima y una comunicación oportuna.","dl":true,"d3":true},{"c":"1.1.2.4","lv":2,"s":"Ejecución de ruta de conducción","t":"El DC se asegura de que el equipo de entrega ejecute la ruta de conducción de acuerdo con el plan de ruta, manteniendo los tiempos de conducción alineados y evitando paradas no planificadas o visitas de segundo intento.","dl":true,"d3":true},{"c":"1.1.2.5","lv":2,"s":"Entrega en el POC","t":"El DC garantiza que el equipo de entrega ejecute la entrega POC de acuerdo con el SOP, realizando cada entrega de manera segura y productiva (de acuerdo con el tiempo de servicio esperado) e informando con precisión cualquier problema, como rechazos o incidentes de entrega.","dl":true,"d3":true},{"c":"1.1.2.6","lv":3,"s":"PI puerta a puerta","t":"La entrega en ruta PI (puerta a puerta) está dentro del objetivo o, si no cumple, hay un plan de acción en marcha que muestra una tendencia positiva, mejoras o resultados consistentes.","dl":true,"d3":true}]},{"n":3,"name":"POST RUTA","reqs":[{"c":"1.1.3.1","lv":1,"s":"SOP Post Ruta","t":"El SOP del proceso de entrega posterior a la ruta se actualiza e incluye todos los pasos operativos críticos (5S, validación de inventario, informe de inspección del vehículo de entrega/lista de verificación de seguridad, financiero, como mínimo).","dl":true,"d3":true},{"c":"1.1.3.2","lv":1,"s":"Capacitación Post Ruta","t":"Todos los profesionales de entrega están capacitados y tienen conocimientos sobre los procedimientos operativos estándar posteriores a la ruta.","dl":true,"d3":true},{"c":"1.1.3.3","lv":2,"s":"Ejecución Post Ruta","t":"El proceso de entrega posterior a la ruta se ejecuta de acuerdo con el SOP.","dl":true,"d3":true},{"c":"1.1.3.4","lv":3,"s":"PI retorno al CD","t":"La PI de entrega posterior a la ruta (entrada a la puerta con camión de entrega para registrar la salida) está según lo previsto o, si no cumple, hay un plan de acción en marcha que muestra una tendencia positiva, mejoras o resultados consistentes.","dl":true,"d3":true}]},{"n":4,"name":"ENTREGANDO PRODUCTOS DE CALIDAD","reqs":[{"c":"1.1.4.1","lv":1,"s":"Capacitación en calidad","t":"Todos los profesionales de entrega están capacitados y cuentan con los conocimientos necesarios para la capacitación estándar de Zona/BU en calidad del producto. Esta capacitación está validada en el panel de capacitación/SKAP.","dl":true,"d3":true},{"c":"1.1.4.2","lv":2,"s":"Reporte de roturas","t":"El proceso para reportar roturas de producto se ejecuta de acuerdo al SOP de ejecución de entrega.","dl":true,"d3":true},{"c":"1.1.4.3","lv":3,"s":"Índice DQI y plan","t":"Índice de calidad de entrega si las roturas no cumplen con el objetivo, existe un plan de acción establecido y se muestra una tendencia positiva o mejoras.","dl":true,"d3":true},{"c":"1.1.4.4","lv":3,"s":"Tendencia DQI","t":"El índice de calidad de entrega muestra mejoras y/o resultados consistentes.","dl":true,"d3":true}]}]};
+const ESTADO = {"1.1.1.1":"wip","1.1.1.2":"wip","1.1.1.4":"wip"}; /* "wip" en construcción, "done" listo */
+/* Link del SOP oficial en Word (SharePoint / OneDrive). Pegar aquí el enlace. */
+/* Herramientas vinculadas a un subbloque. same:true = abre dentro del menú.
+   slot = casillero con archivo: se carga y descarga aquí mismo y al tocarlo se ve dentro del menú (def = archivo de arranque) */
+const LINKS = {
+  "1.1.2.2":[{ic:"SOP",tag:"Inducción de tripulación",name:"En Ruta en 5 paradas",desc:"Material para entrenar a la tripulación: llegada segura, SERVIR 2026, entrega y envases, modulación de rechazos, cierre y retorno.",url:"sop-en-ruta.html",same:true}],
+  "1.1.1.3":[{ic:"PPT",slot:"ppt-huellero",cat:"opl",tag:"Registro de entrada",name:"PPT del huellero",desc:"Marcación de entrada en el huellero: cómo se registra y se controla"}],
+  "1.1.2.1":[{ic:"W",cls:"word",slot:"sop-word",cat:"sop",tag:"Documento oficial · editable",name:"Ver SOP En Ruta",desc:"SOP Ejecución en Ruta · CD Callao 2026 · H2"}],
+  "1.1.3.1":[{ic:"W",cls:"word",slot:"sop-word",cat:"sop",tag:"Documento oficial · editable",name:"Ver SOP Post Ruta",desc:"SOP Llegada de Unidades · CD Callao 2026 · H2"}],
+  "1.1.4.1":[{ic:"W",cls:"word",slot:"sop-word",cat:"sop",tag:"Documento oficial · editable",name:"Ver SOP Calidad en Ruta",desc:"SOP Calidad en Ruta · CD Callao 2026"}],
+  "1.1.1.1":[
+    {ic:"W",cls:"word",slot:"sop-word",cat:"sop",tag:"Documento oficial · editable",name:"Ver SOP Pre Ruta",desc:"SOP Salida de Unidades · CD Callao 2026 · H2"}
+  ],
+  "1.1.1.2":[
+    {ic:"SOP",tag:"Inducción de tripulación",name:"Pre Ruta en 5 paradas",desc:"Material para entrenar a la tripulación: registro, ruta, matinal, carga y calidad, seguridad y salida.",url:"sop-pre-ruta.html",same:true}
+  ],
+  "1.1.1.4":[{ic:"4.0",tag:"Herramienta vinculada",name:"Layout Delivery 4.0",desc:"Cochera T2 · CD Callao: el apoyo nocturno registra placa y ubicación, y el conductor ve dónde está su unidad al inicio de turno.",url:"https://layout-delivery.netlify.app/#apoyo"}]
+};
+/* Zonas por subbloque (por defecto: las 4). kpi · datos · archivos · plan */
+const ZONAS = {"1.1.1.1":["control","docs"],"1.1.1.2":["mat","evc"],"1.1.1.3":["matm","link","ev"],"1.1.1.4":["psenal","pcap","ev"],"1.1.1.5":["link","ev"],"1.1.1.6":["link","ev"],"1.1.1.7":["link","ev"],"1.1.2.1":["control","docs"],"1.1.2.2":["mat","evc"],"1.1.3.1":["control","docs"],"1.1.3.2":["ind","mat","evc"],"1.1.4.1":["ind","mat","evc"]};  /* subbloques no listados: link + evidencias */
+/* Archivos del Bloque 1 tomados de la carpeta DPO CALLAO 1TB - 2026 H2. k = casillero (no cambiar), t = etiqueta, n = nombre visible */
+const DOCS = {"1.1.1.1":[{"k":"f-flujograma-salida-a-ruta-cd-callao","t":"FLUJO","n":"FLUJOGRAMA SALIDA A RUTA CD CALLAO"}],"1.1.1.2":[{"k":"f-opls-delivery-pre-ruta-rev05","t":"OPL","n":"Delivery Pre Ruta Rev05"},{"k":"f-opl-smartphone-responsable-reparto-anexo-1","t":"OPL","n":"Smartphone Responsable Reparto · Anexo 1"},{"k":"f-opl-carga-e-inconsistencias-auxiliar-anexo-2","t":"OPL","n":"Carga e Inconsistencias Auxiliar · Anexo 2"},{"k":"f-opls-ejecucion-5s-anexo-3","t":"OPL","n":"Ejecucion 5S · Anexo 3"},{"k":"f-opls-apertura-y-cierre-de-cortinas-anexo-7","t":"OPL","n":"Apertura y Cierre de Cortinas · Anexo 7"},{"k":"f-opls-salidas-de-t2-cd-callao-anexo-8","t":"OPL","n":"Salidas de T2 CD Callao · Anexo 8"},{"k":"f-opls-reposicion-de-epp-anexo-9","t":"OPL","n":"Reposicion de EPP · Anexo 9"},{"k":"f-opl-owd-salida-de-unidades-anexo-13","t":"OPL","n":"OWD Salida de Unidades · Anexo 13"},{"k":"f-opl-flujo-salida-a-ruta-anexo-16","t":"OPL","n":"Flujo Salida a Ruta · Anexo 16"},{"k":"f-opl-salida-del-conductor-anexo-17","t":"OPL","n":"Salida del Conductor · Anexo 17"},{"k":"f-opls-tres-puntos-de-apoyo-anexo-18","t":"OPL","n":"Tres Puntos de Apoyo · Anexo 18"},{"k":"f-opls-procedimiento-alcoholtest","t":"OPL","n":"Procedimiento Alcoholtest"},{"k":"f-opls-seguridad-cd-callao2026","t":"OPL","n":"Seguridad CD CALLAO2026"}],"1.1.2.1":[{"k":"f-politica-de-salud-y-seguridad","t":"POLÍTICA","n":"Política de Salud y Seguridad"},{"k":"f-politica-de-manejo-de-efectivo-t77","t":"POLÍTICA","n":"Politica de Manejo de Efectivo T77"}],"1.1.2.2":[{"k":"f-opls-ejecucion-en-ruta-anexo-2","t":"OPL","n":"Ejecucion en Ruta · Anexo 2"},{"k":"f-opls-ejecucion-en-el-poc-anexo-3","t":"OPL","n":"Ejecucion en el POC · Anexo 3"},{"k":"f-opls-modulacion-de-pedidos-anexo-4","t":"OPL","n":"Modulacion de Pedidos · Anexo 4"},{"k":"f-opls-protocolo-intervenciones-en-ruta-anexo-7","t":"OPL","n":"Protocolo Intervenciones en Ruta · Anexo 7"},{"k":"f-opls-desviacion-de-ruta-rev05","t":"OPL","n":"Desviacion de Ruta Rev05"},{"k":"f-modificacion-de-pedidos-en-poc-anexo-5","t":"PPT","n":"Modificacion de Pedidos en POC · Anexo 5"},{"k":"f-ubicacion-t2-geotab","t":"PPT","n":"Ubicacion T2 Geotab"},{"k":"f-dqi-politica-de-refrigerio","t":"DQI","n":"Politica de Refrigerio"},{"k":"f-dqi-segregacion-de-rotura","t":"DQI","n":"Segregacion de Rotura"},{"k":"f-dqi-stretch-film-kkaa","t":"DQI","n":"Stretch Film KKAA"},{"k":"f-que-es-marketplace","t":"MKP","n":"Que es Marketplace"},{"k":"f-opl-mkp","t":"MKP","n":"MKP"},{"k":"f-manual-bees-marketplace","t":"MKP","n":"Manual Bees Marketplace"},{"k":"f-catalogo-de-mkp","t":"MKP","n":"Catalogo de MKP"}],"1.1.3.2":[{"k":"f-opls-proceso-smartphone-liquidacion-anexo-1","t":"OPL","n":"Proceso Smartphone Liquidacion · Anexo 1"},{"k":"f-opls-criterios-segregacion-de-pallets-anexo2","t":"OPL","n":"Criterios Segregacion de Pallets · Anexo 2"},{"k":"f-opls-retiro-efectivo-caja-fuerte-t2-anexo4","t":"OPL","n":"Retiro Efectivo Caja Fuerte T2 · Anexo 4"},{"k":"f-opls-faltantes-y-sobrantes-anexo5","t":"OPL","n":"Faltantes y Sobrantes · Anexo 5"},{"k":"f-opls-ingreso-checklist-retorno-anexo-11","t":"OPL","n":"Ingreso Checklist Retorno · Anexo 11"},{"k":"f-opls-seguimiento-conductor-llegada-anexo13","t":"OPL","n":"Seguimiento Conductor Llegada · Anexo 13"},{"k":"f-uso-aplicativo-vecfleet","t":"PPT","n":"Uso aplicativo VecFleet"}],"1.1.4.1":[{"k":"f-opls-calidad-de-entrega","t":"OPL","n":"Calidad de Entrega"},{"k":"f-opls-manipulacion-de-producto-anexo-1","t":"OPL","n":"Manipulacion de Producto · Anexo 1"},{"k":"f-opls-calidad-de-entrega-market-place-anexo-4","t":"OPL","n":"Calidad de Entrega Market Place · Anexo 4"},{"k":"f-opls-producto-fuera-de-norma-pfn-anexo-5","t":"OPL","n":"Producto Fuera de Norma PFN · Anexo 5"},{"k":"f-opls-proceso-reporte-dqi-anexo-6","t":"OPL","n":"Proceso Reporte DQI · Anexo 6"},{"k":"f-opls-seguimiento-quejas-de-clientes-rev04","t":"OPL","n":"Seguimiento Quejas de Clientes Rev04"}]};
+/* Links a mis visuales por subbloque (def = link inicial; se cambia desde el menú con "Cambiar link") */
+const LINKV = {"1.1.1.3":[{"k":"link-1","n":"Tablero de Indicadores Rutina Matinal"},{"k":"pi-cd","n":"Asistencia a tiempo al CD","tag":"PI Pre Ruta · pestaña Asistencia a tiempo","def":"https://claude.ai/artifact/CFMqtjMHyfeng64QxxVye2#t=cd","ic":"PI"},{"k":"pi-mat","n":"Asistencia a matinal","tag":"PI Pre Ruta · pestaña Matinal","def":"https://claude.ai/artifact/CFMqtjMHyfeng64QxxVye2#t=cd","ic":"PI"}],"1.1.1.5":[{"k":"link-1","n":"VecFleet · checklist de inspección","ic":"✓"}],"1.1.1.6":[{"k":"link-1","n":"Validación de Carga Nocturna","def":"https://claude.ai/artifact/KSKyi7g8iGqL4B6Ah7Uwvw"},{"k":"pi-val","n":"Tiempo de revisión de carga","tag":"PI Pre Ruta · pestaña Revisión de carga","def":"https://claude.ai/artifact/CFMqtjMHyfeng64QxxVye2#t=val","ic":"PI"}],"1.1.1.7":[{"k":"pi-sal","n":"Salida del CD 07:30","tag":"PI Pre Ruta · pestaña Salida CD","def":"https://claude.ai/artifact/CFMqtjMHyfeng64QxxVye2#t=sal","ic":"PI"}]};
+const DOCS_T = {"1.1.1.2":"OPL de capacitación Pre Ruta","1.1.2.2":"OPL, DQI y Marketplace","1.1.3.2":"OPL de capacitación Post Ruta","1.1.4.1":"OPL de calidad"};
+/* ===== 1.1.1.4 · Ubicación y acceso a camiones (patio T2) =====
+   Todo se llena aquí; indicador, totales y gráfico se calculan solos. */
+const PATIO = {
+  meta:{reg:100, salida:""},  /* reg = % de unidades registradas antes del turno · salida = hora meta de salida de la flota, ej. "07:00" */
+  /* Registro diario (una línea por día, en orden de fecha).
+     tot = unidades en el patio · reg = registradas en Layout 4.0 antes del turno · sal = hora en que salió la última unidad
+     Ejemplo: {f:"02/10/2026", tot:42, reg:41, sal:"06:55"} */
+  dias:[],
+  senal:[
+    {t:"PLANO",n:"Layout T2 · CD Callao (plano oficial)",u:""},
+    {t:"FOTO",n:"Señalización y numeración de bahías",u:""},
+    {t:"FOTO",n:"Zona peatonal y cruces señalizados",u:""}
+  ],
+  /* Capacitación por grupo. n = capacitados · tot = total del grupo · act = última actualización (la PPT con fotos y firmas se carga en su casillero) */
+  cap:[
+    {g:"Apoyo nocturno",rol:"Registra placa y bahía en el Layout 4.0",n:null,tot:null,act:""},
+    {g:"Conductores",rol:"Ubican su unidad al inicio de turno",n:null,tot:null,act:""}
+  ],
+  material:"https://claude.ai/code/artifact/8467ce4e-2f62-4512-b331-a9b46fcf9f87",
+  /* Plan de acción. e = "abierto" o "cerrado"
+     Ejemplo: {h:"Numeración de bahía 12 borrosa", r:"J. Pérez", f:"10/10/2026", e:"abierto"} */
+  plan:[]
+};
+/* Control del documento: actualizar con cada nueva revisión del SOP */
+/* Control del documento de cada SOP (datos del encabezado e historial del Word). px = fecha de la próxima revisión (AAAA-MM-DD) para el aviso de días */
+const CONTROL = {"1.1.1.1":{rev:"Rev. 15",act:"30/10/2026",elab:"J. Torres",revi:"M. Huapaya",prox:"Dic. 2026",px:"2026-12-31"},"1.1.2.1":{rev:"Rev. 10",act:"06/11/2026",elab:"J. Torres",revi:"M. Huapaya",prox:"Dic. 2026",px:"2026-12-31"},"1.1.3.1":{rev:"Rev. 10",act:"08/11/2026",elab:"J. Torres",revi:"M. Huapaya",prox:"Dic. 2026",px:"2026-12-31"}};
+const faltan = px => { if(!px) return ""; const d=Math.ceil((new Date(px+"T23:59:59")-new Date())/864e5); const c=d<0?"no":d<=30?"al":"ok"; return `<small class="px ${c}">${d<0?`Vencida hace ${-d} día${-d===1?"":"s"}`:d===0?"Vence hoy":`Faltan ${d} día${d===1?"":"s"}`}</small>`; };
+/* Capacitación SOP Pre Ruta: una sola evidencia (PPT del responsable con fotos y firmas acumuladas).
+   cap y total en números (null = por registrar). act = fecha de la última actualización de la PPT (la PPT se carga en su casillero). */
+const CAPACITACION = {"1.1.1.2":{resp:"",act:"",cap:null,total:null}};
+/* Casilleros con archivo: se cargan y descargan aquí mismo; al tocarlos se ven dentro del menú */
+const slug = x => String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,48);
+const slotCard = t => `<div class="tool pend" data-slot="${t.slot}" data-kind="card" data-ic="${esc(t.ic)}" data-cls="${t.cls||""}" data-tag="${esc(t.tag)}" data-n="${esc(t.name)}" data-d="${esc(t.desc||"")}" data-cat="${t.cat||"sop"}"${t.def?` data-def="${t.def}"`:""}><span class="tool-ic${t.cls?" "+t.cls:""}" aria-hidden="true">${esc(t.ic)}</span><span class="tool-tx"><small>${esc(t.tag)}</small><b>${esc(t.name)}</b><span>${esc(t.desc||"")}</span></span><span class="tool-go">Cargando…</span></div>`;
+const slotRow = (key,t,n,cat) => `<li data-slot="${key}" data-kind="row" data-tag="${esc(t)}" data-n="${esc(n)}" data-cat="${cat}"><span class="pend"><i>${esc(t)}</i><span>${esc(n)}</span><em>…</em></span></li>`;
+const slotPill = (key,n,cat) => `<span data-slot="${key}" data-kind="pill" data-n="${esc(n)}" data-cat="${cat}"><span class="sb off"><b>▣</b>${esc(n)}</span></span>`;
+const upBtn = (c,cat) => `<div data-fxup data-cat="${cat||"evid"}"></div>`;
+/* Archivos de evidencia (OPL): cada uno es un casillero; se carga la PPT y al tocarla se ve aquí */
+const EVID = {"1.1.1.1":[
+  {t:"OPL",n:"Delivery Pre Ruta (smartphone e inconsistencias de carga)"},
+  {t:"OPL",n:"Salidas de T2 · CD Callao (salida y segregación de pallets)"},
+  {t:"OPL",n:"Ejecución 5S en unidades de reparto"},
+  {t:"OPL",n:"Uso correcto de extintor"},
+  {t:"OPL",n:"Reporte, investigación y gestión de accidentes"},
+  {t:"OPL",n:"Colocación de tacos / cuñas"},
+  {t:"OPL",n:"Reposición de EPP"},
+  {t:"OPL",n:"Procedimiento de alcotest"}
+]};
+const linkCard = l => `<div data-link="${l.k}" data-n="${esc(l.n)}" data-tag="${esc(l.tag||"Visual vinculada")}"${l.def?` data-def="${l.def}"`:""}${l.ic?` data-ic="${esc(l.ic)}"`:""}><div class="tool pend"><span class="tool-ic">🔗</span><span class="tool-tx"><small>Visual vinculada</small><b>${esc(l.n)}</b></span><span class="tool-go">…</span></div></div>`;
+const upBar = (cat,t,sub,kind) => `<div data-fxup data-cat="${cat}" data-t="${esc(t)}" data-s="${esc(sub)}"${kind?` data-kind="${kind}"`:""}></div>`;
+function zonesHtml(c){
+  const z = ZONAS[c] || ["link","ev"];
+  const ev = EVID[c];
+  const k = CONTROL[c];
+  const cp = CAPACITACION[c];
+  const btn = (u,ic,t) => u ? `<a class="sb" href="${u}" target="_blank" rel="noopener"><b>${ic}</b>${t} ↗</a>` : `<span class="sb off"><b>${ic}</b>${t}</span>`;
+  const H = {
+    evidencia: cp ? (()=>{
+      const pct = cp.cap!=null&&cp.total ? Math.min(100,Math.round(cp.cap/cp.total*100)) : null;
+      const card = slotCard({slot:"cap-ppt",cat:"evid",ic:"PPT",tag:"Evidencia única · SOP Pre Ruta",name:"Capacitación Pre Ruta",desc:"Fotos de la capacitación y firmas del personal, acumuladas en una sola PPT."});
+      return `<div class="zone z-wide ctrl"><div class="zl">Evidencia de capacitación</div>${card}
+      <dl class="ctl c4">
+      <div class="big"><dt>Personal capacitado</dt><dd>${cp.cap!=null?cp.cap:"—"}${cp.total?` <small>/ ${cp.total}</small>`:""}</dd></div>
+      <div><dt>Responsable</dt><dd>${esc(cp.resp||"Por asignar")}</dd></div>
+      <div><dt>Última actualización</dt><dd>${esc(cp.act||"Por registrar")}</dd></div>
+      <div class="nx"><dt>Cobertura</dt><dd>${pct!=null?pct+"%":"—"}</dd></div></dl>
+      ${pct!=null?`<div class="cbar" role="img" aria-label="Cobertura ${pct}%"><i style="width:${pct}%"></i><span>${pct}% de la tripulación</span></div>`:""}
+      <div class="zh">Cada vez que el responsable suma fotos y firmas nuevas a la PPT, se actualiza aquí el número de capacitados y la fecha.</div></div>`;
+    })() : "",
+    control: k ? `<div class="zone z-wide ctrl"><div class="zl">Control del documento</div><dl class="ctl"><div><dt>Versión</dt><dd>${esc(k.rev)}</dd></div><div><dt>Actualizado</dt><dd>${esc(k.act)}</dd></div><div><dt>Elaboró</dt><dd>${esc(k.elab)}</dd></div><div><dt>Revisó</dt><dd>${esc(k.revi)}</dd></div><div class="nx"><dt>Próxima revisión</dt><dd>${esc(k.prox)}</dd>${faltan(k.px)}</div></dl></div>` : "",
+    kpi:`<div class="zone z-kpi"><div class="zl">Indicador</div><div class="ph-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="zh">Gráfico del KPI / PI con su meta</div></div>`,
+    datos:`<div class="zone"><div class="zl">Base de datos</div><div class="ph-rows" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div class="zh">Datos que alimentan el indicador</div></div>`,
+    mat: `<div class="zone z-wide"><div class="zl"><span class="zn">1</span>Material de capacitación${(DOCS[c]||[]).length?" · "+DOCS[c].length:""}</div>${upBar("opl","Cargar archivos","OPL, PPT y material que se usó en la capacitación")}${(DOCS[c]||[]).length?`<ul class="evid">${DOCS[c].map(e=>slotRow(e.k,e.t,e.n,"opl")).join("")}</ul>`:""}</div>`,
+    evc: `<div class="zone z-wide"><div class="zl"><span class="zn">2</span>Evidencias de la capacitación</div>${upBar("evid","Cargar evidencias","Lista de asistencia, firmas, evaluaciones")}${upBar("foto","Fotos del personal capacitado","Toma o sube las fotos desde tu celular o tu PC","fotos")}</div>`,
+    ind: `<div class="zone z-wide"><div class="zl">Inducción para la tripulación</div>${linkCard({k:"induccion",n:"Inducción para la tripulación",tag:"Material del SOP para entrenar"})}</div>`,
+    matm: `<div class="zone z-wide"><div class="zl"><span class="zn">1</span>Material de matinales</div>${upBar("matm","Cargar material de matinales","Sube la carpeta con la presentación y el material de las matinales")}</div>`,
+    link: `<div class="zone z-wide"><div class="zl"><span class="zn">1</span>Indicadores y visuales</div>${(LINKV[c]||[{k:"link-1",n:"Link de la visual o carpeta"}]).map(linkCard).join("")}</div>`,
+    ev: `<div class="zone z-wide"><div class="zl"><span class="zn">2</span>Evidencias</div>${upBar("evid","Cargar carpeta o archivos","Sube una carpeta completa o archivos sueltos, desde tu PC u OneDrive")}</div>`,
+    docs: `<div class="zone z-wide"><div class="zl">${esc(DOCS_T[c]||"Documentos")}${(DOCS[c]||[]).length?" · "+(DOCS[c]||[]).length:""}</div>${upBtn(c,"opl")}${(DOCS[c]||[]).length?`<ul class="evid">${DOCS[c].map(e=>slotRow(e.k,e.t,e.n,"opl")).join("")}</ul>`:""}</div>`,
+    archivos: ev
+      ? `<div class="zone z-wide"><div class="zl">Archivos de evidencia · ${ev.length} OPL</div>${upBtn(c,"opl")}<ul class="evid">${ev.map(e=>slotRow("opl-"+slug(e.n),e.t,e.n,"opl")).join("")}</ul></div>`
+      : `<div class="zone"><div class="zl">Archivos de evidencia</div><div class="ph-files" aria-hidden="true"><i>SOP</i><i>XLSX</i><i>PDF</i><i>FOTO</i></div><div class="zh">SOP, formatos, actas, fotos</div></div>`,
+    pkpi: (()=>{
+      const P=PATIO, d=P.dias, pc=x=>x.tot?Math.round(x.reg/x.tot*100):null, last=d[d.length-1];
+      const avg=d.length?Math.round(d.reduce((a,x)=>a+(pc(x)||0),0)/d.length):null;
+      const lo=60, y=v=>Math.max(2,Math.min(100,(v-lo)/(100-lo)*100));
+      const sh=d.slice(-14);
+      const bars = sh.length ? sh.map(x=>{const v=pc(x);return `<i class="b${v<P.meta.reg?" no":""}" style="height:${y(v)}%" title="${esc(x.f)} · ${v}%"><em>${esc(x.f.slice(0,5))}</em></i>`;}).join("")
+        : [70,78,74,85,82,90,88].map(v=>`<i class="b ghost" style="height:${y(v)}%"></i>`).join("");
+      const salOk = last&&P.meta.salida&&last.sal ? last.sal<=P.meta.salida : null;
+      return `<div class="zone z-wide ctrl"><div class="pk-head"><div class="zl"><span class="zn">1</span>Indicador · registro antes del turno</div><div class="pk-meta">Meta registro <b>${P.meta.reg}%</b> · Meta salida <b>${esc(P.meta.salida||"por definir")}</b></div></div>
+      <dl class="ctl c4"><div class="big"><dt>Último día</dt><dd>${last?pc(last)+"%":"—"}</dd></div><div><dt>Promedio</dt><dd>${avg!=null?avg+"%":"—"}</dd></div><div><dt>Salida última unidad</dt><dd${salOk===false?' style="color:#FF8A96"':""}>${esc(last&&last.sal||"—")}</dd></div><div><dt>Días registrados</dt><dd>${d.length||"—"}</dd></div></dl>
+      <div class="pchart-wrap"><div class="pchart" role="img" aria-label="Porcentaje de unidades registradas por día">${[60,80,100].map(v=>`<span class="ax" style="bottom:${y(v)}%">${v}%</span>`).join("")}<div class="ml" style="bottom:${y(P.meta.reg)}%"><span>META ${P.meta.reg}%</span></div>${bars}</div></div>
+      ${d.length?"":`<div class="pk-empty">El gráfico se llena solo al anotar los días en el registro diario.</div>`}</div>`;
+    })(),
+    preg: (()=>{
+      const P=PATIO, d=P.dias, pc=x=>x.tot?Math.round(x.reg/x.tot*100):null;
+      const rows = d.length ? d.slice(-7).reverse().map(x=>{const v=pc(x);return `<tr><td>${esc(x.f)}</td><td class="n">${x.tot??"—"}</td><td class="n">${x.reg??"—"}</td><td class="n ${v>=P.meta.reg?"ok":"no"}">${v??"—"}%</td><td class="n">${esc(x.sal||"—")}</td></tr>`;}).join("")
+        : [1,2,3].map(()=>`<tr class="tpl"><td>dd/mm/aaaa</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td></tr>`).join("");
+      return `<div class="zone z-wide"><div class="pk-head"><div class="zl"><span class="zn">2</span>Registro diario del patio</div><div class="sbs"><span data-fxup data-mini data-cat="ind" data-n="Subir registros"></span></div></div>
+      <ol class="flujo"><li><b>1</b>El apoyo nocturno registra placa y bahía en el Layout 4.0</li><li><b>2</b>Al cierre del turno se descarga el registro y se sube aquí</li><li><b>3</b>Se anota aquí el día; el indicador se actualiza solo</li></ol>
+      <div class="ptab-wrap"><table class="ptab"><thead><tr><th>Fecha</th><th class="n">Unidades</th><th class="n">Registradas</th><th class="n">%</th><th class="n">Salida</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    })(),
+    pvivo: `<div class="zone z-wide ctrl"><div class="pk-head"><div class="zl"><span class="zn">1</span>Indicador y registro diario · en vivo</div><div class="pk-meta">Se alimenta solo del <b>Layout 4.0</b></div></div>
+      <a class="tool" href="https://layout-delivery.netlify.app/indicador.html" target="_blank" rel="noopener"><span class="tool-ic">KPI</span><span class="tool-tx"><small>Registro antes del turno · Patio T2</small><b>Indicador del patio en vivo</b><span>% de la flota ubicada antes de las 06:00 (diario, semanal, mensual, trimestral y anual) y el registro de cada día con placa, ubicación, fecha y hora.</span></span><span class="tool-go">Abrir ↗</span></a>
+      <ol class="flujo"><li><b>1</b>El apoyo nocturno registra placa y bahía en el Layout 4.0</li><li><b>2</b>Al cerrar el turno, el día queda guardado en el historial</li><li><b>3</b>El indicador y el registro diario se actualizan solos</li></ol></div>`,
+    psenal: `<div class="zone z-wide"><div class="zl"><span class="zn">1</span>Señalización y plano</div><ul class="evid">${PATIO.senal.map(e=>slotRow("senal-"+slug(e.n),e.t,e.n,"evid")).join("")}</ul></div>`,
+    pcap: `<div class="zone z-wide"><div class="pk-head"><div class="zl"><span class="zn">2</span>Capacitación en el Layout 4.0</div><div class="sbs">${btn(PATIO.material,"▶","Material de capacitación")}</div></div>
+      <div class="pcap">${PATIO.cap.map(g=>`<div><h4>${esc(g.g)}<small>${esc(g.rol)}</small></h4><dl><div><dt>Capacitados</dt><dd>${g.n??"—"}${g.tot?` <small>/ ${g.tot}</small>`:""}</dd></div><div><dt>Última actualización</dt><dd class="tx">${esc(g.act||"Por registrar")}</dd></div></dl><div class="sbs">${slotPill("cap-"+slug(g.g),"PPT · fotos y firmas","evid")}</div></div>`).join("")}</div></div>`,
+    pplan: (()=>{
+      const pl=PATIO.plan, ab=pl.filter(x=>x.e!=="cerrado").length, ce=pl.length-ab;
+      const rows = pl.length ? pl.map(x=>`<tr><td>${esc(x.h)}</td><td>${esc(x.r)}</td><td>${esc(x.f)}</td><td><span class="est ${x.e==="cerrado"?"cerrado":"abierto"}">${x.e==="cerrado"?"Cerrado":"Abierto"}</span></td></tr>`).join("")
+        : [1,2].map(()=>`<tr class="tpl"><td>Hallazgo del patio</td><td>Responsable</td><td>Fecha</td><td>—</td></tr>`).join("");
+      return `<div class="zone z-wide"><div class="pk-head"><div class="zl"><span class="zn">5</span>Plan de acción del patio</div><div class="pplan-c"><span class="ab">${ab} abiertas</span><span class="ce">${ce} cerradas</span></div></div>
+      <div class="ptab-wrap"><table class="ptab"><thead><tr><th>Hallazgo</th><th>Responsable</th><th>Fecha compromiso</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    })(),
+    plan:`<div class="zone z-wide" style="min-height:120px"><div class="zl">Plan de acción</div><div class="ph-rows" aria-hidden="true"><i></i><i></i><i></i></div><div class="zh">Acción, responsable y fecha</div></div>`
+  };
+  let zn=0; return `<div class="zones">${z.map(k=>H[k]).join("").replace(/<span class="zn">\d+<\/span>/g,()=>`<span class="zn">${++zn}</span>`)}</div>`;
+}
+const toolCard = t => t.slot ? slotCard(t) : `<a class="tool${t.url?"":" pend"}" ${t.url?`href="${t.url}"${t.same?"":' target="_blank" rel="noopener"'}`:'aria-disabled="true"'}><span class="tool-ic${t.cls?" "+t.cls:""}" aria-hidden="true">${esc(t.ic)}</span><span class="tool-tx"><small>${esc(t.tag)}</small><b>${esc(t.name)}</b><span>${esc(t.desc)}</span></span><span class="tool-go">${t.url?(t.same?"Ver →":"Abrir ↗"):"Link por vincular"}</span></a>`;
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const all = B.procs.flatMap(p=>p.reqs.map(r=>({p,r})));
+document.querySelectorAll(".leaf").forEach(el=>{const st=ESTADO[el.dataset.c]; if(st) el.classList.add(st); el.onclick=()=>openSheet(el.dataset.c);});
+/* PI del proceso: los indicadores que el tablero PI Pre Ruta ancla a todo el proceso (1.1, 1.2, 1.3, 1.4) van en su cabecera del árbol */
+const PI_URL = "https://claude.ai/artifact/CFMqtjMHyfeng64QxxVye2#t=";
+const PROCPI = {"1.1.1":[["chs","Checklist salida"],["chr","Checklist retorno"],["pp","Primer punto"]],"1.1.2":[["tm","Tiempo en mercado"],["tm","Desv. tiempo mercado"],["dkm","Desv. kilometraje"],["er","Entrega en rango"],["ao","Asset Occupation"],["tlp","TLP"],["eta","ETA"],["pnp","Paradas no plan"]],"1.1.3":[["liq","Tiempo de liquidación"]],"1.1.4":[["dqi","DQI"]]};
+document.querySelectorAll(".term").forEach(t=>{const b=t.querySelector(".badge"); const l=b&&PROCPI[b.textContent.trim()]; if(!l) return;
+  const d=document.createElement("div"); d.className="tpi"; d.innerHTML=`<small>PI del proceso</small>`+l.map(([k,n])=>`<a href="${PI_URL}${k}" target="_blank" rel="noopener">${esc(n)}</a>`).join(""); t.appendChild(d);});
+
+/* Estado automático: un subbloque con archivos o links cargados figura como "Listo" */
+const ESTADO0 = Object.assign({}, ESTADO);
+const conLink = c => typeof LINKV!=="undefined" && (LINKV[c]||[]).some(l=>l.def);
+function pintarEstados(){
+  document.querySelectorAll(".leaf").forEach(el=>{el.classList.remove("wip","done"); const st=ESTADO[el.dataset.c]; if(st) el.classList.add(st);});
+  const b=document.querySelector(".nums > div:nth-child(3) > b"); if(b) b.textContent=all.filter(x=>ESTADO[x.r.c]==="done").length;
+}
+window.fxEstado = set => { all.forEach(x=>{const c=x.r.c; if(set.has(c)||conLink(c)) ESTADO[c]="done"; else if(ESTADO0[c]) ESTADO[c]=ESTADO0[c]; else delete ESTADO[c];}); pintarEstados(); };
+all.forEach(x=>{ if(conLink(x.r.c)) ESTADO[x.r.c]="done"; }); pintarEstados();
+const sheet=document.getElementById("sheet");
+let last=null;
+function openSheet(code){
+  const i=all.findIndex(x=>x.r.c===code); if(i<0) return;
+  const {p,r}=all[i]; const st=ESTADO[r.c]||"empty"; const stTxt={empty:"Por llenar",wip:"En construcción",done:"Listo"}[st];
+  last = last || document.activeElement;
+  sheet.innerHTML=`<div class="page" role="dialog" aria-modal="true" aria-label="Subbloque ${r.c}">
+    <div class="page-top"><div class="crumbs">Bloque ${B.n}<span>›</span>1.${B.n}.${p.n} ${esc(p.name)}<span>›</span>${r.c}</div><button class="x" id="close">Cerrar ✕</button></div>
+    <div class="slot-title"><span class="big">${r.c}</span><span class="state ${st}">${stTxt}</span><span class="state lv">Nivel ${r.lv}</span><h3>${esc(r.s)}</h3></div>
+    <p class="req-t">${esc(r.t)}</p>
+    ${(LINKS[r.c]||[]).map(toolCard).join("")}
+    ${zonesHtml(r.c)}
+    <div class="page-nav"><button id="prev">← Anterior</button><span>${i+1} de ${all.length}</span><button id="next">Siguiente →</button></div>
+  </div>`;
+  sheet.hidden=false; document.body.style.overflow="hidden";
+  document.getElementById("prev").disabled=i===0; document.getElementById("next").disabled=i===all.length-1;
+  document.getElementById("prev").onclick=()=>openSheet(all[i-1].r.c);
+  document.getElementById("next").onclick=()=>openSheet(all[i+1].r.c);
+  document.getElementById("close").onclick=closeSheet;
+  document.getElementById("close").focus();
+}
+function closeSheet(){sheet.hidden=true;sheet.innerHTML="";document.body.style.overflow="";if(last){last.focus();last=null;}}
+sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheet.hidden)closeSheet();});
+const m=location.hash.match(/^#s(\d+)-(\d+)-(\d+)-(\d+)$/); if(m) openSheet(m.slice(1).join("."));
+</script>
+<script src="js/archivos.js"></script>
+</body>
+</html>
