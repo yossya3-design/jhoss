@@ -57,6 +57,15 @@
     ".xv th{position:sticky;top:0;background:#EFEFEF;color:#444;font-weight:600;z-index:1}",
     ".xv td.rn{position:sticky;left:0;background:#EFEFEF;color:#444;text-align:center;font-weight:600}",
     ".xv td.n{text-align:right}",
+    ".ml{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:12px}",
+    ".ml-h{background:#151513;border:1px solid #2B2822;border-left:4px solid #F2C52A;border-radius:12px;padding:14px 16px}",
+    ".ml-h h2{margin:0 0 10px;font:800 20px/1.2 var(--f-body,Barlow,Arial,sans-serif);color:#F4F1E8;overflow-wrap:anywhere}",
+    ".ml-h dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px}.ml-h dt{color:#A6A093;font-weight:700}.ml-h dd{margin:0;color:#F4F1E8;overflow-wrap:anywhere}",
+    ".ml-f{width:100%;border:0;border-radius:12px;background:#fff;min-height:200px;display:block}",
+    ".ml-t{white-space:pre-wrap;background:#fff;color:#111;border-radius:12px;padding:16px;font:14px/1.5 Arial,sans-serif;overflow-wrap:anywhere}",
+    ".ml-s{font:700 12px var(--f-mono,monospace);letter-spacing:.12em;text-transform:uppercase;color:#A6A093;margin-top:4px}",
+    ".ml-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.ml-g a{display:block;border-radius:10px;overflow:hidden;border:1px solid #2B2822;background:#151513}.ml-g img{display:block;width:100%;height:130px;object-fit:cover}.ml-g span{display:block;padding:6px 8px;font-size:12px;color:#A6A093;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+    ".ml-a{display:flex;flex-wrap:wrap;gap:8px}.ml-a a{display:inline-flex;gap:6px;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid #3A352B;background:#151513;color:#F4F1E8;font-size:13px;text-decoration:none}",
     ".tv{max-width:1000px;margin:0 auto;white-space:pre-wrap;font:13px var(--f-mono,monospace);background:#151513;border:1px solid #2B2822;border-radius:10px;padding:14px;color:#F4F1E8}",
     "@media (max-width:560px){.vw-top{flex-wrap:wrap}.vw-tt{flex-basis:calc(100% - 50px)}.vw-b{flex:1}.vw-body{padding:10px}.dv-page{padding:22px 18px}}"
   ].join("\n");
@@ -672,7 +681,7 @@
   }
 
   /* ================= visor ================= */
-  var ICOL = { W: "#2B579A", X: "#217346", P: "#C43E1C", PDF: "#C8102E", IMG: "#1F84A0", VID: "#7A4FB0", TXT: "#5F5B53" };
+  var ICOL = { W: "#2B579A", X: "#217346", P: "#C43E1C", PDF: "#C8102E", IMG: "#1F84A0", MSG: "#0F6CBD", VID: "#7A4FB0", TXT: "#5F5B53" };
   function kind(e) {
     if (e === "pdf") return "pdf";
     if (e === "pptx" || e === "ppsx" || e === "potx") return "pptx";
@@ -680,10 +689,11 @@
     if (e === "xlsx" || e === "xlsm" || e === "xltx" || e === "xls" || e === "ods") return "xlsx";
     if (/^(png|jpe?g|gif|webp|svg|bmp)$/.test(e)) return "img";
     if (/^(mp4|webm|mov|m4v)$/.test(e)) return "vid";
+    if (e === "msg" || e === "eml") return "mail";
     if (/^(txt|csv|md|json|log)$/.test(e)) return "txt";
     return "otro";
   }
-  var TAG = { pdf: "PDF", pptx: "P", docx: "W", xlsx: "X", img: "IMG", vid: "VID", txt: "TXT" };
+  var TAG = { mail: "MSG", pdf: "PDF", pptx: "P", docx: "W", xlsx: "X", img: "IMG", vid: "VID", txt: "TXT" };
   var CUR = null;
   function close() {
     if (!CUR) return;
@@ -717,6 +727,7 @@
       else if (k === "pptx") await renderPptx(blob, body, ctx);
       else if (k === "docx") await renderDocx(blob, body, ctx);
       else if (k === "xlsx") await renderXlsx(blob, body, ctx, tabs);
+      else if (k === "mail") await renderMail(blob, body, ctx, e);
       else if (k === "img") { var u = URL.createObjectURL(new Blob([blob], { type: e === "svg" ? "image/svg+xml" : "image/" + (e === "jpg" ? "jpeg" : e) })); ctx.urls.push(u); body.innerHTML = '<img class="vw-media" alt="' + esc(o.name) + '" src="' + u + '">'; }
       else if (k === "vid") { var v = URL.createObjectURL(new Blob([blob], { type: e === "webm" ? "video/webm" : "video/mp4" })); ctx.urls.push(v); body.innerHTML = '<video class="vw-media" controls playsinline src="' + v + '"></video>'; }
       else if (k === "txt") {
@@ -730,6 +741,40 @@
       body.innerHTML = '<div class="vw-st"><b>No se pudo mostrar la vista previa</b>El archivo está guardado bien: descárgalo para abrirlo.' + (o.onDownload ? '<br><br><button class="vw-b" type="button" data-dl2>⬇ Descargar</button>' : "") + "</div>";
       var d2 = body.querySelector("[data-dl2]"); if (d2) d2.onclick = function () { o.onDownload(d2); };
       if (window.console) console.warn("visor:", err);
+    }
+  }
+  function mailLib() { return loadScript("js/correo.js", function () { return !!window.FxCorreo; }, 15000).then(function () { return window.FxCorreo; }); }
+  var MIMEX = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", bmp: "image/bmp", svg: "image/svg+xml", pdf: "application/pdf" };
+  function b64(u) { var s = "", C = 0x8000; for (var i = 0; i < u.length; i += C) s += String.fromCharCode.apply(null, u.subarray(i, i + C)); return btoa(s); }
+  async function renderMail(blob, body, ctx, e) {
+    var M = (await mailLib()).parse(await blob.arrayBuffer(), e);
+    var used = {}, fd = function (d) { try { return d && !isNaN(d) ? d.toLocaleString("es-PE", { timeZone: "America/Lima", dateStyle: "full", timeStyle: "short" }) : ""; } catch (x) { return String(d || ""); } };
+    M.atts.forEach(function (a) { var x = (/\.([a-z0-9]+)$/i.exec(a.name) || [])[1]; a.type = a.mime || MIMEX[(x || "").toLowerCase()] || "application/octet-stream"; a.img = /^image\//.test(a.type); });
+    var html = M.html;
+    if (html) {
+      html = html.replace(/(src|background)\s*=\s*(["']?)cid:([^"'\s>]+)\2/gi, function (all, at, q, cid) {
+        var a = M.atts.filter(function (x) { return x.cid && (x.cid === cid || x.cid === cid.replace(/^<|>$/g, "")) || x.name === cid; })[0];
+        if (!a) return all; used[M.atts.indexOf(a)] = 1; return at + '="data:' + a.type + ";base64," + b64(a.data) + '"';
+      }).replace(/<script[\s\S]*?<\/script>/gi, "");
+    }
+    var h = '<div class="ml"><div class="ml-h"><h2>' + esc(M.subject || "(Sin asunto)") + "</h2><dl>" +
+      (M.from || M.fromMail ? "<dt>De</dt><dd>" + esc(M.from) + (M.fromMail && M.fromMail !== M.from ? " &lt;" + esc(M.fromMail) + "&gt;" : "") + "</dd>" : "") +
+      (M.to ? "<dt>Para</dt><dd>" + esc(M.to) + "</dd>" : "") + (M.cc ? "<dt>CC</dt><dd>" + esc(M.cc) + "</dd>" : "") +
+      (M.date ? "<dt>Fecha</dt><dd>" + esc(fd(M.date)) + "</dd>" : "") + "</dl></div>";
+    if (html) h += '<iframe class="ml-f" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" title="Contenido del correo"></iframe>';
+    else if (M.text) h += '<div class="ml-t">' + esc(M.text.slice(0, 300000)) + "</div>";
+    var imgs = M.atts.filter(function (a, i) { return a.img && !used[i] && !a.hidden; }), otros = M.atts.filter(function (a) { return !a.img; });
+    var urlOf = function (a) { var u = URL.createObjectURL(new Blob([a.data], { type: a.type })); ctx.urls.push(u); return u; };
+    if (imgs.length) h += '<div class="ml-s">Imágenes del correo (' + imgs.length + ')</div><div class="ml-g">' + imgs.map(function (a) { var u = urlOf(a); return '<a href="' + u + '" target="_blank" rel="noopener"><img alt="' + esc(a.name) + '" src="' + u + '"><span>' + esc(a.name) + "</span></a>"; }).join("") + "</div>";
+    if (otros.length) h += '<div class="ml-s">Adjuntos (' + otros.length + ')</div><div class="ml-a">' + otros.map(function (a) { return '<a href="' + urlOf(a) + '" download="' + esc(a.name) + '">📎 ' + esc(a.name) + " · " + Math.max(1, Math.round(a.size / 1024)) + " KB</a>"; }).join("") + "</div>";
+    if (!html && !M.text && !imgs.length) h += '<div class="vw-st">El correo no trae texto para mostrar. Descárgalo para abrirlo en Outlook.</div>';
+    body.innerHTML = h + "</div>";
+    var fr = body.querySelector(".ml-f");
+    if (fr) {
+      var fit = function () { try { var d = fr.contentDocument; if (d && d.documentElement) fr.style.height = Math.max(200, d.documentElement.scrollHeight + 4) + "px"; } catch (x) { fr.style.height = "70vh"; } };
+      fr.onload = function () { fit(); try { Array.prototype.forEach.call(fr.contentDocument.images, function (im) { im.addEventListener("load", fit); }); } catch (x) { } setTimeout(fit, 400); };
+      fr.srcdoc = '<!doctype html><meta charset="utf-8"><base target="_blank"><style>html,body{margin:0;background:#fff;color:#111}body{padding:14px;font:14px/1.45 Calibri,Arial,sans-serif;overflow-wrap:anywhere}img{max-width:100%;height:auto}table{max-width:100%}</style>' + html;
+      ctx.onResize = fit;
     }
   }
   async function renderSheetRows(rows, body) {
