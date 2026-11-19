@@ -43,6 +43,10 @@
     "#dg input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;font-size:16px;cursor:pointer}" +
     "#dg .msg{min-height:24px;margin:14px 0 0;font-size:15px;color:#A6A093}#dg.err .msg{color:#FF6B70}#dg.ok .msg{color:#2FBF71;font-weight:700;font-size:17px}" +
     "#dg .ver{display:inline-flex;gap:6px;align-items:center;margin-top:6px;background:none;border:0;color:#A6A093;font:600 13px Barlow,Arial,sans-serif;cursor:pointer;text-decoration:underline}" +
+    "#dg .logo{display:block;width:118px;height:auto;margin:0 auto 10px;filter:drop-shadow(0 0 14px rgba(229,178,28,.55));animation:dgl .9s cubic-bezier(.2,1.6,.4,1) both,dgfl 3.2s ease-in-out .9s infinite}" +
+    "@keyframes dgl{from{opacity:0;transform:scale(.3) rotate(-25deg)}}@keyframes dgfl{50%{transform:translateY(-8px) rotate(3deg);filter:drop-shadow(0 0 24px rgba(255,226,122,.85))}}" +
+    "#dg.err .logo{animation:dgsk .45s}#dg.ok .logo{animation:dgwin .9s ease-in forwards}@keyframes dgwin{40%{transform:scale(1.25) rotate(-8deg)}100%{transform:scale(1.1) rotate(360deg);filter:drop-shadow(0 0 30px #2FBF71)}}" +
+    "@media (max-height:640px){#dg .logo{width:84px}}" +
     "@media (prefers-reduced-motion:reduce){#dg *{animation:none!important;transition:none!important}}";
 
   var paths = "";
@@ -58,7 +62,7 @@
   g.id = "dg"; g.setAttribute("role", "dialog"); g.setAttribute("aria-modal", "true"); g.setAttribute("aria-labelledby", "dg-t");
   g.innerHTML = '<style>' + css + '</style>' +
     '<svg class="bg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + paths + dots + '</svg>' +
-    '<div class="box"><div class="k">Backus · CD Callao · T2</div>' +
+    '<div class="box"><img class="logo" src="img/cd-callao-op.png" alt="CD Callao" onerror="this.remove()"><div class="k">Backus · CD Callao · T2</div>' +
     '<h1 id="dg-t">Delivery DPO</h1><div class="sub">H2 · CD Callao</div>' +
     '<p class="hi">' + saludo + ', <b>Mayra</b>. Ingresa tu clave de acceso</p>' +
     '<div class="ruta" aria-hidden="true"><div class="via"></div><div class="avance"></div><div class="cam">🚚</div><div class="cd">CD</div></div>' +
