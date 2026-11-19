@@ -1,18 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Delivery DPO H2 CD Callao</title>
-<div id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-t" style="position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;padding:24px;background:#070707 radial-gradient(ellipse at 50% 30%,rgba(229,178,28,.18),transparent 60%);color:#F4F1E8;font-family:Barlow,Arial,sans-serif">
-<form id="gate-f" style="width:min(360px,100%);text-align:center" autocomplete="off">
-<div style="font:700 12px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#A6A093">Backus · CD Callao · T2</div>
-<h1 id="gate-t" style="margin:8px 0 2px;font:900 clamp(40px,11vw,64px)/.95 'Big Shoulders Display',Impact,sans-serif;text-transform:uppercase;background:linear-gradient(180deg,#FFE27A,#E5B21C 55%,#9A6F05);-webkit-background-clip:text;background-clip:text;color:transparent">Delivery DPO</h1>
-<div style="font:800 22px 'Big Shoulders Display',Impact,sans-serif;text-transform:uppercase;color:#E5B21C;margin-bottom:26px">H2 · CD Callao</div>
-<p style="margin:0 0 12px;font-size:18px">Hola <b style="color:#E5B21C">Mayra</b>, ingresa tu clave de acceso</p>
-<input id="gate-i" type="password" inputmode="numeric" aria-label="Clave de acceso" style="box-sizing:border-box;width:100%;padding:14px 16px;border-radius:12px;border:1px solid #E5B21C;background:#151513;color:#F4F1E8;font:700 22px 'JetBrains Mono',monospace;letter-spacing:.3em;text-align:center">
-<button type="submit" style="margin-top:12px;width:100%;padding:13px;border:0;border-radius:999px;background:#E5B21C;color:#070707;font:700 17px Barlow,Arial,sans-serif;cursor:pointer">Ingresar</button>
-<p id="gate-e" role="alert" style="min-height:22px;margin:10px 0 0;color:#FF8A96;font-size:14px"></p>
-</form></div>
-<script>(function(){var g=document.getElementById("gate"),ok=false;try{ok=sessionStorage.getItem("dpo-ok")==="1"}catch(e){}
-if(ok){g.remove();return}document.documentElement.style.overflow="hidden";var i=document.getElementById("gate-i");setTimeout(function(){i.focus()},50);
-document.getElementById("gate-f").onsubmit=function(ev){ev.preventDefault();if(i.value.replace(/\D/g,"")==="031023"){try{sessionStorage.setItem("dpo-ok","1")}catch(e){}document.documentElement.style.overflow="";g.remove()}else{document.getElementById("gate-e").textContent="Clave incorrecta. Intenta de nuevo.";i.value="";i.focus()}}})();</script>
+<script src="js/gate.js" data-portada></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
