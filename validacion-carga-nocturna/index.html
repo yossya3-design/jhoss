@@ -190,6 +190,9 @@ td.obs{font-size:13px;color:var(--gris);max-width:220px}
 .borrar.seguro{background:var(--rojo);color:#fff;border-color:var(--rojo)}
 tr.conf td{background:rgba(46,125,58,.06)}
 .vacio{padding:30px 20px;text-align:center}
+.adm-acc{display:contents}
+body:not(.es-admin) td.ac,body:not(.es-admin) th.ac{display:none}
+.btn-adm.on{background:var(--oro);color:#111;border-color:var(--oro)}
 .vacio strong{display:block;font-family:var(--f-titulo);font-size:28px;color:var(--oro);text-transform:uppercase;letter-spacing:.04em}
 .vacio span{color:var(--gris);font-size:14px}
 
@@ -230,42 +233,102 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
   .reloj span{font-size:10px}
   .analisis{grid-template-columns:1fr}
 }
+/* Celular: mismo diseño que pantalla grande, en tamaño reducido */
 @media (max-width:640px){
-  .wrap{gap:20px;padding-block:18px 40px}
+  body{font-size:14px}
+  .wrap{gap:16px;padding-inline:12px;padding-block:14px 32px}
+  header{--cw:86px;gap:8px}
+  .marca-row{gap:8px;flex-wrap:nowrap}
   .marca-row .sep{display:none}
-  .ante{font-size:9.5px;letter-spacing:.1em}
-  .logo-ab{height:20px}.chip-t77 img{height:17px}
+  .logo-ab{height:17px}.chip-t77{padding:2px 5px}.chip-t77 img{height:14px}
+  .marca-row{overflow:hidden}
+  .ante{font-size:8.5px;letter-spacing:.08em;gap:5px;white-space:nowrap;overflow:hidden;min-width:0}
+  html,body{overflow-x:hidden}
+  .solo-pc{display:none}
+  .bandera{width:16px;height:10px}
+  h1{font-size:clamp(30px,9vw,40px);margin-top:6px}
+  .sub{font-size:14px;margin-top:4px}
+  .linea{margin-top:8px}
+  .crest-wrap{width:74px}
+  .reloj strong{font-size:18px}
   .reloj span{display:none}
-  .form{padding:14px;gap:12px}
-  .f-placa,.f-pick{grid-column:1/-1}
-  .f-cant,.f-hora{grid-column:span 6}
-  .motivo{font-size:16px;letter-spacing:.02em;padding:10px 4px}
-  .motivo small{font-size:8.5px}
-  .f-sku,.f-motivo,.f-cruce,.f-obs{grid-column:1/-1}
-  .resumen{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .resumen .kpi.principal{grid-column:1/-1}
-  .barra .acciones{margin-left:0;width:100%}
-  .barra .acciones .btn{flex:1 1 auto}
-  .buscar{width:100%}
-  .btn-ok{flex:1 1 100%}
-  /* Tabla como tarjetas en celular */
+  /* barra */
+  .barra{padding:8px 10px;gap:6px 8px}
+  .barra .grupo{gap:6px}
+  .barra .et{font-size:8.5px;letter-spacing:.08em}
+  .campo-dia{font-size:12px;padding:5px 6px}
+  #tGuardado{font-size:11px!important;line-height:1.2}
+  .barra .acciones{margin-left:0;width:100%;gap:6px;flex-wrap:nowrap}
+  .barra .btn{flex:1 1 0;padding:8px 4px;font-size:9.5px;letter-spacing:.04em;white-space:normal;line-height:1.2;text-align:center}
+  body:not(.es-admin) .barra .btn-adm{flex:0 0 auto;padding:8px 12px;margin-left:auto}
+  /* títulos */
+  .sec-tit h2{font-size:22px}
+  .sec-tit p{font-size:12.5px}
+  /* formulario compacto en 2 columnas */
+  .form{padding:12px;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .f{gap:4px}
+  .f>label,.f>.lbl{font-size:9px;letter-spacing:.1em}
+  .f input,.f textarea{padding:9px 10px;font-size:14px}
+  .f-placa,.f-pick,.f-hora,.f-cant{grid-column:span 1}
+  .f-sku,.f-motivo,.f-cruce,.f-obs,.f-btns{grid-column:1/-1}
+  input.placa-in{font-size:19px;padding:5px 6px}
+  .placa-info{font-size:9.5px}
+  .stepper button{width:38px;font-size:22px}
+  .stepper input{font-size:22px!important;padding:4px 2px!important}
+  .sku-sel{padding:8px 10px;min-height:42px;font-size:14px}
+  .motivos{gap:6px}
+  .motivo{font-size:15px;letter-spacing:.02em;padding:8px 3px;border-radius:8px}
+  .motivo .ico{font-size:16px}
+  .motivo small{font-size:8px}
+  .f-btns{gap:8px}
+  .btn-reg{flex:1 1 auto;padding:11px 6px;font-size:17px}
+  .btn-ok{flex:0 0 auto;padding:10px 10px;font-size:14px}
+  .msg{font-size:12.5px}
+  /* indicadores compactos: 3 arriba (conformes doble), 3 abajo */
+  .resumen{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .resumen .kpi.principal,.resumen #kConfCaja{grid-column:span 2}
+  .kpi{padding:8px 9px;gap:1px;border-radius:8px}
+  .kpi .et{font-size:8px;letter-spacing:.08em}
+  .kpi .num{font-size:26px}
+  .kpi .det{font-size:10px;line-height:1.25}
+  .mbar{height:6px;margin-top:4px}
+  /* filtros */
+  .filtros{gap:5px}
+  .chip{font-size:10.5px;padding:5px 9px}
+  .buscar{width:100%;font-size:12px;padding:7px 10px}
+  /* tabla en fichas compactas */
   table,thead,tbody,tr,td{display:block}
   thead{display:none}
-  tbody tr{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(242,197,42,.12)}
+  tbody tr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 8px;align-items:center;padding:9px 10px;border-bottom:1px solid rgba(242,197,42,.12)}
   tbody tr:last-child{border-bottom:none}
-  td{padding:0;border:none!important}
-  td.hr{grid-column:1;grid-row:1}
-  td.plc{grid-column:2;grid-row:1}
+  td{padding:0;border:none!important;font-size:12.5px}
+  td.hr{grid-column:1;grid-row:1;font-size:11px}
+  td.plc{grid-column:2;grid-row:1;display:flex;align-items:center;gap:6px;min-width:0}
+  td.plc .emp{margin-top:0;max-width:none;flex:1;min-width:0}
+  .pl{font-size:14px;padding:0 5px}
   td.mt{grid-column:3;grid-row:1;justify-self:end}
-  td.sku{grid-column:1/3;grid-row:2}
-  td.cant{grid-column:3;grid-row:2;font-size:28px;justify-self:end}
-  td.pk{grid-column:1/3;grid-row:3;font-size:13px;color:var(--gris)}
-  td.pk::before{content:"Pickinero · ";font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris-2)}
+  .mot{font-size:9px;padding:3px 6px}
+  td.sku{grid-column:1/3;grid-row:2;line-height:1.3}
+  td.sku .x{font-size:11px}
+  td.cant{grid-column:3;grid-row:2;font-size:22px;justify-self:end}
+  td.pk{grid-column:1/3;grid-row:3;font-size:12px;color:var(--gris)}
+  td.pk::before{content:"Pickinero · ";font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris-2)}
   td.ac{grid-column:3;grid-row:3;justify-self:end}
-  td.obs{grid-column:1/-1;max-width:none}
+  .borrar{padding:3px 6px;font-size:10px}
+  td.obs{grid-column:1/-1;max-width:none;font-size:11.5px}
   td.obs:empty{display:none}
-  td.vacio{grid-column:1/-1}
-  tr.conf td.sku{font-size:13px;color:var(--verde-claro)}
+  td.vacio{grid-column:1/-1;padding:20px 10px}
+  .vacio strong{font-size:20px}
+  tr.conf td.sku{font-size:12px;color:var(--verde-claro)}
+  /* análisis compacto */
+  .analisis{gap:8px}
+  .panel{padding:10px 12px;gap:6px}
+  .panel h3{font-size:17px}
+  .rk{font-size:12px}
+  .rk .tot{font-size:11px}
+  .rk .pila{height:7px;margin-bottom:4px}
+  .ley{font-size:10.5px}
+  footer{font-size:9px;letter-spacing:.08em}
 }
 </style>
 </head>
@@ -275,7 +338,7 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
 <div class="wrap">
   <header>
     <div class="titulo">
-      <div class="marca-row"><img class="logo-ab" src="img/abinbev-blanco.png" alt="AB InBev" width="150" height="31"><span class="chip-t77"><img src="img/t77.png" alt="Transportes 77 S.A." width="58" height="26"></span><span class="sep" aria-hidden="true"></span><div class="ante"><span class="bandera" aria-hidden="true"><i></i><i></i><i></i></span>CD Callao · T2 · Carga nocturna</div></div>
+      <div class="marca-row"><img class="logo-ab" src="img/abinbev-blanco.png" alt="AB InBev" width="150" height="31"><span class="chip-t77"><img src="img/t77.png" alt="Transportes 77 S.A." width="58" height="26"></span><span class="sep" aria-hidden="true"></span><div class="ante"><span class="bandera" aria-hidden="true"><i></i><i></i><i></i></span>CD Callao · T2<span class="solo-pc"> · Carga nocturna</span></div></div>
       <h1>Validación de Carga Nocturna</h1>
       <p class="sub">Cada caja en su <b>camión</b></p>
       <div class="linea"></div>
@@ -290,9 +353,12 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
     <div class="grupo"><label class="et" for="dia">Noche de carga</label><input class="campo-dia" type="date" id="dia"></div>
     <div class="grupo"><span class="punto" id="pGuardado"></span><span id="tGuardado" style="font-size:14px">Conectando…</span></div>
     <div class="acciones">
+      <button class="btn btn-adm" id="btnAdm" type="button"><span aria-hidden="true">🔒</span> Administradora</button>
+      <span class="adm-acc" id="admAcc" hidden>
       <button class="btn" id="btnExcel" type="button">Descargar Excel</button>
       <button class="btn" id="btnWsp" type="button">Copiar para WhatsApp</button>
       <button class="btn" id="btnTabla" type="button">Copiar tabla</button>
+      </span>
     </div>
   </div>
 
@@ -355,7 +421,7 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
     </div>
     <div class="tabla-caja">
       <table>
-        <thead><tr><th>Hora</th><th>Placa</th><th>SKU – Producto</th><th class="c">Cant.</th><th>Motivo</th><th>Pickinero</th><th>Obs.</th><th></th></tr></thead>
+        <thead><tr><th>Hora</th><th>Placa</th><th>SKU – Producto</th><th class="c">Cant.</th><th>Motivo</th><th>Pickinero</th><th>Obs.</th><th class="ac"></th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -376,7 +442,7 @@ footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-f
     <span>CD Callao · Backus · Transportes 77</span>
   </footer>
 </div>
-<div class="modal" id="modalPin" hidden><form id="formPin" autocomplete="off"><h3>Borrar registro</h3><p>Ingresa la clave de administradora</p><label class="sr" for="pinIn">Clave</label><input id="pinIn" type="password" inputmode="numeric" maxlength="10" placeholder="••••••"><p class="msg err" id="pinErr"></p><div class="fila"><button type="button" class="btn" id="pinCancel">Cancelar</button><button type="submit" class="btn-reg" style="font-size:18px;padding:10px">Borrar</button></div></form></div>
+<div class="modal" id="modalPin" hidden><form id="formPin" autocomplete="off"><h3 id="pinTit">Administradora</h3><p id="pinTxt">Ingresa tu clave para descargar el reporte y borrar registros</p><label class="sr" for="pinIn">Clave</label><input id="pinIn" type="password" inputmode="numeric" maxlength="10" placeholder="••••••"><p class="msg err" id="pinErr"></p><div class="fila"><button type="button" class="btn" id="pinCancel">Cancelar</button><button type="submit" class="btn-reg" style="font-size:18px;padding:10px">Entrar</button></div></form></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
@@ -552,28 +618,40 @@ async function guardar(r){
   const todo = lsGet(LKEY, {}); todo[r.id]=r; lsSet(LKEY, todo);
   cargaLocal(); return true;
 }
-let pendienteBorrar = null;
-function pidePin(id){ pendienteBorrar=id; $("pinIn").value=""; $("pinErr").textContent=""; $("modalPin").hidden=false; setTimeout(()=>$("pinIn").focus(),50); }
-$("pinCancel").onclick = ()=>{ $("modalPin").hidden=true; pendienteBorrar=null; };
-$("formPin").addEventListener("submit", async e=>{
+let adminPin = "";
+try{ adminPin = sessionStorage.getItem("vcn-adm") || ""; }catch(_){}
+function pintaAdmin(){
+  const on = !!adminPin;
+  $("admAcc").hidden = !on;
+  $("btnAdm").innerHTML = on ? '<span aria-hidden="true">🔓</span> Salir' : '<span aria-hidden="true">🔒</span> Administradora';
+  $("btnAdm").classList.toggle("on", on);
+  document.body.classList.toggle("es-admin", on);
+}
+$("btnAdm").addEventListener("click", ()=>{
+  if(adminPin){ adminPin=""; try{sessionStorage.removeItem("vcn-adm");}catch(_){} pintaAdmin(); toast("Saliste del modo administradora."); return; }
+  $("pinIn").value=""; $("pinErr").textContent=""; $("modalPin").hidden=false; setTimeout(()=>$("pinIn").focus(),50);
+});
+$("pinCancel").onclick = ()=>{ $("modalPin").hidden=true; };
+$("formPin").addEventListener("submit", e=>{
   e.preventDefault();
   const pin=$("pinIn").value.replace(/\D/g,"");
+  if(pin!=="031023"){ $("pinErr").textContent="Clave incorrecta."; $("pinIn").select(); return; }
+  adminPin=pin; try{sessionStorage.setItem("vcn-adm",pin);}catch(_){}
+  $("modalPin").hidden=true; pintaAdmin(); toast("Modo administradora activo.");
+});
+async function borrar(id){
+  if(!adminPin) return;
   if(modo==="sheet"){
-    try{ await api({accion:"borrar", id:pendienteBorrar, fecha:(registros.find(r=>r.id===pendienteBorrar)||{}).fecha||$("dia").value, pin}); registros=registros.filter(r=>r.id!==pendienteBorrar); pinta(); $("modalPin").hidden=true; toast("Registro borrado."); }
-    catch(err){ $("pinErr").textContent = (err.api&&err.api.error==="pin") ? "Clave incorrecta." : "No se pudo borrar. Intenta de nuevo."; }
+    try{ await api({accion:"borrar", id, fecha:(registros.find(r=>r.id===id)||{}).fecha||$("dia").value, pin:adminPin}); registros=registros.filter(r=>r.id!==id); pinta(); toast("Registro borrado."); }
+    catch(err){ toast("No se pudo borrar. Intenta de nuevo."); }
     return;
   }
-  if(pin!=="031023"){ $("pinErr").textContent="Clave incorrecta."; return; }
-  $("modalPin").hidden=true; borrarDirecto(pendienteBorrar);
-});
-async function borrarDirecto(id){
   if(modo==="nube" && db){
     try{ await db.collection("validaciones").doc(id).delete(); }catch(e){ toast("No se pudo borrar."); }
     return;
   }
   const todo = lsGet(LKEY, {}); delete todo[id]; lsSet(LKEY, todo); cargaLocal();
 }
-function borrar(id){ pidePin(id); }
 function cargaLocal(){
   if(modo==="sheet"||modo==="nube") return;
   const f = $("dia").value; const todo = lsGet(LKEY, {});
@@ -619,6 +697,7 @@ setTimeout(()=>{ if(modo==="cargando") pasaALocal(); }, 11000);
 if(!API && !(window.claude && window.claude.use)){ modo="local"; estado("Guardado solo en este equipo","local"); }
 cargaLocal();
 
+pintaAdmin();
 /* ---------- pintado ---------- */
 function pinta(){
   registros.sort((a,b)=>(a.hora||"").localeCompare(b.hora||"") || a.ts-b.ts);
@@ -673,6 +752,7 @@ document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click", ()=>{ 
 $("buscar").addEventListener("input", pinta);
 $("tbody").addEventListener("click", e=>{
   const b = e.target.closest(".borrar"); if(!b) return;
+  if(!b.classList.contains("seguro")){ b.classList.add("seguro"); b.textContent="¿Seguro?"; setTimeout(()=>{ if(b.isConnected){ b.classList.remove("seguro"); b.textContent="Borrar"; } },3000); return; }
   borrar(b.dataset.id);
 });
 
