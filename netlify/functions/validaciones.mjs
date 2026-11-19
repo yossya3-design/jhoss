@@ -1,7 +1,7 @@
 // Validación de Carga Nocturna – CD Callao (Netlify Blobs).
 // GET  ?fecha=YYYY-MM-DD                       -> { ok, registros }
 // POST { accion:"agregar", registro }           -> guarda un hallazgo o placa conforme
-// POST { accion:"borrar", fecha, id, pin }      -> borra (solo administradora)
+// POST { accion:"borrar", fecha, id, pin|tk }   -> borra (administradora, o quien lo registró desde su celular)
 import { getStore } from "@netlify/blobs";
 
 const PIN_ADMIN = "031023";
@@ -24,14 +24,19 @@ export default async (req) => {
           sku: txt(r.sku, 20), producto: txt(r.producto, 120), cant: Math.max(0, Math.round(Number(r.cant) || 0)),
           motivo: ["Faltante", "Sobrante", "Cruce", "Conforme"].includes(r.motivo) ? r.motivo : "Faltante",
           skuCruce: txt(r.skuCruce, 20), productoCruce: txt(r.productoCruce, 120), obs: txt(r.obs, 140),
-          registrado: new Date().toISOString(),
+          tk: txt(r.tk, 40), registrado: new Date().toISOString(),
         };
         await store.setJSON(`${limpio.fecha}/${limpio.id}`, limpio);
         return json({ ok: true });
       }
       if (b.accion === "borrar") {
-        if (String(b.pin || "").replace(/\D/g, "") !== PIN_ADMIN) return json({ ok: false, error: "pin" }, 403);
         if (!okFecha(b.fecha) || !okId(b.id)) return json({ ok: false, error: "datos" }, 400);
+        const esAdmin = String(b.pin || "").replace(/\D/g, "") === PIN_ADMIN;
+        if (!esAdmin) {
+          // Quien registró desde su celular puede borrar su propio registro (por si se equivocó)
+          const actual = await store.get(`${b.fecha}/${b.id}`, { type: "json" });
+          if (!actual || !actual.tk || String(b.tk || "") !== actual.tk) return json({ ok: false, error: "pin" }, 403);
+        }
         await store.delete(`${b.fecha}/${b.id}`);
         return json({ ok: true });
       }
@@ -40,7 +45,7 @@ export default async (req) => {
     const fecha = new URL(req.url).searchParams.get("fecha");
     if (!okFecha(fecha)) return json({ ok: false, error: "fecha" }, 400);
     const { blobs } = await store.list({ prefix: `${fecha}/` });
-    const registros = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean);
+    const registros = (await Promise.all(blobs.map((x) => store.get(x.key, { type: "json" })))).filter(Boolean).map(({ tk, ...r }) => r);
     return json({ ok: true, registros });
   } catch (e) {
     return json({ ok: false, error: String((e && e.message) || e) }, 500);

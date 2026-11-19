@@ -191,7 +191,6 @@ td.obs{font-size:13px;color:var(--gris);max-width:220px}
 tr.conf td{background:rgba(46,125,58,.06)}
 .vacio{padding:30px 20px;text-align:center}
 .adm-acc{display:contents}
-body:not(.es-admin) td.ac,body:not(.es-admin) th.ac{display:none}
 .btn-adm.on{background:var(--oro);color:#111;border-color:var(--oro)}
 .vacio strong{display:block;font-family:var(--f-titulo);font-size:28px;color:var(--oro);text-transform:uppercase;letter-spacing:.04em}
 .vacio span{color:var(--gris);font-size:14px}
@@ -454,7 +453,9 @@ let SKUS = [];               // [codigo, descripcion, tipo, marca]
 let registros = [];          // registros de la noche seleccionada
 let db = null, unsub = null, modo = "cargando", downloads = null;
 let filtro = "Todos", motivo = null, sku = null, sku2 = null;
-const LKEY = "vcn-callao-registros", PKEY = "vcn-callao-pickineros";
+const LKEY = "vcn-callao-registros", PKEY = "vcn-callao-pickineros", MKEY = "vcn-callao-mios";
+const VERSION = "2026-11-18-3";
+const mios = lsGet(MKEY, {});   // registros hechos desde este celular: se pueden borrar sin clave
 
 /* ---------- utilidades ---------- */
 const pad = n => String(n).padStart(2,"0");
@@ -604,6 +605,8 @@ async function api(body){
 }
 async function guardar(r){
   r.id = "r"+r.ts+Math.random().toString(36).slice(2,6);
+  r.tk = Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+  mios[r.id] = r.tk; lsSet(MKEY, mios);
   if(modo==="sheet"){
     try{ await api({accion:"agregar", registro:r}); registros.push(r); pinta(); return true; }
     catch(e){ msg("No se pudo guardar en la base. Revisa tu señal e intenta de nuevo.","err"); return false; }
@@ -626,6 +629,7 @@ function pintaAdmin(){
   $("btnAdm").innerHTML = on ? '<span aria-hidden="true">🔓</span> Salir' : '<span aria-hidden="true">🔒</span> Administradora';
   $("btnAdm").classList.toggle("on", on);
   document.body.classList.toggle("es-admin", on);
+  if(typeof pinta==="function" && pintaAdmin.listo) pinta();
 }
 $("btnAdm").addEventListener("click", ()=>{
   if(adminPin){ adminPin=""; try{sessionStorage.removeItem("vcn-adm");}catch(_){} pintaAdmin(); toast("Saliste del modo administradora."); return; }
@@ -639,10 +643,11 @@ $("formPin").addEventListener("submit", e=>{
   adminPin=pin; try{sessionStorage.setItem("vcn-adm",pin);}catch(_){}
   $("modalPin").hidden=true; pintaAdmin(); toast("Modo administradora activo.");
 });
+const puedeBorrar = r => !!adminPin || !!mios[r.id];
 async function borrar(id){
-  if(!adminPin) return;
+  if(!adminPin && !mios[id]) return;
   if(modo==="sheet"){
-    try{ await api({accion:"borrar", id, fecha:(registros.find(r=>r.id===id)||{}).fecha||$("dia").value, pin:adminPin}); registros=registros.filter(r=>r.id!==id); pinta(); toast("Registro borrado."); }
+    try{ await api({accion:"borrar", id, fecha:(registros.find(r=>r.id===id)||{}).fecha||$("dia").value, pin:adminPin, tk:mios[id]||""}); registros=registros.filter(r=>r.id!==id); delete mios[id]; lsSet(MKEY, mios); pinta(); toast("Registro borrado."); }
     catch(err){ toast("No se pudo borrar. Intenta de nuevo."); }
     return;
   }
@@ -697,7 +702,7 @@ setTimeout(()=>{ if(modo==="cargando") pasaALocal(); }, 11000);
 if(!API && !(window.claude && window.claude.use)){ modo="local"; estado("Guardado solo en este equipo","local"); }
 cargaLocal();
 
-pintaAdmin();
+pintaAdmin(); pintaAdmin.listo = true;
 /* ---------- pintado ---------- */
 function pinta(){
   registros.sort((a,b)=>(a.hora||"").localeCompare(b.hora||"") || a.ts-b.ts);
@@ -732,7 +737,7 @@ function pinta(){
       <td class="mt"><span class="mot ${esc(r.motivo)}"><i></i>${esc(r.motivo)}</span></td>
       <td class="pk">${esc(r.pickinero)}</td>
       <td class="obs">${esc(r.obs||"")}</td>
-      <td class="ac"><button class="borrar" type="button" data-id="${esc(r.id)}">Borrar</button></td></tr>`;
+      <td class="ac">${puedeBorrar(r)?`<button class="borrar" type="button" data-id="${esc(r.id)}">Borrar</button>`:""}</td></tr>`;
   }).join("") : `<tr><td class="vacio" colspan="8"><strong>${registros.length?"Sin resultados":"Sin registros esta noche"}</strong><span>${registros.length?"Cambia el filtro o la búsqueda.":"Registra el primer hallazgo o marca una placa conforme."}</span></td></tr>`;
 
   ranking("rkPick", obs, r=>r.pickinero, n=>esc(n));
@@ -756,6 +761,21 @@ $("tbody").addEventListener("click", e=>{
   borrar(b.dataset.id);
 });
 
+/* ---------- se actualiza sola cuando publico una corrección ---------- */
+function formVacio(){ return !$("skuQ").value && !sku && !$("obs").value && $("modalPin").hidden; }
+async function revisaVersion(){
+  if(!API) return;
+  try{
+    const r = await fetch("version.json?t="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
+    const v = (await r.json()).version;
+    if(v && v!==VERSION){
+      if(formVacio()){ toast("Nueva versión publicada · actualizando…"); setTimeout(()=>location.reload(),1200); }
+      else { revisaVersion.pend = true; }
+    }
+  }catch(e){}
+}
+setInterval(()=>{ if(document.visibilityState==="visible") revisaVersion(); }, 120000);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") revisaVersion(); });
 /* ---------- exportar ---------- */
 function filasExport(){
   return registros.map(r=>({
