@@ -437,12 +437,12 @@
         getBlob: function () { return d.pdfUrl ? fetch(d.pdfUrl).then(function (r) { if (!r.ok) throw { code: "missing" }; return r.blob(); }) : d.pdf ? fetch("/_blob/" + d.pdf).then(function (r) { if (!r.ok) throw { code: "missing" }; return r.blob(); }) : fetchBlob(d); }, onDownload: S.dl ? function (b) { downloadOne(d, b, code); } : null });
     });
   }
-  window.fxVerUrl = function (u, n, t) { viewUrl(u, n, t); };
-  function viewUrl(url, name, title) {
+  window.fxVerUrl = function (u, n, t, du, dn) { viewUrl(u, n, t, du, dn); };
+  function viewUrl(url, name, title, dlUrl, dlName) {
     loadVisor().then(function (V) {
-      V.open({ name: name, title: title || name, sub: name + " · incluido en el menú",
+      V.open({ name: name, title: title || name, sub: (dlName || name) + " · incluido en el menú",
         getBlob: function () { return fetch(url).then(function (r) { if (!r.ok) throw { code: "missing" }; return r.blob(); }); },
-        onDownload: S.dl ? function (b) { downloadUrl(url, name, b); } : null });
+        onDownload: S.dl ? function (b) { downloadUrl(dlUrl || url, dlName || name, b); } : null });
     });
   }
   async function downloadUrl(url, name, btn) {

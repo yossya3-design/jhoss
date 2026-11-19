@@ -488,7 +488,7 @@ html,body{overflow-x:clip}
     <div class="nums"><div><b>4</b>procesos</div><div><b>21</b>subbloques</div><div><b>0</b>listos</div></div>
     <div class="htools">
       <button type="button" class="htool" id="btnRaci"><span class="hi" aria-hidden="true">🧰</span><span><small>Herramienta</small><b>RACI Delivery</b></span></button>
-      <a class="htool" href="https://seguimiento-delivery-t2.netlify.app/pi-pre-ruta/#t=res" target="_blank" rel="noopener"><span class="hi" aria-hidden="true">📊</span><span><small>Indicadores · con clave</small><b>PIs del Bloque 1</b></span></a>
+      <a class="htool" href="https://seguimiento-delivery-t2.netlify.app/pi-pre-ruta/#t=res&b1" target="_blank" rel="noopener"><span class="hi" aria-hidden="true">📊</span><span><small>Indicadores · con clave</small><b>PIs del Bloque 1</b></span></a>
     </div>
   </header>
   <section class="metro" aria-label="Mapa de madurez del bloque">
@@ -713,6 +713,6 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheet.hidden)close
 const m=location.hash.match(/^#s(\d+)-(\d+)-(\d+)-(\d+)$/); if(m) openSheet(m.slice(1).join("."));
 </script>
 <script src="js/archivos.js"></script>
-<script>(function(){var b=document.getElementById("btnRaci");if(!b)return;b.onclick=function(){if(window.fxVerUrl)window.fxVerUrl("docs/RACIS-Delivery.pdf","RACIS Delivery.pdf","Herramienta RACI · Delivery");else location.href="docs/RACIS-Delivery.pdf";};})();</script>
+<script>(function(){var b=document.getElementById("btnRaci");if(!b)return;b.onclick=function(){if(window.fxVerUrl)window.fxVerUrl("docs/RACIS-Delivery.pdf","RACIS Delivery.pdf","Herramienta RACI · Delivery","docs/RACIS-Delivery.xlsx","RACIS Delivery.xlsx");else location.href="docs/RACIS-Delivery.pdf";};})();</script>
 </body>
 </html>

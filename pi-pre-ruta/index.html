@@ -443,6 +443,9 @@ const IND = {
        desc:()=>`Si la llegada planificada al cliente es en la <b>mañana</b> (antes de 12:00) y llegamos en la mañana, o es en la <b>tarde</b> (desde 12:00) y llegamos en la tarde, cuenta 1. <b>Entregas en su ventana ÷ total de entregas × 100</b>. Meta: <b>${CFG.mEta}%</b>.`},
 };
 const ORDER = ['cd','mat','sal','tml','val','chk','chs','chr','pp','tm','dtm','dkm','er','ao','tlp','eta','liq','dqi','mr'];
+/* Vista solo Bloque 1 (1.1 a 1.4): el menú DPO la abre con #t=res&b1 */
+const B1 = (()=>{ try { return /[#&?]b1\b/.test((location.hash||'')+(location.search||'')); } catch(e){ return false; } })();
+if (B1) ORDER.splice(ORDER.indexOf('mr'), 1);
 const VEH = k => ['chs','chr','chk','val','sal','tml','tm','pp','dtm','dkm','er','ao','tlp','eta','liq','dqi'].includes(k);
 const PER = k => ['cd','mat'].includes(k);
 
@@ -999,7 +1002,7 @@ function dayKeysAll(){ if (CACHE.days) return CACHE.days; const s = new Set(); f
 function renderTabs(){
   let h = `<button class="tab" role="tab" aria-selected="${UI.tab==='res'}" data-t="res"><span class="tn">★</span>Resumen</button>`;
   let tb = ''; ORDER.forEach(k => { if (k === 'mat' || k === 'dtm') return; if (BLQ[k] !== tb){ tb = BLQ[k]; h += `<span class="tgrp">${BLQN[tb]}</span>`; } const st = status(k, agg(k, units(k)).val); h += `<button class="tab" role="tab" aria-selected="${UI.tab===k}" data-t="${k}"><span class="tn">${IND[k].n}</span>${k === 'cd' ? 'Asistencia CD y matinal' : IND[k].tab}<span class="sd st-${st}"></span></button>`;  if (k === 'eta') h += `<button class="tab" role="tab" aria-selected="${UI.tab==='pnp'}" data-t="pnp"><span class="tn">PNP</span>Paradas no plan<span class="sd st-${pnpStatus()}"></span></button>`; if (k === 'mr') h += `<button class="tab" role="tab" aria-selected="${UI.tab==='inf'}" data-t="inf"><span class="tn">IF</span>In Full<span class="sd st-${otStatus('inf')}"></span></button><span class="tgrp">Bloque 4.4 · On time</span><button class="tab" role="tab" aria-selected="${UI.tab==='ont'}" data-t="ont"><span class="tn">OT</span>On Time<span class="sd st-${otStatus('ont')}"></span></button>`; });
-  h += `<span class="tgrp">Bloque 2 · Gestión</span>`; B2ORDER.forEach(k => { h += `<button class="tab" role="tab" aria-selected="${UI.tab===k}" data-t="${k}"><span class="tn">${B2T[k].code}</span>${B2T[k].tab}<span class="sd st-${b2Status(k)}"></span></button>`; });
+  if (!B1) { h += `<span class="tgrp">Bloque 2 · Gestión</span>`; } (B1 ? [] : B2ORDER).forEach(k => { h += `<button class="tab" role="tab" aria-selected="${UI.tab===k}" data-t="${k}"><span class="tn">${B2T[k].code}</span>${B2T[k].tab}<span class="sd st-${b2Status(k)}"></span></button>`; });
   h += `<button class="tab" role="tab" aria-selected="${UI.tab==='dat'}" data-t="dat"><span class="tn">⇪</span>Datos y metas</button>`;
   $('#tabs').innerHTML = h;
 }
@@ -1406,6 +1409,7 @@ function viewB2(k){
 function b2ResumenCards(){
   const pL = pnpRows(), pd = pnpOpDays(pL);
   let h = `<h3 class="bhd">Bloque 1.2 · Paradas no planificadas</h3><div class="grid sum"><button class="card sc st-${pnpStatus()}" data-go="pnp"><span class="scode">PNP · 1.2</span><span class="sn">Paradas no planificadas</span><span class="sv num">${pd ? (pL.length / pd).toLocaleString('es-PE', {maximumFractionDigits:1}) : '–'}<small> eventos/día</small></span><span class="sm">Meta ≤ ${PNP.metaN} · ${pL.length} eventos · ${(pL.reduce((a, r) => a + r[2], 0) / 60).toLocaleString('es-PE', {maximumFractionDigits:0})} h detenidas</span></button></div>`;
+  if (B1) return h;
   h += `<h3 class="bhd">Bloque 4.3 / 4.4 · In Full y On Time (volumen)</h3><div class="grid sum">` + ['inf','ont'].map(k => { const v = otVal(k), b = otBU(k); return `<button class="card sc st-${otStatus(k)}" data-go="${k}"><span class="scode">${OTT[k].code}</span><span class="sn">${k === 'inf' ? 'Pérdida in full' : 'Fuera de ventana'}</span><span class="sv num">${v == null ? '–' : v.toLocaleString('es-PE', {maximumFractionDigits:2})}<small>%</small></span><span class="sm">${b == null ? 'Meta BU pendiente' : 'BU ' + b.toLocaleString('es-PE', {maximumFractionDigits:2}) + '%'} · sobre HL creados</span></button>`; }).join('') + '</div>';
   h += `<h3 class="bhd">Bloque 2 · Retroalimentación y 5 Porqués</h3><div class="grid sum">`;
   B2ORDER.forEach(k => { const L = b2Rows(k), n = L.length, cl = L.filter(r => b2Closed(k, r)).length;
@@ -1571,6 +1575,7 @@ function render(){
   renderTabs(); renderSide(); renderBanner();
   const v = $('#view');
   if (UI.tab === 'mat') UI.tab = 'cd'; if (UI.tab === 'dtm') UI.tab = 'tm';
+  if (B1 && ['mr','inf','ont','ret','w5'].includes(UI.tab)) UI.tab = 'res';
   v.innerHTML = UI.tab === 'res' ? viewResumen() + b2ResumenCards() : B2T[UI.tab] ? viewB2(UI.tab) : UI.tab === 'pnp' ? viewPNP() : OTT[UI.tab] ? viewOT(UI.tab) : UI.tab === 'dat' ? viewDatos() : UI.tab === 'cd' ? viewInd('cd') + '<div class="rule" style="margin:26px 0 6px"></div>' + viewInd('mat') : UI.tab === 'tm' ? viewInd('tm') + '<div class="rule" style="margin:26px 0 6px"></div>' + viewInd('dtm') : viewInd(UI.tab);
 }
 let rT = null; const rerender = () => { clearTimeout(rT); rT = setTimeout(() => { invalidate(); render(); }, 80); };
