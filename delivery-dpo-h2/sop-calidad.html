@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SOP Calidad en Ruta CD Callao</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: Tapiz Backus (noche). Inducción En Ruta: portada → la ruta en 5 paradas → seguridad en una mirada → quién hace qué → indicadores y anexos. */
+:root{
+  --bg:#070707; --card:rgba(17,17,16,.9); --card2:rgba(12,12,11,.92);
+  --ink:#F4F1E8; --muted:#A6A093; --line:#2B2822;
+  --gold:#F2C52A; --gold-hi:#FFE97A; --gold-lo:#C8960F; --golddeep:#B07E07;
+  --red:#C8102E; --red-tx:#FF8A96; --green:#2E7D3A; --green-tx:#7FD99A; --sea:#1F84A0; --brick:#A3472A;
+  --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --f-body:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:clip}
+body{background:#070707 url(img/tapiz-noche.svg) center/cover fixed;color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:clamp(16px,3vw,32px)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:.01em}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* barra superior */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(7,7,7,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
+.back{display:inline-flex;align-items:center;gap:8px;font-weight:700;text-decoration:none;border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:999px;font-size:14px}
+.back:hover{border-color:var(--gold)}
+.jump{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.jump a{font:700 12px var(--f-mono);text-decoration:none;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:var(--card2)}
+.jump a:hover{color:var(--gold);border-color:var(--gold)}
+
+.navl{display:flex;gap:8px}
+.back.home{color:var(--gold)}
+@media (max-width:520px){.back.home{display:none}}
+.wordbtn{margin-top:22px;max-width:640px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border-radius:14px;text-decoration:none;color:var(--ink);
+  background:linear-gradient(120deg,rgba(242,197,42,.2),rgba(242,197,42,.05));border:1px solid rgba(242,197,42,.65);box-shadow:0 0 0 4px rgba(242,197,42,.08)}
+.wordbtn:hover{background:linear-gradient(120deg,rgba(242,197,42,.3),rgba(242,197,42,.08))}
+.w-ic{width:52px;height:52px;border-radius:10px;display:grid;place-items:center;background:#2B579A;color:#fff;font:900 28px var(--f-display);box-shadow:inset 0 -4px 0 rgba(0,0,0,.25)}
+.w-tx{display:flex;flex-direction:column;min-width:0}
+.w-tx small{font:700 10px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.w-tx b{font-family:var(--f-display);font-size:26px;text-transform:uppercase;line-height:1.05}
+.w-tx span{font-size:13px;color:var(--muted)}
+.w-go{font-weight:700;color:var(--gold);white-space:nowrap}
+.wordbtn.pend{cursor:default}.wordbtn.pend .w-go{color:var(--muted);font-size:13px;border:1px dashed var(--muted);padding:4px 10px;border-radius:999px}
+@media (max-width:520px){.wordbtn{grid-template-columns:auto minmax(0,1fr)}.w-go{grid-column:1/-1}}
+/* portada */
+.hero{position:relative;padding-block:26px 0}
+.hero::before{content:"";position:absolute;inset:-20px -80px -40px -100px;z-index:-1;background:radial-gradient(ellipse at 30% 45%,rgba(7,7,7,.94) 0%,rgba(7,7,7,.78) 45%,rgba(7,7,7,0) 78%)}
+.brandbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.peru{display:inline-flex;width:30px;height:18px;margin-right:12px;vertical-align:-4px;border:1px solid #3a3a3a}
+.peru i{flex:1;background:#D91023}.peru i:nth-child(2){background:#fff}
+.logos{display:flex;align-items:center;gap:14px}
+.logos img{display:block;height:auto}
+.lg-ab{width:132px}.lg-badge{width:70px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.hero h1{margin-top:22px;font-size:clamp(50px,9vw,112px);line-height:.86;font-weight:900;text-transform:uppercase;
+  background:linear-gradient(180deg,var(--gold-hi) 0%,var(--gold) 45%,var(--gold-lo) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 18px rgba(229,178,28,.25))}
+.hero h1 .l2{display:block;font-size:.5em;line-height:1.05;margin-top:6px;-webkit-text-fill-color:var(--ink);color:var(--ink)}
+.hero h1 .l2 b{-webkit-text-fill-color:var(--gold);color:var(--gold)}
+.goldrule{height:3px;width:min(520px,70%);margin-top:18px;background:linear-gradient(90deg,var(--gold),rgba(242,197,42,0))}
+.lead{max-width:62ch;margin:16px 0 0;font-size:18px;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:13.5px}
+.chip b{font:700 11px var(--f-mono);color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+
+section{padding-block:52px 0}
+.sec-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:8px 20px;margin-bottom:20px}
+.sec-head h2{font-size:clamp(32px,4.6vw,50px);font-weight:900;text-transform:uppercase;line-height:.95}
+.sec-head h2 em{font-style:normal;color:var(--gold)}
+.sec-head p{margin:0;color:var(--muted);max-width:52ch}
+
+/* línea de la ruta */
+.clock{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:26px}
+.clock::before{content:"";position:absolute;left:6%;right:6%;top:23px;height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,#2A2A2A 0 18px,#F2D36B 18px 30px);opacity:.85}
+.clock a{position:relative;text-decoration:none;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;min-width:0}
+.clock .pin{position:relative;z-index:1;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#fff;font:900 26px var(--f-display);border:4px solid var(--bg);box-shadow:0 0 0 2px var(--c)}
+.clock .t{font:700 15px var(--f-mono);color:var(--gold);font-variant-numeric:tabular-nums}
+.clock .n{font-family:var(--f-display);font-weight:800;font-size:18px;text-transform:uppercase;line-height:1.05}
+.clock a:hover .pin{transform:translateY(-3px)}
+.clock .pin{transition:transform .15s}
+.truckdot{position:absolute;z-index:2;top:16px;left:6%;width:20px;height:20px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 5px rgba(242,197,42,.25),0 0 18px rgba(242,197,42,.7);animation:ride 10s linear infinite}
+@keyframes ride{from{left:6%}to{left:calc(94% - 20px)}}
+@media (prefers-reduced-motion:reduce){.truckdot{animation:none}}
+
+/* paradas */
+.stops{display:grid;gap:16px}
+.stop{--c:var(--red);position:relative;display:grid;grid-template-columns:150px minmax(0,1fr);background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:16px;overflow:hidden;backdrop-filter:blur(4px);scroll-margin-top:70px}
+.stop .side{padding:18px 16px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 26%,transparent),transparent 80%);border-right:1px solid var(--line)}
+.stop .num{font:900 64px/0.8 var(--f-display);color:var(--c);filter:brightness(1.35)}
+.stop .time{font:700 22px var(--f-mono);color:var(--gold);font-variant-numeric:tabular-nums}
+.stop .dur{font:600 12px var(--f-mono);color:var(--muted)}
+.stop .body{padding:18px 20px 20px;display:grid;gap:14px;min-width:0}
+.stop h3{font-size:clamp(26px,3.4vw,36px);font-weight:900;text-transform:uppercase;line-height:1}
+.stop .req{font:700 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:6px}
+.stop .req::before{content:"";width:10px;height:10px;border-radius:2px;background:var(--gold)}
+.who{display:flex;flex-wrap:wrap;gap:6px}
+.who span{font-size:13px;border-radius:999px;padding:3px 10px;border:1px solid var(--line);background:var(--card2)}
+.who span b{font:700 10px var(--f-mono);letter-spacing:.08em;margin-right:6px;color:var(--muted)}
+.who span.r{border-color:color-mix(in srgb,var(--c) 70%,var(--line))}
+.who span.r b{color:var(--ink)}
+.do{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px}
+.do li{position:relative;padding-left:28px;min-width:0}
+.do li::before{content:"";position:absolute;left:0;top:3px;width:18px;height:18px;border-radius:5px;border:2px solid var(--gold);background:linear-gradient(135deg,rgba(242,197,42,.18),transparent)}
+.do li::after{content:"";position:absolute;left:6px;top:7px;width:5px;height:9px;border:solid var(--gold);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.do li b{color:var(--ink)}
+.do li small{display:block;color:var(--muted);font-size:13.5px}
+.stopif{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:10px 12px;background:color-mix(in srgb,var(--red) 16%,transparent);border:1px solid color-mix(in srgb,var(--red) 55%,transparent);font-size:14.5px}
+.stopif .ic{flex:none;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;background:var(--red);color:#fff;font:900 11px var(--f-mono)}
+.agenda{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;counter-reset:ag}
+.agenda div{counter-increment:ag;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px;line-height:1.25;min-width:0}
+.agenda div::before{content:counter(ag);display:block;font:900 22px var(--f-display);color:var(--gold)}
+.ind{display:flex;flex-wrap:wrap;gap:6px}
+.ind span{font:600 12px var(--f-mono);padding:3px 9px;border-radius:6px;background:rgba(242,197,42,.1);color:var(--gold);border:1px solid rgba(242,197,42,.35)}
+.lbl{font:700 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.veedores{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.veedor{position:relative;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 12px 12px 14px;min-width:0}
+.veedor .vn{font:900 15px var(--f-display);text-transform:uppercase;letter-spacing:.04em;color:var(--v)}
+.veedor ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+.veedor::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:2px;background:var(--v)}
+
+/* seguridad */
+.safety{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 20px;backdrop-filter:blur(4px);min-width:0}
+.panel h3{font-size:26px;font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:14px}
+.rules{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rules li{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;align-items:center}
+.rules svg{width:48px;height:48px}
+.rules b{display:block;font-family:var(--f-display);font-size:20px;text-transform:uppercase;line-height:1.05}
+.rules span{font-size:14px;color:var(--muted)}
+.epp{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.epp i{font-style:normal;font-size:12.5px;padding:2px 8px;border-radius:999px;border:1px solid rgba(242,197,42,.4);color:var(--ink)}
+.nogo{border-color:color-mix(in srgb,var(--red) 60%,var(--line));background:linear-gradient(170deg,rgba(200,16,46,.22),var(--card) 60%)}
+.nogo h3{color:#fff}
+.nogo h3 small{display:block;font:700 11px var(--f-mono);letter-spacing:.12em;color:var(--red-tx);margin-bottom:4px}
+.nogo ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.nogo li{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.nogo li::before{content:"✕";flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--red);color:#fff;font:700 12px var(--f-mono);margin-top:1px}
+.nogo .note{margin-top:14px;font-size:13.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+
+/* quién hace qué */
+.tblwrap{overflow-x:auto;border-radius:16px;border:1px solid var(--line);background:var(--card);backdrop-filter:blur(4px)}
+table{width:100%;border-collapse:collapse;min-width:620px;font-size:14.5px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--card2)}
+td:first-child{font:700 13px var(--f-mono);color:var(--gold);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block;font:700 10px var(--f-mono);padding:1px 6px;border-radius:4px;margin-right:6px}
+.tag.R{background:var(--red);color:#fff}.tag.A{background:var(--green);color:#fff}
+
+/* kpis y anexos */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card2);min-width:0}
+.kpi b{display:block;font-family:var(--f-display);font-size:20px;text-transform:uppercase;line-height:1.05}
+.kpi span{font-size:13px;color:var(--muted)}
+.docs{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.docs a{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;text-decoration:none;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card2);font-size:14px}
+.docs a:hover{border-color:var(--gold)}
+.docs a i{font:700 10px var(--f-mono);font-style:normal;color:#070707;background:var(--gold);padding:2px 6px;border-radius:4px}
+.docs a span{overflow-wrap:anywhere}
+.docs a em{font:600 11px var(--f-mono);font-style:normal;color:var(--muted)}
+
+/* pie: ciclo de entrega */
+.flow{margin-top:60px;display:flex;align-items:flex-end;gap:18px;padding-top:14px}
+.fl-castle{width:44px;height:auto;flex:none;opacity:.85}
+.steps{list-style:none;margin:0;padding:0;flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative;counter-reset:st}
+.steps::before{content:"";position:absolute;left:0;right:0;top:20px;border-top:2px dashed rgba(242,197,42,.5)}
+.steps li{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;counter-increment:st;min-width:0}
+.steps img{height:30px;width:auto;opacity:.85;background:var(--bg);padding:0 8px;position:relative}
+.steps b{font-family:var(--f-display);font-weight:800;font-size:17px;text-transform:uppercase;margin-top:6px;line-height:1}
+.steps b::before{content:counter(st) " · ";color:var(--gold)}
+.steps span{font-size:12px;color:var(--muted)}
+footer{padding-block:28px 36px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+footer .mono{font-family:var(--f-mono);font-size:12px}
+
+@media (max-width:900px){
+  .agenda{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .safety,.two{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:720px){
+  .stop{grid-template-columns:minmax(0,1fr)}
+  .stop .side{flex-direction:row;align-items:center;gap:14px;border-right:0;border-bottom:1px solid var(--line);padding:12px 16px}
+  .stop .num{font-size:44px}
+  .do,.veedores{grid-template-columns:minmax(0,1fr)}
+  .clock{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+  .clock .n{font-size:13px}
+  .clock .t{font-size:11px}
+  .clock .pin{width:40px;height:40px;font-size:20px}
+  .clock::before{top:18px}
+  .truckdot{top:11px}
+  .jump{display:none}
+}
+@media (max-width:520px){
+  .clock .n{display:none}
+  .agenda{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpis{grid-template-columns:minmax(0,1fr)}
+  .lg-ab{width:96px}.lg-badge{width:48px}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:16px}
+  .steps::before{display:none}.fl-castle{display:none}
+}
+.waits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.waits div{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px;line-height:1.3;min-width:0}
+.waits b{display:block;font:900 22px var(--f-display);color:var(--gold)}
+.waits i{display:block;font-style:normal;color:var(--ink);font-weight:700}
+.agenda.servir div::before{content:attr(data-l);font-size:28px}
+.pays{display:flex;flex-wrap:wrap;gap:6px}
+.pays span{font-size:13px;border-radius:8px;padding:4px 10px;border:1px solid var(--line);background:var(--card2)}
+.pays span b{color:var(--gold);margin-right:4px}
+@media (max-width:520px){.waits{grid-template-columns:minmax(0,1fr)}}
+</style>
+<body><script src="js/gate.js"></script>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="navl"><a class="back" href="bloque-1.html#s1-1-4-1">← <span>Bloque 1 · Calidad</span></a><a class="back home" href="index.html">Menú DPO</a></div>
+    <nav class="jump" aria-label="Secciones">
+      <a href="#ruta">Los 5 pasos</a>
+      <a href="#seguridad">Calidad y seguridad</a>
+      <a href="#roles">Quién hace qué</a>
+      <a href="#apoyo">KPIs y anexos</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+<header class="hero">
+  <div class="brandbar">
+    <div class="eyebrow"><span class="peru" aria-hidden="true"><i></i><i></i><i></i></span>Bloque 1 · Capacitación Calidad en la entrega · Subbloque 1.1.4.1</div>
+    <div class="logos" aria-label="Logos">
+      <img src="img/abinbev-blanco.png" alt="AB InBev" class="lg-ab">
+      <img src="img/cd-callao.png" alt="CD Callao" class="lg-badge">
+      <img src="img/dpo.png" alt="DPO Perú" class="lg-badge">
+    </div>
+  </div>
+  <h1>SOP Calidad en Ruta<span class="l2">Producto perfecto al cliente · CD <b>Callao</b></span></h1>
+  <div class="goldrule"></div>
+  <p class="lead">Del armado de carga al retorno en cinco pasos: armo la carga según el camión, verifico en la rampa con foto, manipulo y entrego sin lanzar ni arrastrar, separo y reporto el PFN, y recojo envases y reviso lo que vuelve al CD. Ante la duda, no se entrega.</p>
+  <div class="chips">
+    <span class="chip"><b>Aplica a</b>Tripulaciones T2, T77, EDT, Liderman y Almacén</span>
+    <span class="chip"><b>Inicia</b>Verificación en la rampa de salida</span>
+    <span class="chip"><b>Termina</b>Revisión del producto que retorna</span>
+    <span class="chip"><b>KPI crítico</b>DQI</span>
+  </div>
+  <a class="wordbtn" href="bloque-1.html#s1-1-4-1">
+    <span class="w-ic" aria-hidden="true">W</span>
+    <span class="w-tx"><small>Documento oficial · versión completa del SOP</small><b>Ver SOP en Word</b><span>SOP Calidad en Ruta · CD Callao 2026 · Rev. 11</span></span>
+    <span class="w-go">Ver en el menú →</span>
+  </a>
+</header>
+
+<section id="ruta">
+  <div class="sec-head">
+    <h2>La calidad en <em>5 pasos</em></h2>
+    <p>Siguen el recorrido del producto: desde la carga en el CD hasta su retorno. Cada tripulante cumple su parte según su rol.</p>
+  </div>
+
+  <nav class="clock" aria-label="Recorrido del producto">
+    <span class="truckdot" aria-hidden="true"></span>
+    <a href="#p1" style="--c:#C8102E"><span class="pin">1</span><span class="t">a</span><span class="n">Armo la carga</span></a>
+    <a href="#p2" style="--c:#B07E07"><span class="pin">2</span><span class="t">b</span><span class="n">Verifico con foto</span></a>
+    <a href="#p3" style="--c:#2E7D3A"><span class="pin">3</span><span class="t">c</span><span class="n">Entrego perfecto</span></a>
+    <a href="#p4" style="--c:#7A5A1E"><span class="pin">4</span><span class="t">d</span><span class="n">Separo y reporto PFN</span></a>
+    <a href="#p5" style="--c:#A3472A"><span class="pin">5</span><span class="t">e · f</span><span class="n">Envases y retorno</span></a>
+  </nav>
+
+  <div class="stops">
+    <article class="stop" id="p1" style="--c:#C8102E">
+      <div class="side"><span class="num">1</span><span class="time">a</span><span class="dur">zona de carga</span></div>
+      <div class="body">
+        <div class="req">Armado de carga por tipo de camión</div>
+        <h3>Armo la carga según el camión</h3>
+        <div class="who"><span class="r"><b>HACE</b>Auxiliar T2</span><span><b>APRUEBA</b>Supervisor EDT</span><span><b>CONSULTA</b>Picking</span></div>
+        <div>
+          <div class="lbl">Layout por camión · 620/650 ml · misceláneos</div>
+          <div class="pays"><span><b>200 Foton</b>Pos. 3–6 · misc. 1–2</span><span><b>672 · 8 bahías</b>Pos. 1–7 · misc. 8</span><span><b>Freightliner 1008</b>Pos. 1–11 · misc. 12</span><span><b>Descartables</b>Bodegas inferiores</span></div>
+        </div>
+        <ul class="do">
+          <li><b>Balanceo y nivelo las cajas</b><small>Que no se muevan ni se caigan. Nada de 620/650 ml ni NR sobre misceláneos.</small></li>
+          <li><b>Pallet mix de abajo hacia arriba</b><small>Jabas 620/650 ml → encartonados x24 → termocontraíbles → NABS → latas.</small></li>
+          <li><b>No golpeo las chapas al apilar</b><small>Ni cargo botellas desfondadas, explotadas o desgasificadas.</small></li>
+          <li><b>Faltantes completos, sobrantes devueltos</b><small>Antes de salir del CD.</small></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="stop" id="p2" style="--c:#B07E07">
+      <div class="side"><span class="num">2</span><span class="time">b</span><span class="dur">rampa de salida</span></div>
+      <div class="body">
+        <div class="req">Verificación de calidad en la salida (foto Liderman)</div>
+        <h3>Verifico con foto antes de salir</h3>
+        <div class="who"><span class="r"><b>HACE</b>Auxiliar T2</span><span><b>APRUEBA</b>Supervisor EDT</span><span><b>CONSULTA</b>Agente de seguridad</span></div>
+        <ul class="do">
+          <li><b>Abro la cortina en la rampa</b><small>Tripulación uniformada y con EPP (Anexo 9).</small></li>
+          <li><b>Liderman toma la foto de la carga</b><small>Y la comparte en el grupo de WhatsApp de control.</small></li>
+          <li><b>Reviso armado, pallets, jabas y bahías</b><small>Según el paso 1 y los criterios del Anexo 3.</small></li>
+        </ul>
+        <div class="stopif"><span class="ic">!</span><span>¿Pallet en mal estado? Aviso a Almacén para el cambio. ¿Jabas rotas o sucias? Se cambian. ¿Bahía sucia? Almacén la corrige antes de cargar; una unidad sucia afecta la auditoría mensual de 5S.</span></div>
+      </div>
+    </article>
+
+    <article class="stop" id="p3" style="--c:#2E7D3A">
+      <div class="side"><span class="num">3</span><span class="time">c</span><span class="dur">en ruta y en el POC</span></div>
+      <div class="body">
+        <div class="req">Manipulación y entrega del producto</div>
+        <h3>Manipulo y entrego en perfecto estado</h3>
+        <div class="who"><span class="r"><b>HACE</b>Tripulación T2</span><span><b>APRUEBA</b>Empresario (EDT)</span></div>
+        <ul class="do">
+          <li><b>Cortinas cerradas entre clientes</b><small>Cerraduras aseguradas en todo el recorrido.</small></li>
+          <li><b>No lanzo ni arrastro</b><small>Carretilla para PET, latas y termocontraíbles bien apilados (Anexo 1).</small></li>
+          <li><b>Agarro desde la base</b><small>Latas y termocontraíbles; sin peso sobre NABS, latas y aguas.</small></li>
+          <li><b>Solo producto perfecto e higiene personal</b><small>Sin humedad, polvo ni cuerpos extraños, fecha legible (Anexo 4). Uniforme limpio, sin joyas ni uñas largas.</small></li>
+        </ul>
+      </div>
+    </article>
+
+    <article class="stop" id="p4" style="--c:#7A5A1E">
+      <div class="side"><span class="num">4</span><span class="time">d</span><span class="dur">ante una novedad</span></div>
+      <div class="body">
+        <div class="req">Producto no conforme y reporte de roturas</div>
+        <h3>Separo el PFN y lo reporto</h3>
+        <div class="who"><span class="r"><b>HACE</b>Responsable de reparto T2</span><span><b>APRUEBA</b>Supervisor EDT</span><span><b>CONSULTA</b>Supervisor T2</span></div>
+        <ul class="do">
+          <li><b>No lo entrego: canastilla blanca</b><small>Lejos del producto bueno. La verde es para productos en fracción.</small></li>
+          <li><b>Reporto con foto en WhatsApp</b><small>Grupo Coord. BK &amp; Formavena: placa, SKU, descripción, foto del producto y del lote.</small></li>
+          <li><b>Rotura en ruta: aviso al EDT y DQI</b><small>Registro en el reporte DQI – Roturas de reparto (Anexos 6 y 7).</small></li>
+          <li><b>Entrega parcial o pago del dañado</b><small>Si el cliente tiene descuento o crédito activo. El Supervisor T2 consolida y valida con Calidad.</small></li>
+        </ul>
+        <div class="stopif"><span class="ic">!</span><span>¿Lluvia, huaico o granizo? Me detengo en un lugar seguro, cierro cortinas y aviso al EDT y al Supervisor T2, que deciden si continúa la ruta. El producto afectado se separa y se informa al liquidar.</span></div>
+      </div>
+    </article>
+
+    <article class="stop" id="p5" style="--c:#A3472A">
+      <div class="side"><span class="num">5</span><span class="time">e · f</span><span class="dur">POC y check in</span></div>
+      <div class="body">
+        <div class="req">Recojo de envases y PFN · retorno del producto al CD</div>
+        <h3>Recojo envases y reviso el retorno</h3>
+        <div class="who"><span class="r"><b>HACE</b>Auxiliar T2</span><span><b>APRUEBA</b>Supervisor T2 · Supervisor EDT</span><span><b>CONSULTA</b>Almacén</span></div>
+        <ul class="do">
+          <li><b>Envases en buen estado</b><small>Vidrio retornable de 600, 620, 630, 650 y 1000 ml. Sin pico roto, rajados ni de otra compañía. Brahma solo por Brahma.</small></li>
+          <li><b>PFN programado con parámetros</b><small>En canastillas cerca de los envases; si es mucho, una sola bahía sin mezclar con PBE (Anexo 5).</small></li>
+          <li><b>Check in del 100 % del retorno</b><small>Con el conductor y el asistente de Almacén de turno.</small></li>
+          <li><b>PBE vuelve, merma se cobra</b><small>PBE a Picking; roto, faltante o vencido va a merma y se cobra al EDT. El PFN de ruta se descarta al 100 %.</small></li>
+        </ul>
+        <div class="stopif"><span class="ic">!</span><span>¿El cliente no tiene envases? Aviso al Supervisor de reparto; el SDG se registra solo con autorización del Gerente de Ventas. Pallets de PFN siempre con etiqueta de "Baja" visible.</span></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="seguridad">
+  <div class="sec-head">
+    <h2>Calidad <em>en una mirada</em></h2>
+    <p>Las 5 reglas de oro de la calidad en ruta y los casos en que no se sale ni se entrega.</p>
+  </div>
+  <div class="safety">
+    <div class="panel">
+      <h3>Las 5 reglas de oro</h3>
+      <ul class="rules">
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><path d="M15 15l18 18M33 15L15 33" stroke="#F2C52A" stroke-width="5" stroke-linecap="round"/></svg>
+          <div><b>No lanzar ni arrastrar</b><span>Cajas y jabas se cargan, bajan y entregan en mano.</span>
+            <div class="epp"><i>Casco con barbiquejo</i><i>Lentes</i><i>Chaleco o polo reflectivo</i><i>Botas punta de acero</i><i>Guantes anticorte N5</i></div></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><rect x="17" y="12" width="14" height="22" rx="3" fill="none" stroke="#F2C52A" stroke-width="3"/><path d="M12 37h24" stroke="#F2C52A" stroke-width="4" stroke-linecap="round"/></svg>
+          <div><b>Agarrar desde la base</b><span>Latas y termocontraíbles; nada pesado encima de NABS, latas y aguas.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><rect x="13" y="28" width="22" height="7" fill="#F2C52A"/><rect x="15" y="20" width="18" height="7" fill="#F2C52A"/><rect x="17" y="12" width="14" height="7" fill="#F2C52A"/></svg>
+          <div><b>Carga estable y nivelada</b><span>Sin 620/650 ml ni NR sobre misceláneos y sin pasar el nivel máximo.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><path d="M11 22l13-9 13 9v14H11z" fill="none" stroke="#F2C52A" stroke-width="3" stroke-linejoin="round"/><rect x="18" y="26" width="12" height="10" fill="#F2C52A"/></svg>
+          <div><b>Producto protegido</b><span>Techo o carpa y cortinas cerradas; sin sol directo ni olores fuertes; no agitar la cerveza.</span></div>
+        </li>
+        <li>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1a1608" stroke="#F2C52A" stroke-width="2"/><text x="24" y="32" text-anchor="middle" font-family="Big Shoulders Display, Impact, sans-serif" font-weight="900" font-size="22" fill="#F2C52A">?</text></svg>
+          <div><b>Ante la duda, no se entrega</b><span>Se separa como PFN y se reporta con foto del producto y del lote.</span></div>
+        </li>
+      </ul>
+    </div>
+    <div class="panel nogo">
+      <h3><small>ALTO</small>No sale ni se entrega si…</h3>
+      <ul>
+        <li>Hay pallets negros, con heces de roedor, astillados o sin clavos.</li>
+        <li>Hay jabas rotas, sucias o con fisuras, o la bahía tiene vidrios, basura, grasa u olores.</li>
+        <li>La carga no está armada según el layout del camión.</li>
+        <li>El producto está roto, desfondado, explotado o con bajo nivel.</li>
+        <li>Está mal chapado o etiquetado, con empaque roto, sucio o húmedo.</li>
+        <li>Tiene polvo o cuerpos extraños, o la fecha de vencimiento no es legible.</li>
+      </ul>
+      <p class="note">En la salida, el auxiliar avisa a Almacén y la unidad sale solo con la observación corregida. En el cliente, el producto va a la canastilla de PFN y se reporta (paso 4).</p>
+    </div>
+  </div>
+</section>
+
+<section id="roles">
+  <div class="sec-head">
+    <h2>Quién <em>hace qué</em></h2>
+    <p>Resumen de la matriz RACI (Unique ID 601 · R.1.4.2). <span class="tag R">R</span>ejecuta · <span class="tag A">A</span>aprueba.</p>
+  </div>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Paso</th><th>Actividad</th><th>Ejecuta</th><th>Aprueba</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Armado de carga por tipo de camión</td><td><span class="tag R">R</span>Auxiliar T2</td><td><span class="tag A">A</span>Supervisor EDT</td></tr>
+        <tr><td>2</td><td>Verificación de calidad en la salida (foto Liderman)</td><td><span class="tag R">R</span>Auxiliar T2</td><td><span class="tag A">A</span>Supervisor EDT</td></tr>
+        <tr><td>3</td><td>Manipulación y entrega del producto</td><td><span class="tag R">R</span>Tripulación T2</td><td><span class="tag A">A</span>Empresario (EDT)</td></tr>
+        <tr><td>4</td><td>Producto no conforme y reporte de roturas</td><td><span class="tag R">R</span>Responsable de reparto T2</td><td><span class="tag A">A</span>Supervisor EDT</td></tr>
+        <tr><td>5</td><td>Recojo de envases y PFN</td><td><span class="tag R">R</span>Auxiliar T2</td><td><span class="tag A">A</span>Supervisor T2</td></tr>
+        <tr><td>5</td><td>Retorno del producto al CD (check in)</td><td><span class="tag R">R</span>Auxiliar T2</td><td><span class="tag A">A</span>Supervisor EDT</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="apoyo">
+  <div class="sec-head">
+    <h2>Cómo lo <em>medimos</em></h2>
+    <p>Indicadores de calidad en la entrega y documentos de apoyo para cada paso.</p>
+  </div>
+  <div class="two">
+    <div class="panel">
+      <h3>Indicadores</h3>
+      <div class="kpis">
+        <div class="kpi"><b>DQI · Delivery Quality Index</b><span>(HL con novedad DQI ÷ Total HL) × 1 000 000</span></div>
+        <div class="kpi"><b>Roturas / averías en reparto</b><span>N.° de productos dañados en el reparto</span></div>
+        <div class="kpi"><b>Market Refusal por calidad</b><span>% de cajas rechazadas en el día por mala calidad</span></div>
+        <div class="kpi"><b>NPS</b><span>Promotores menos detractores sobre clientes encuestados</span></div>
+        <div class="kpi"><b>Rate my Delivery</b><span>Calificación del cliente al servicio de reparto</span></div>
+        <div class="kpi"><b>Casos BeesCare – Calidad</b><span>Quejas de clientes por calidad</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Documentos de apoyo</h3>
+      <ul class="docs">
+        <li><a href="bloque-1.html#s1-1-4-1"><i>OPL</i><span>Manipulación manual de cargas</span><em>Anexo 1</em></a></li>
+        <li><a href="bloque-1.html#s1-1-1-2"><i>OPL</i><span>5S en las unidades de reparto</span><em>Anexo 2</em></a></li>
+        <li><a href="bloque-1.html#s1-1-3-2"><i>OPL</i><span>Criterios para segregación de pallets</span><em>Anexo 3</em></a></li>
+        <li><a href="bloque-1.html#s1-1-4-1"><i>OPL</i><span>Calidad de entrega y producto fuera de norma (PFN)</span><em>Anexos 4–5</em></a></li>
+        <li><a href="bloque-1.html#s1-1-4-1"><i>OPL</i><span>Proceso de reporte DQI · Roturas de reparto</span><em>Anexos 6–7</em></a></li>
+        <li><a href="bloque-1.html#s1-1-1-2"><i>OPL</i><span>Reposición de EPP · Apertura y cierre de cortina</span><em>Anexos 8–9</em></a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="flow" aria-label="Recorrido del producto">
+  <img src="img/ico-castillo-oro.png" alt="" class="fl-castle">
+  <ol class="steps">
+    <li><img src="img/ico-montacargas-oro.png" alt=""><b>Carga</b><span>Layout por camión</span></li>
+    <li><img src="img/ico-camion-oro.png" alt=""><b>Salida</b><span>Foto Liderman</span></li>
+    <li><img src="img/ico-carretilla-oro.png" alt=""><b>Entrega</b><span>Producto perfecto</span></li>
+    <li><img src="img/ico-camioneta-oro.png" alt=""><b>Retorno</b><span>Check in 100 %</span></li>
+  </ol>
+</div>
+<footer>
+  <span>SOP Calidad en Ruta · Pilar Delivery DPO · CD Callao</span>
+  <span class="mono">Elaboró: Jhoselyn Torres · Asistente de Transporte T2</span>
+</footer>
+</div>
+</body>
+</html>
