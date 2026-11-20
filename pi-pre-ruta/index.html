@@ -305,8 +305,6 @@ body.locked .page{visibility:hidden}
   const open = () => { g.remove(); document.body.classList.remove('locked'); };
   let ok = false; try { ok = sessionStorage.getItem('pib1-gate') === H; } catch(e){}
   if (ok) { open(); return; }
-  /* Abierto desde el menú DPO en una sola pestaña (#t=clave&solo): entra sin clave. El PI completo sí pide clave. */
-  if (/[#&?]solo\b/.test((location.hash||'')+(location.search||''))) { open(); return; }
   document.body.classList.add('locked');
   async function hash(t){ if (window.crypto && crypto.subtle){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); } return t === '031023' ? H : ''; }
   document.getElementById('gateForm').addEventListener('submit', async e => { e.preventDefault();
@@ -443,9 +441,6 @@ const IND = {
        desc:()=>`Si la llegada planificada al cliente es en la <b>mañana</b> (antes de 12:00) y llegamos en la mañana, o es en la <b>tarde</b> (desde 12:00) y llegamos en la tarde, cuenta 1. <b>Entregas en su ventana ÷ total de entregas × 100</b>. Meta: <b>${CFG.mEta}%</b>.`},
 };
 const ORDER = ['cd','mat','sal','tml','val','chk','chs','chr','pp','tm','dtm','dkm','er','ao','tlp','eta','liq','dqi','mr'];
-/* Vista solo Bloque 1 (1.1 a 1.4): el menú DPO la abre con #t=res&b1 */
-const B1 = (()=>{ try { return /[#&?]b1\b/.test((location.hash||'')+(location.search||'')); } catch(e){ return false; } })();
-if (B1) ORDER.splice(ORDER.indexOf('mr'), 1);
 const VEH = k => ['chs','chr','chk','val','sal','tml','tm','pp','dtm','dkm','er','ao','tlp','eta','liq','dqi'].includes(k);
 const PER = k => ['cd','mat'].includes(k);
 
@@ -460,11 +455,9 @@ function rutaIdx(){ if (CACHE.__ruta) return CACHE.__ruta; const byDay = {}, las
 const rutaOf = (p, d) => { const I = rutaIdx(); return I.byDay[p + '|' + d] || I.last[p] || ''; };
 try { const s = JSON.parse(localStorage.getItem('pib1-ui')||'{}'); if (s.tab) UI.tab = s.tab; } catch(e){}
 /* Abrir directo en una pestaña desde el menú DPO: link con #t=clave o ?t=clave (ej. #t=sal) */
-/* Modo una sola pestaña: el menú DPO abre con #t=clave&solo y solo se ve ese PI */
-try { if (/[#&?]solo\b/.test((location.hash||'')+(location.search||''))) { document.documentElement.classList.add('solo'); const st=document.createElement('style'); st.textContent='.solo #tabs{display:none!important}.solo .solo-bar{display:flex}.solo-bar{display:none;position:fixed;right:14px;bottom:14px;z-index:60;gap:8px;align-items:center;padding:9px 14px;border-radius:999px;background:#E5B21C;color:#070707;font:700 14px Barlow,Arial,sans-serif;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.5)}'; document.head.appendChild(st); addEventListener('DOMContentLoaded',()=>{ const a=document.createElement('a'); a.className='solo-bar'; a.href=location.pathname+'#t=res'; a.textContent='☰ Ver PI completo'; a.onclick=e=>{e.preventDefault(); let okc=false; try{ okc=sessionStorage.getItem('pib1-gate')==='4007b530a1cf44b36d8260259a6491b0e53730ad5b718b92ffbf0ac33033ffce'; }catch(_){} if(!okc){ location.replace(location.pathname+'#t='+UI.tab); location.reload(); return; } document.documentElement.classList.remove('solo'); a.remove(); history.replaceState(null,'',location.pathname+'#t='+UI.tab);}; document.body.appendChild(a); }); } } catch(e){}
 try { const q = ((location.hash||'').match(/[#&]t=([a-z0-9]+)/) || (location.search||'').match(/[?&]t=([a-z0-9]+)/) || [])[1]; if (q) UI.tab = q; } catch(e){}
 try { ADMIN = sessionStorage.getItem('pib1-adm') === '1'; } catch(e){}
-if (!['res','dat','cd','mat','sal','val','chk','tml','chs','chr','pp','tm','dkm','er','ao','tlp','eta','liq','dqi','mr','pnp','ret','w5','inf','ont'].includes(UI.tab)) UI.tab = 'res';
+if (!['res','dat','cd','mat','sal','val','chk','tml','chs','chr','pp','tm','dkm','er','ao','tlp','eta','liq','dqi','mr','pnp','ret','w5','inf','ont','rmd'].includes(UI.tab)) UI.tab = 'res';
 const saveUI = () => { try { localStorage.setItem('pib1-ui', JSON.stringify({tab:UI.tab})); } catch(e){} };
 
 /* ---------- tiempo ---------- */
@@ -998,11 +991,11 @@ const ICO = {
 /* =========================================================
    VISTAS
    ========================================================= */
-function dayKeysAll(){ if (CACHE.days) return CACHE.days; const s = new Set(); for (const src in DATA) for (const d in DATA[src]) if (/^\d{4}-\d{2}-\d{2}$/.test(d)) s.add(d); for (const k of ['ret','w5','pnp']) (B2[k] || []).forEach(r => s.add(r[0])); Object.keys((B2.otif || {}).tot || {}).forEach(d => s.add(d)); return CACHE.days = [...s].sort(); }
+function dayKeysAll(){ if (CACHE.days) return CACHE.days; const s = new Set(); for (const src in DATA) for (const d in DATA[src]) if (/^\d{4}-\d{2}-\d{2}$/.test(d)) s.add(d); for (const k of ['ret','w5','pnp']) (B2[k] || []).forEach(r => s.add(r[0])); Object.keys((B2.otif || {}).tot || {}).forEach(d => s.add(d)); ((B2.rmd || {}).rows || []).forEach(r => s.add(r[0])); return CACHE.days = [...s].sort(); }
 function renderTabs(){
   let h = `<button class="tab" role="tab" aria-selected="${UI.tab==='res'}" data-t="res"><span class="tn">★</span>Resumen</button>`;
-  let tb = ''; ORDER.forEach(k => { if (k === 'mat' || k === 'dtm') return; if (BLQ[k] !== tb){ tb = BLQ[k]; h += `<span class="tgrp">${BLQN[tb]}</span>`; } const st = status(k, agg(k, units(k)).val); h += `<button class="tab" role="tab" aria-selected="${UI.tab===k}" data-t="${k}"><span class="tn">${IND[k].n}</span>${k === 'cd' ? 'Asistencia CD y matinal' : IND[k].tab}<span class="sd st-${st}"></span></button>`;  if (k === 'eta') h += `<button class="tab" role="tab" aria-selected="${UI.tab==='pnp'}" data-t="pnp"><span class="tn">PNP</span>Paradas no plan<span class="sd st-${pnpStatus()}"></span></button>`; if (k === 'mr') h += `<button class="tab" role="tab" aria-selected="${UI.tab==='inf'}" data-t="inf"><span class="tn">IF</span>In Full<span class="sd st-${otStatus('inf')}"></span></button><span class="tgrp">Bloque 4.4 · On time</span><button class="tab" role="tab" aria-selected="${UI.tab==='ont'}" data-t="ont"><span class="tn">OT</span>On Time<span class="sd st-${otStatus('ont')}"></span></button>`; });
-  if (!B1) { h += `<span class="tgrp">Bloque 2 · Gestión</span>`; } (B1 ? [] : B2ORDER).forEach(k => { h += `<button class="tab" role="tab" aria-selected="${UI.tab===k}" data-t="${k}"><span class="tn">${B2T[k].code}</span>${B2T[k].tab}<span class="sd st-${b2Status(k)}"></span></button>`; });
+  let tb = ''; ORDER.forEach(k => { if (k === 'mat' || k === 'dtm') return; if (BLQ[k] !== tb){ tb = BLQ[k]; h += `<span class="tgrp">${BLQN[tb]}</span>`; } const st = status(k, agg(k, units(k)).val); h += `<button class="tab" role="tab" aria-selected="${UI.tab===k}" data-t="${k}"><span class="tn">${IND[k].n}</span>${k === 'cd' ? 'Asistencia CD y matinal' : IND[k].tab}<span class="sd st-${st}"></span></button>`;  if (k === 'eta') h += `<button class="tab" role="tab" aria-selected="${UI.tab==='pnp'}" data-t="pnp"><span class="tn">PNP</span>Paradas no plan<span class="sd st-${pnpStatus()}"></span></button>`; if (k === 'mr') h += `<button class="tab" role="tab" aria-selected="${UI.tab==='inf'}" data-t="inf"><span class="tn">IF</span>In Full<span class="sd st-${otStatus('inf')}"></span></button><span class="tgrp">Bloque 4.4 · On time</span><button class="tab" role="tab" aria-selected="${UI.tab==='ont'}" data-t="ont"><span class="tn">OT</span>On Time<span class="sd st-${otStatus('ont')}"></span></button><span class="tgrp">Satisfacción del cliente</span><button class="tab" role="tab" aria-selected="${UI.tab==='rmd'}" data-t="rmd"><span class="tn">RMD</span>RMD<span class="sd st-${rmdStatus()}"></span></button>`; });
+  h += `<span class="tgrp">Bloque 2 · Gestión</span>`; B2ORDER.forEach(k => { h += `<button class="tab" role="tab" aria-selected="${UI.tab===k}" data-t="${k}"><span class="tn">${B2T[k].code}</span>${B2T[k].tab}<span class="sd st-${b2Status(k)}"></span></button>`; });
   h += `<button class="tab" role="tab" aria-selected="${UI.tab==='dat'}" data-t="dat"><span class="tn">⇪</span>Datos y metas</button>`;
   $('#tabs').innerHTML = h;
 }
@@ -1409,8 +1402,8 @@ function viewB2(k){
 function b2ResumenCards(){
   const pL = pnpRows(), pd = pnpOpDays(pL);
   let h = `<h3 class="bhd">Bloque 1.2 · Paradas no planificadas</h3><div class="grid sum"><button class="card sc st-${pnpStatus()}" data-go="pnp"><span class="scode">PNP · 1.2</span><span class="sn">Paradas no planificadas</span><span class="sv num">${pd ? (pL.length / pd).toLocaleString('es-PE', {maximumFractionDigits:1}) : '–'}<small> eventos/día</small></span><span class="sm">Meta ≤ ${PNP.metaN} · ${pL.length} eventos · ${(pL.reduce((a, r) => a + r[2], 0) / 60).toLocaleString('es-PE', {maximumFractionDigits:0})} h detenidas</span></button></div>`;
-  if (B1) return h;
   h += `<h3 class="bhd">Bloque 4.3 / 4.4 · In Full y On Time (volumen)</h3><div class="grid sum">` + ['inf','ont'].map(k => { const v = otVal(k), b = otBU(k); return `<button class="card sc st-${otStatus(k)}" data-go="${k}"><span class="scode">${OTT[k].code}</span><span class="sn">${k === 'inf' ? 'Pérdida in full' : 'Fuera de ventana'}</span><span class="sv num">${v == null ? '–' : v.toLocaleString('es-PE', {maximumFractionDigits:2})}<small>%</small></span><span class="sm">${b == null ? 'Meta BU pendiente' : 'BU ' + b.toLocaleString('es-PE', {maximumFractionDigits:2}) + '%'} · sobre HL creados</span></button>`; }).join('') + '</div>';
+  { const rv = rmdAvg(rmdRows()); h += `<h3 class="bhd">Satisfacción del cliente · RMD</h3><div class="grid sum"><button class="card sc st-${rmdStatus()}" data-go="rmd"><span class="scode">RMD</span><span class="sn">Rate My Delivery</span><span class="sv num">${rv == null ? '–' : rv.toFixed(2)}<small> /5</small></span><span class="sm">BU ${RMD_BU} · ${rmdRows().length.toLocaleString('es-PE')} encuestas</span></button></div>`; }
   h += `<h3 class="bhd">Bloque 2 · Retroalimentación y 5 Porqués</h3><div class="grid sum">`;
   B2ORDER.forEach(k => { const L = b2Rows(k), n = L.length, cl = L.filter(r => b2Closed(k, r)).length;
     h += `<button class="card sc st-${b2Status(k)}" data-go="${k}"><span class="scode">${B2T[k].code}</span><span class="sn">${B2T[k].tab}</span><span class="sv num">${n.toLocaleString('es-PE')}<small> registros</small></span><span class="sm">${n ? Math.round(cl / n * 100) : 0}% cerrados · ${new Set(L.map(r => r[0])).size} días</span></button>`; });
@@ -1571,12 +1564,82 @@ function viewOT(k){
   return h;
 }
 
+
+/* =========================================================
+   RMD · RATE MY DELIVERY (BEES) · promedio simple del Score (1 a 5) por fecha de calificación · CD Callao (BK34)
+   rows = [fechaRating, fechaEntrega, cliente, score, razón, estatus, tipoEntrega, placa, supervisor, canal, comentario(≤3)]
+   ========================================================= */
+const RMD_ACT = [["2026-07-06", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Implementar seguimiento a clientes con pagos recurrentes en efectivo, permitiéndonos promover la bancarización mediante acciones de sensibilización y fortalecer el uso de medios de pago electrónicos seguros.", "2026-07-16"], ["2026-07-10", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "mplementar seguimiento semanal de clientes con calificaciones bajas en el NPS, permitiéndonos identificar oportunidades de mejora y fortalecer acciones que incrementen la satisfacción y fidelización del cliente.", "2026-07-24"], ["2026-07-17", "RMD", "Manuel Leonidas Huapaya Sinarahua", "Revisar con el equipo de reparto las rutas con RMD por de bajo de 3 estrellas", "2026-07-20"], ["2026-07-27", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "mplementar seguimiento a clientes con bajas calificaciones en el NPS, permitiéndonos identificar las principales oportunidades de mejora y fortalecer acciones que incrementen la satisfacción y fidelización del cliente.", "2026-07-31"], ["2026-07-27", "RMD", "Manuel Leonidas Huapaya Sinarahua", "Gestionar el RMD de 5 estrellas para la empresa adriancar", "2026-07-28"], ["2026-08-04", "Npsdelivery", "Jose Garcia Perez", "Revisar los planes que se implementaron frente al modelo Onte To One + Sup a fin de lograr consolidar las oportunidades y con esto mejorar el nivel de servicio ello a fin de incrementar nuestra tendencia positiva en NPS y OTIF BY ORDER.", "2026-08-08"], ["2026-08-05", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Implementar seguimiento de los resultados del NPS mediante retroalimentación con las tripulaciones, permitiéndonos identificar oportunidades de mejora y fortalecer la experiencia del cliente durante cada entrega.", "2026-08-13"], ["2026-08-08", "RMD", "Manuel Leonidas Huapaya Sinarahua", "Gestionar la participación oportuna del equipo de reparto en las encuestas de rmd por el lado de Adriancar", "2026-08-10"], ["2026-08-14", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Implementar seguimiento a clientes con bajas calificaciones en el NPS, permitiéndonos identificar causas recurrentes y establecer acciones de mejora para fortalecer la satisfacción y experiencia del cliente.", "2026-08-20"], ["2026-08-22", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Realizar seguimiento a clientes con bajas calificaciones en NPS, identificando las principales causas de insatisfacción y reforzando acciones con el personal de reparto para mejorar la experiencia.", "2026-08-25"], ["2026-08-26", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Implementar seguimiento a clientes con bajas calificaciones en NPS, permitiéndonos identificar las principales causas de insatisfacción y establecer acciones de mejora para fortalecer la experiencia durante las entregas.", "2026-09-03"], ["2026-09-14", "RMD", "Manuel Leonidas Huapaya Sinarahua", "Revisar el uso correcto de la encuesta de RMD con el equipo de reparto", "2026-09-16"], ["2026-09-14", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Gestionar la clinica de servicio en ruta con los repartos del BK3468 y BK3406", "2026-09-18"], ["2026-09-16", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Implementar seguimiento semanal de clientes con bajas calificaciones en NPS, permitiéndonos identificar causas recurrentes de insatisfacción y reforzar acciones con el personal de reparto para mejorar la experiencia del cliente.", "2026-09-19"], ["2026-09-17", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Gestionar el llenado correcto de la encuesta NSP con el equipo de vendedores con la finalidad de promover promotores", "2026-09-21"], ["2026-10-03", "Npsdelivery", "Manuel Leonidas Huapaya Sinarahua", "Gestionar llamadas post entrega a clientes al azar con la finalidad de asegurar el buen servicio de los repartos", "2026-10-06"], ["2026-10-07", "RMD", "Manuel Leonidas Huapaya Sinarahua", "Gestionar el proceso actualizado de flujo de reclamos por las encuestas menores a 3 estrellas", "2026-10-09"], ["2026-10-12", "Npsdelivery", "Jose Garcia Perez", "Revisar tickets de ingreso para la tripulacion que se identifico con acciones de adulteracion en ruta por parte de las personas involucradas, confirmar con T2 y tener atenciones", "2026-10-19"]];
+const RMD_BU = 4.88; const RMD_AC = {'2026-01':4.8844, '2026-02':4.8703, '2026-03':4.8525, '2026-04':4.8461, '2026-05':4.8918, '2026-06':4.855, '2026-07':4.8656, '2026-08':4.8423, '2026-09':4.8346};
+function rmdRows(){ const R = (B2.rmd || {}).rows || []; return R.filter(r => inPeriod(r[0]) && (!UI.emp || (r[7] && PLACA_EMP[normPlaca(r[7])] === UI.emp)) && (!UI.placa || normPlaca(r[7] || '') === normPlaca(UI.placa))); }
+function rmdAvg(L){ return L.length ? L.reduce((a, r) => a + r[3], 0) / L.length : null; }
+function rmdSt(v){ return v == null ? 'none' : v >= RMD_BU ? 'ok' : v >= RMD_BU - 0.03 ? 'warn' : 'bad'; }
+function rmdStatus(){ return rmdSt(rmdAvg(rmdRows())); }
+function rmdLine(series){
+  if (!series.length) return '<div class="empty">Sin encuestas en este periodo.</div>';
+  const W = Math.max(460, series.length * 40), H = 200, pl = 34, pr = 10, pt = 18, pb = 30;
+  const vals = series.map(s => s.v).concat([RMD_BU]); let lo = Math.min(...vals), hi = Math.max(...vals); lo = Math.floor((lo - 0.03) * 20) / 20; hi = Math.min(5, Math.ceil((hi + 0.02) * 20) / 20); if (hi - lo < 0.1) lo = hi - 0.1;
+  const x = i => pl + (series.length === 1 ? (W - pl - pr) / 2 : i * (W - pl - pr) / (series.length - 1)), y = v => pt + (hi - v) / (hi - lo) * (H - pt - pb);
+  let g = '';
+  for (let t = lo; t <= hi + 1e-9; t += (hi - lo) / 4){ g += `<line x1="${pl}" x2="${W - pr}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="var(--line)"/><text x="${pl - 4}" y="${(y(t) + 3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)" font-family="var(--f-mono)">${t.toFixed(2)}</text>`; }
+  g += `<line x1="${pl}" x2="${W - pr}" y1="${y(RMD_BU).toFixed(1)}" y2="${y(RMD_BU).toFixed(1)}" stroke="var(--ink)" stroke-dasharray="5 4" opacity=".8"/><text x="${W - pr}" y="${(y(RMD_BU) - 4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink)" font-family="var(--f-mono)">BU ${RMD_BU.toFixed(2)}</text>`;
+  g += `<polyline fill="none" stroke="var(--gold)" stroke-width="2" points="${series.map((s, i) => x(i).toFixed(1) + ',' + y(s.v).toFixed(1)).join(' ')}"/>`;
+  series.forEach((s, i) => { g += `<circle cx="${x(i).toFixed(1)}" cy="${y(s.v).toFixed(1)}" r="4.5" fill="var(--${rmdSt(s.v)})" stroke="#111"/><text x="${x(i).toFixed(1)}" y="${(y(s.v) - 8).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--ink)" font-family="var(--f-mono)">${s.v.toFixed(2)}</text><text x="${x(i).toFixed(1)}" y="${H - 10}" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="var(--f-mono)">${esc(s.l)}</text>`; });
+  return `<div class="chartbox"><svg viewBox="0 0 ${W} ${H}" ${series.length > 14 ? `style="min-width:${Math.round(W * .8)}px"` : ''} role="img" aria-label="RMD promedio">${g}</svg></div>`;
+}
+function viewRMD(){
+  const D = B2.rmd || {L:{}, rows:[]}, Lx = D.L, L = rmdRows(), n = L.length, v = rmdAvg(L), st = rmdSt(v);
+  const nf = (x, d = 2) => x.toLocaleString('es-PE', {maximumFractionDigits:d, minimumFractionDigits:d});
+  let h = `<div class="ph"><div><span class="code">RMD · SATISFACCIÓN</span><h2>RMD · Rate My Delivery</h2><div class="sub">Calificación del cliente a la entrega (BEES, 1 a 5 estrellas) · ${esc(periodTxt())}${UI.emp ? ' · ' + esc(UI.emp) : ''}</div>
+    <p><b>RMD = promedio del score</b> de todas las encuestas del periodo, por fecha de calificación (así lo calcula Anaplan). Meta: <b>BU Anaplan ≥ ${RMD_BU}</b> (T2 Rate My Delivery). Detractor = 1 a 3 estrellas. La placa y la EDT salen de cruzar cliente y fecha de entrega con el reporte de entrega en punto de venta (hasta el 30/10); canal y supervisor, del maestro de clientes.</p></div></div>`;
+  if (!D.rows.length) return h + '<div class="banner"><span>◆</span><div><b>Falta el archivo.</b> Pásale a Claude el reporte RMD.</div></div>';
+  const c5 = L.filter(r => r[3] === 5).length, det = L.filter(r => r[3] <= 3), days = new Set(L.map(r => r[0])).size;
+  h += `<div class="grid kpis">` + b2Kpi('RMD promedio', v == null ? '–' : nf(v), `BU ${nf(RMD_BU)} · ${v == null ? '' : (v - RMD_BU >= 0 ? '+' : '') + nf(v - RMD_BU) + ' vs meta'}`, st)
+    + b2Kpi('Encuestas', n.toLocaleString('es-PE'), `${days} días · ${days ? nf(n / days, 0) : 0} por día`, '')
+    + b2Kpi('5 estrellas', n ? nf(c5 / n * 100, 1) + '<small>%</small>' : '–', `${c5.toLocaleString('es-PE')} encuestas`, '')
+    + b2Kpi('Detractores (1–3)', n ? nf(det.length / n * 100, 1) + '<small>%</small>' : '–', `${det.length} encuestas · cada una baja el promedio`, '') + `</div>`;
+  const ser = (f, lab, last) => { const g = {}; L.forEach(r => { const k = f(r[0]); (g[k] = g[k] || []).push(r[3]); }); return Object.keys(g).sort().slice(-last).map(k => ({l:lab(k), v:g[k].reduce((a, b) => a + b, 0) / g[k].length, n:g[k].length})); };
+  h += `<div class="grid two"><div class="card"><h3>Por mes <small>RMD promedio vs BU</small></h3>${rmdLine(ser(d => d.slice(0,7), k => MESL[+k.slice(5,7) - 1].slice(0,3), 24))}</div><div class="card"><h3>Por semana <small>últimas 16</small></h3>${rmdLine(ser(d => weekOf(d), k => 'S' + +k.slice(5), 16))}</div></div>`;
+  h += `<div class="card" style="margin-top:8px"><h3>Por día <small>últimos 31 días</small></h3>${rmdLine(ser(d => d, k => k.slice(8,10) + '/' + k.slice(5,7), 31))}</div>`;
+  // mes a mes
+  const mm = {}; L.forEach(r => { const m = r[0].slice(0,7); const o = mm[m] || (mm[m] = {n:0, s:0, c5:0, d:0}); o.n++; o.s += r[3]; if (r[3] === 5) o.c5++; if (r[3] <= 3) o.d++; });
+  h += `<div class="card" style="margin-top:8px"><h3>Mes a mes vs BU Anaplan <small>promedio del score</small></h3>${b2Tbl(['Mes','Encuestas','RMD','BU','Brecha','AC Anaplan','% 5★','% detractores'], Object.keys(mm).sort().map(m => { const o = mm[m], a = o.s / o.n; return `<tr><td>${MESL[+m.slice(5,7) - 1]}${m === '2026-11' ? ' (al 19)' : ''}</td><td class="num">${o.n.toLocaleString('es-PE')}</td><td class="num c-${rmdSt(a)}"><b>${nf(a, 3)}</b></td><td class="num">${nf(RMD_BU)}</td><td class="num">${(a - RMD_BU >= 0 ? '+' : '') + nf(a - RMD_BU, 3)}</td><td class="num">${RMD_AC[m] != null ? nf(RMD_AC[m], 3) : '–'}</td><td class="num">${nf(o.c5 / o.n * 100, 1)}%</td><td class="num">${nf(o.d / o.n * 100, 1)}%</td></tr>`; }))}</div>`;
+  // distribución y motivos
+  const dist = [5,4,3,2,1].map(s => ({k:s + ' ★', n:L.filter(r => r[3] === s).length}));
+  const mot = b2Count(det, r => Lx.rz[r[4]] === '—' ? 'Sin razón' : Lx.rz[r[4]]);
+  h += `<div class="grid two"><div class="card"><h3>Distribución del score</h3>${b2Bars(dist, n)}</div><div class="card"><h3>Motivos de los detractores <small>encuestas de 1 a 3 estrellas</small></h3>${b2Bars(mot, det.length, {wide:true})}</div></div>`;
+  // EDT y placas
+  const withP = L.filter(r => r[7]);
+  const edt = b2Count(withP, r => PLACA_EMP[normPlaca(r[7])] || 'SIN EDT', r => r[3]).filter(o => o.n >= 100).map(o => ({...o, a:o.w / o.n, d:o.rows.filter(r => r[3] <= 3).length})).sort((a, b) => a.a - b.a);
+  h += `<div class="card" style="margin-top:8px"><h3>Por empresario (EDT) <small>de peor a mejor · encuestas con placa identificada (${Math.round(withP.length / Math.max(n, 1) * 100)}%)</small></h3>${b2Tbl(['EDT','Encuestas','RMD','Detractores','% det.'], edt.map(o => `<tr><td class="wrapc"><span class="dot st-${rmdSt(o.a)}"></span>${esc(titleCase(o.k))}</td><td class="num">${o.n.toLocaleString('es-PE')}</td><td class="num"><b>${nf(o.a, 3)}</b></td><td class="num">${o.d}</td><td class="num">${nf(o.d / o.n * 100, 1)}%</td></tr>`))}</div>`;
+  const pl = b2Count(withP, r => normPlaca(r[7]), r => r[3]).filter(o => o.n >= 30).map(o => ({...o, a:o.w / o.n, d:o.rows.filter(r => r[3] <= 3).length, lab:normPlaca(o.k) + ' · ' + titleCase(PLACA_EMP[normPlaca(o.k)] || '')}));
+  const off = pl.slice().sort((a, b) => a.a - b.a || b.d - a.d).slice(0, 8), top = pl.slice().sort((a, b) => b.a - a.a || b.n - a.n).slice(0, 8);
+  const prow = o => `<tr><td class="wrapc">${esc(o.lab)}</td><td class="num">${o.n}</td><td class="num"><b>${nf(o.a, 2)}</b></td><td class="num">${o.d}</td></tr>`;
+  h += `<div class="grid two"><div class="card"><h3>Top offender · placas <small>menor RMD · 30 encuestas o más</small></h3>${b2Tbl(['Placa','Encuestas','RMD','Detract.'], off.map(prow))}</div><div class="card"><h3>Top performance · placas <small>mayor RMD · 30 encuestas o más</small></h3>${b2Tbl(['Placa','Encuestas','RMD','Detract.'], top.map(prow))}</div></div>`;
+  // supervisor, canal, tipo de entrega
+  const grp = (idx, list) => b2Count(L, r => Lx[list][r[idx]], r => r[3]).filter(o => o.k !== '—' && o.n >= 100).map(o => ({...o, a:o.w / o.n})).sort((a, b) => a.a - b.a);
+  const sup = grp(8, 'sup'), can = grp(9, 'can'), tp = grp(6, 'tp'), es = grp(5, 'st').filter(o => o.n >= 30);
+  const grow = o => `<tr><td class="wrapc"><span class="dot st-${rmdSt(o.a)}"></span>${esc(o.k)}</td><td class="num">${o.n.toLocaleString('es-PE')}</td><td class="num"><b>${nf(o.a, 3)}</b></td></tr>`;
+  h += `<div class="grid two"><div class="card"><h3>Supervisor de ventas <small>de peor a mejor · 100 encuestas o más</small></h3>${b2Tbl(['Supervisor','Encuestas','RMD'], sup.slice(0, 8).map(grow))}</div><div class="card"><h3>Canal y tipo de entrega</h3>${b2Tbl(['Grupo','Encuestas','RMD'], can.concat(tp).concat(es).map(grow))}</div></div>`;
+  // voz del cliente
+  const com = det.filter(r => r[10]).sort((a, b) => a[0] < b[0] ? 1 : -1).slice(0, 12);
+  if (com.length) h += `<div class="card" style="margin-top:8px"><h3>Voz del cliente <small>últimos comentarios de 1 a 3 estrellas</small></h3>${b2Tbl(['Fecha','★','Motivo','Placa','Comentario'], com.map(r => `<tr><td>${r[0].split('-').reverse().join('/')}</td><td class="num c-bad">${r[3]}</td><td class="wrapc">${esc(Lx.rz[r[4]])}</td><td>${esc(r[7] || '–')}</td><td class="wrapc">${esc(r[10])}</td></tr>`))}</div>`;
+  h += `<div class="card" style="margin-top:8px"><h3>Acciones registradas en el Action Log <small>${RMD_ACT.length} acciones · KPI RMD y NPS delivery</small></h3>${b2Tbl(['Fecha','KPI','Dueño','Acción','Compromiso'], RMD_ACT.map(a => `<tr><td>${a[0].split('-').reverse().join('/')}</td><td>${esc(a[1])}</td><td class="wrapc">${esc(a[2])}</td><td class="wrapc">${esc(a[3])}</td><td>${a[4] && a[4] !== 'NaT' ? a[4].split('-').reverse().join('/') : '–'}</td></tr>`))}</div>`;
+  const lect = [];
+  if (v != null) lect.push(`RMD de <b>${nf(v)}</b> frente a la BU de ${nf(RMD_BU)}: ${v >= RMD_BU ? 'en meta' : 'falta ' + nf(RMD_BU - v) + ' para la meta'}.`);
+  if (mot[0]) lect.push(`Primer motivo de detractores: <b>${esc(mot[0].k)}</b> (${Math.round(mot[0].n / Math.max(det.length, 1) * 100)}%).`);
+  if (edt.length > 1) lect.push(`EDT con menor RMD: <b>${esc(titleCase(edt[0].k))}</b> (${nf(edt[0].a, 3)}); mejor: <b>${esc(titleCase(edt[edt.length - 1].k))}</b> (${nf(edt[edt.length - 1].a, 3)}).`);
+  if (tp.length > 1) lect.push(`Por tipo de entrega: ${tp.map(o => esc(o.k) + ' ' + nf(o.a, 3)).join(' · ')}.`);
+  lect.push('Enfoque: bajar detractores (llegada tarde, productos y cantidad equivocada) con revisión de placas top offender y llamada post entrega a clientes de 1 a 3 estrellas.');
+  h += `<div class="card lect"><span class="lk">Lectura</span><ul>${lect.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
+  return h;
+}
+
 function render(){
   renderTabs(); renderSide(); renderBanner();
   const v = $('#view');
   if (UI.tab === 'mat') UI.tab = 'cd'; if (UI.tab === 'dtm') UI.tab = 'tm';
-  if (B1 && ['mr','inf','ont','ret','w5'].includes(UI.tab)) UI.tab = 'res';
-  v.innerHTML = UI.tab === 'res' ? viewResumen() + b2ResumenCards() : B2T[UI.tab] ? viewB2(UI.tab) : UI.tab === 'pnp' ? viewPNP() : OTT[UI.tab] ? viewOT(UI.tab) : UI.tab === 'dat' ? viewDatos() : UI.tab === 'cd' ? viewInd('cd') + '<div class="rule" style="margin:26px 0 6px"></div>' + viewInd('mat') : UI.tab === 'tm' ? viewInd('tm') + '<div class="rule" style="margin:26px 0 6px"></div>' + viewInd('dtm') : viewInd(UI.tab);
+  v.innerHTML = UI.tab === 'res' ? viewResumen() + b2ResumenCards() : B2T[UI.tab] ? viewB2(UI.tab) : UI.tab === 'pnp' ? viewPNP() : OTT[UI.tab] ? viewOT(UI.tab) : UI.tab === 'rmd' ? viewRMD() : UI.tab === 'dat' ? viewDatos() : UI.tab === 'cd' ? viewInd('cd') + '<div class="rule" style="margin:26px 0 6px"></div>' + viewInd('mat') : UI.tab === 'tm' ? viewInd('tm') + '<div class="rule" style="margin:26px 0 6px"></div>' + viewInd('dtm') : viewInd(UI.tab);
 }
 let rT = null; const rerender = () => { clearTimeout(rT); rT = setTimeout(() => { invalidate(); render(); }, 80); };
 const toTop = () => { const t = $('.tabs'); if (t && window.scrollY > t.offsetTop) window.scrollTo({top: Math.max(0, t.getBoundingClientRect().top + window.scrollY - 8), behavior:'smooth'}); };
@@ -1683,7 +1746,7 @@ function useSnap(S){
     for (const k in DATA) if (S[k] && Object.keys(S[k]).length){ DATA[k] = S[k]; SNAPD[k] = S[k]; }
     if (S._placas && S._placas.rows && S._placas.rows.length){ PLACAS = {cols:S._placas.cols || ['PLACA'], rows:S._placas.rows}; }
     if (Array.isArray(S._cond)) COND = S._cond;
-    if (Array.isArray(S.ret)) B2.ret = S.ret; if (Array.isArray(S.pnp)) B2.pnp = S.pnp; if (S.otif) B2.otif = S.otif; if (Array.isArray(S.w5)){ B2.w5all = S.w5.length; B2.w5 = S.w5.filter(r => (+r[7] || 0) >= W5MIN); }
+    if (Array.isArray(S.ret)) B2.ret = S.ret; if (Array.isArray(S.pnp)) B2.pnp = S.pnp; if (S.otif) B2.otif = S.otif; if (S.rmd) B2.rmd = S.rmd; if (Array.isArray(S.w5)){ B2.w5all = S.w5.length; B2.w5 = S.w5.filter(r => (+r[7] || 0) >= W5MIN); }
     try { rebuildPlacaMap(); } catch(e){ SNAPERR = 'placas: ' + e.message; }
     DEMO = false; SNAP = true; CACHE = {}; }
 async function loadSnap(){
