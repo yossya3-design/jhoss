@@ -1692,11 +1692,11 @@ async function loadSnap(){
 async function connect(){
   if (await loadSnap()){ $('#sync').textContent = 'Datos guardados · conectando…'; try { render(); } catch(e){ $('#sync').textContent = 'Error al mostrar: ' + e.message; } } else $('#sync').textContent = 'No se pudo leer datos guardados: ' + SNAPERR;
   const loaded = {cd:false, mat:false, sal:false, chk:false, tml:false, tm:false, plan:false, pp:false, dash:false, eta:false};
-  const timer = setTimeout(() => { if (!DB){ LOCAL = true; if (!SNAP) buildDemo(); $('#sync').textContent = SNAP ? 'Datos guardados (17/11)' : 'Vista local'; render(); } else $('#sync').textContent = 'La base tarda en responder; los datos pueden no estar al día'; }, 10000);
+  const timer = setTimeout(() => { if (!DB){ LOCAL = true; if (!SNAP) buildDemo(); $('#sync').textContent = SNAP ? 'Datos guardados (20/11)' : 'Vista local'; render(); } else $('#sync').textContent = 'La base tarda en responder; los datos pueden no estar al día'; }, 10000);
   try {
     const has = window.claude && claude.use;
     const [db, dl] = await Promise.all([has ? claude.use('db') : null, has ? claude.use('downloads') : null]); DL = dl;
-    if (!db){ clearTimeout(timer); LOCAL = true; if (!SNAP) buildDemo(); $('#sync').textContent = SNAP ? 'Datos guardados (17/11)' : 'Vista local'; render(); return; }
+    if (!db){ clearTimeout(timer); LOCAL = true; if (!SNAP) buildDemo(); $('#sync').textContent = SNAP ? 'Datos guardados (20/11)' : 'Vista local'; render(); return; }
     DB = db; const real = {cd:{}, mat:{}, sal:{}, chk:{}, tml:{}, tm:{}, plan:{}, pp:{}, dash:{}, eta:{}, mr:{}, mrm:{}, mrc:{}};
     const apply = () => { const any = Object.values(real).some(o => Object.keys(o).length);
       if (any){ if (DEMO) DEMO = false; for (const s in real) if (Object.keys(real[s]).length) DATA[s] = {...(SNAPD[s] || {}), ...real[s]}; }
@@ -1705,13 +1705,13 @@ async function connect(){
     for (const src of Object.keys(COLL)){
       (SNAP ? DB.collection(COLL[src]).where('at', '>', SNAP_AT) : DB.collection(COLL[src])).onSnapshot(snap => { const o = {}; const om = {}, oc = {}; snap.docs.forEach(d => { const x = d.data(); if (x && Array.isArray(x.rows)) o[d.id] = x.rows; if (src === 'mr' && x){ om[d.id] = x.m || []; if (x.cm) oc[d.id.slice(0,7)] = x.cm; } }); real[src] = o; if (src === 'mr'){ real.mrm = om; real.mrc = oc; }
         if (!snap.metadata.fromCache){ loaded[src] = true; clearTimeout(timer); $('#sync').textContent = 'Base compartida · al día'; } apply(); },
-        err => { $('#sync').textContent = SNAP ? 'Datos guardados (17/11)' : 'No se pudo leer la base (' + err.code + ')'; });
+        err => { $('#sync').textContent = SNAP ? 'Datos guardados (20/11)' : 'No se pudo leer la base (' + err.code + ')'; });
     }
     DB.doc('b1/config').onSnapshot(s => { if (s.exists){ const x = s.data(); CFG = {...CFG_DEF}; for (const k in CFG_DEF) if (typeof x[k] === 'number') CFG[k] = x[k]; rerender(); } }, () => {});
     DB.doc('b1/hc').onSnapshot(s => { if (s.exists){ HC = {...(s.data().hc || {})}; rerender(); } }, () => {});
     DB.doc('b1/condplaca').onSnapshot(s => { if (s.exists){ COND = (s.data().rows || []).map(r => r.c || r); rebuildPlacaMap(); rerender(); } }, () => {});
     DB.doc('b1/placas').onSnapshot(s => { if (s.exists){ const x = s.data(); PLACAS = {cols:x.cols || ['PLACA'], rows:(x.rows || []).map(r => r.c || r)}; rebuildPlacaMap(); rerender(); } }, () => {});
-  } catch(err){ clearTimeout(timer); LOCAL = true; if (!SNAP) buildDemo(); $('#sync').textContent = SNAP ? 'Datos guardados (17/11)' : 'Vista local'; render(); }
+  } catch(err){ clearTimeout(timer); LOCAL = true; if (!SNAP) buildDemo(); $('#sync').textContent = SNAP ? 'Datos guardados (20/11)' : 'Vista local'; render(); }
 }
 
 function tick(){ const now = new Date(); try { $('#clk').textContent = now.toLocaleTimeString('es-PE', {hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'America/Lima'}); $('#clkd').textContent = now.toLocaleDateString('es-PE', {weekday:'long', day:'2-digit', month:'short', timeZone:'America/Lima'}) + ' · Lima'; } catch(_){ $('#clk').textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()); } }
