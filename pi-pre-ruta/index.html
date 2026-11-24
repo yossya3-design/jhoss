@@ -416,7 +416,7 @@ const IND = {
   pp: {n:7, code:'1.1', tab:'Primer punto', name:'Llegada al primer punto', sub:'Viaje 1 · Secuencia real 1 · entre 06:00 y 09:00', src:'pp', kind:'min', clock:true, meta:()=>CFG.ppH,
        desc:()=>`Hora promedio en que la unidad llega a su <b>primer cliente</b> (Hora ejec. llegada cliente, Trip 1 y Secuencia real 1). Solo se consideran llegadas entre ${hhmm(CFG.ppIni)} y ${hhmm(CFG.ppFin)}; lo que llega después no es primer punto. Referencia: ${hhmm(CFG.ppH)}.`},
   tm: {n:8, code:'1.2', tab:'Tiempo en mercado', name:'Tiempo en mercado', sub:'Bloque 1.2 · Hrs en Ruta por placa y día', src:'tm', kind:'min', meta:()=>CFG.tmH,
-       desc:()=>`Horas promedio que la unidad pasa en el mercado (<b>Hrs en Ruta</b> del archivo TM). Meta: entre <b>${CFG.tmMin} y ${CFG.tmH} h</b> (menos de ${CFG.tmMin} h es unidad subutilizada; más de ${CFG.tmH} h es jornada excedida).`},
+       desc:()=>`Horas promedio que la unidad pasa en el mercado (<b>Hrs en Ruta</b> del archivo TM). Meta: <b>${CFG.tmH} h o menos</b>. Por debajo de la meta = verde; por encima = jornada excedida (rojo).`},
   liq:{n:15, code:'1.3', tab:'Tiempo de liquidación', name:'Tiempo de liquidación', sub:'TML · Entrada a geocerca → salida del conductor', src:'tml', kind:'min', meta:()=>CFG.liqMeta,
        desc:()=>`<b>Hora salida del conductor del CD − hora de entrada del camión a la geocerca</b>, en minutos. Cierra la jornada de transporte. Meta: <b>${CFG.liqMeta} min</b> o menos.`},
   mr: {n:17, code:'4.3', tab:'Market refusal', name:'Market Refusal (rechazo)', sub:'Market Refusals (Transporte y Cliente) · HL no entregados sobre HL programados', src:'mr', kind:'rate', meta:()=>mrBU(),
@@ -717,7 +717,7 @@ function units(k, opt = {}){
   }
   if (src === 'tm'){
     for (const d in DATA.tm){ if (!per(d)) continue; const pm = {}; (DATA.plan[d] || []).forEach(p => pm[p[0]] = p);
-      for (const r of DATA.tm[d]){ if (EXCL_PLACA.has(r[0])) continue; const p = pm[r[0]]; const v = r[1] / 60; if (!(v > 0) || v > 24) continue; const ok = v <= CFG.tmH && v >= CFG.tmMin;
+      for (const r of DATA.tm[d]){ if (EXCL_PLACA.has(r[0])) continue; const p = pm[r[0]]; const v = r[1] / 60; if (!(v > 0) || v > 24) continue; const ok = v <= CFG.tmH;
         const dev = p && p[1] > 0 ? (r[1] - p[1]) / p[1] * 100 : null;
         const u = {d, key:r[0], who:r[0], emp:PLACA_EMP[r[0]] || 'SIN EDT', sub:p ? p[3] : '', v, num:ok?1:0, den:1, ok, ej:r[1], pl:p ? p[1] : null, dev}; if (pass(u)) out.push(u); } }
     return out;
@@ -807,7 +807,6 @@ function status(k, v, bu){
   if (kind === 'pct') return v >= m ? 'ok' : (v >= m - CFG.tolPct ? 'warn' : 'bad');
   if (kind === 'low') return v <= m ? 'ok' : (v <= m + CFG.tolPct ? 'warn' : 'bad');
   if (kind === 'dev'){ const a = Math.abs(v); return a <= m ? 'ok' : (a <= m + CFG.tolPct ? 'warn' : 'bad'); }
-  if (k === 'tm' && v < CFG.tmMin) return v >= CFG.tmMin - 0.5 ? 'warn' : 'bad';
   if (IND[k].hi) return v >= m ? 'ok' : (v >= m * (1 - CFG.tolMin/100) ? 'warn' : 'bad');
   if (IND[k].clock) return v <= m ? 'ok' : (v <= m + 15 ? 'warn' : 'bad');
   return v <= m ? 'ok' : (v <= m * (1 + CFG.tolMin/100) ? 'warn' : 'bad');
@@ -815,7 +814,7 @@ function status(k, v, bu){
 const better = (k, a, b) => IND[k].kind === 'dev' ? Math.abs(a) < Math.abs(b) : (IND[k].kind === 'pct' || IND[k].hi) ? a > b : a < b;
 const fmtVal = (k, v) => v == null ? '–' : IND[k].clock ? hhmm(v) : IND[k].kind === 'dev' ? (v > 0.05 ? '+' : '') + (Math.round(v*10)/10).toFixed(1) : IND[k].kind === 'rate' ? (Math.round(v*10)/10).toFixed(1) : (IND[k].kind === 'min' ? fmtMin(v) : (Math.round(v*10)/10).toFixed(1));
 const unit = k => k === 'dqi' ? 'ppm' : k === 'mr' ? '%' : IND[k].kind === 'rate' ? 'pk/HH' : IND[k].kind === 'dev' ? '%' : IND[k].clock ? 'h' : k === 'tm' ? 'h' : IND[k].kind === 'min' ? 'min' : '%';
-const metaTxt = k => k === 'mr' ? (UI.m ? '≤ ' + fmtMin(BU_MR[(UI.y || '2026') + '-' + UI.m] ?? mrBU()) + '% (BU del mes)' : 'BU Anaplan de cada mes') : k === 'dqi' ? (UI.m ? '≤ ' + fmtMin(BU_DQI[(UI.y || '2026') + '-' + UI.m] ?? dqiBU()) + ' ppm (BU del mes)' : 'BU Anaplan de cada mes') : k === 'tm' ? CFG.tmMin + '–' + CFG.tmH + ' h' : IND[k].kind === 'dev' ? '±' + IND[k].meta() + '%' : IND[k].clock ? '≤ ' + hhmm(IND[k].meta()) : IND[k].hi ? '≥ ' + IND[k].meta() + ' ' + unit(k) : IND[k].kind === 'pct' ? IND[k].meta()+'%' : IND[k].kind === 'low' ? '≤ '+IND[k].meta()+'%' : '≤ '+IND[k].meta()+' '+unit(k);
+const metaTxt = k => k === 'mr' ? (UI.m ? '≤ ' + fmtMin(BU_MR[(UI.y || '2026') + '-' + UI.m] ?? mrBU()) + '% (BU del mes)' : 'BU Anaplan de cada mes') : k === 'dqi' ? (UI.m ? '≤ ' + fmtMin(BU_DQI[(UI.y || '2026') + '-' + UI.m] ?? dqiBU()) + ' ppm (BU del mes)' : 'BU Anaplan de cada mes') : k === 'tm' ? '≤ ' + CFG.tmH + ' h' : IND[k].kind === 'dev' ? '±' + IND[k].meta() + '%' : IND[k].clock ? '≤ ' + hhmm(IND[k].meta()) : IND[k].hi ? '≥ ' + IND[k].meta() + ' ' + unit(k) : IND[k].kind === 'pct' ? IND[k].meta()+'%' : IND[k].kind === 'low' ? '≤ '+IND[k].meta()+'%' : '≤ '+IND[k].meta()+' '+unit(k);
 const ST_LBL = {ok:'Cumple', warn:'Alerta', bad:'Fuera de meta', none:'Sin datos'};
 function groupBy(list, f){ const g = {}; for (const u of list){ const key = f(u); (g[key] ||= []).push(u); } return g; }
 /* tendencia DPO: 3 meses y vs. año anterior (respeta EDT/placa; ignora mes/semana/día) */
@@ -850,7 +849,7 @@ function scaleFor(k, vals){
   if (kind !== 'min'){ const hi = Math.max(meta, ...vals, 1); const max = kind === 'low' ? Math.min(100, Math.ceil(hi * 1.25 / 5) * 5) : 100; return {min:0, max, step: max > 50 ? 20 : (max > 20 ? 10 : 5), pct:true}; }
   const max = Math.ceil(Math.max(meta * 1.4, ...vals, 1) / 5) * 5; return {min:0, max, step: max > 60 ? 20 : (max > 30 ? 10 : 5), pct:false};
 }
-const metaVals = k => (k === 'dqi' || k === 'mr') ? [] : IND[k].kind === 'dev' ? [IND[k].meta(), -IND[k].meta()] : k === 'tm' ? [CFG.tmMin, CFG.tmH] : [IND[k].meta()];
+const metaVals = k => (k === 'dqi' || k === 'mr') ? [] : IND[k].kind === 'dev' ? [IND[k].meta(), -IND[k].meta()] : k === 'tm' ? [CFG.tmH] : [IND[k].meta()];
 const tickL = (k, t, sc) => IND[k].clock ? hhmm(t) : t + (sc.pct ? '%' : '');
 function barChart(k, ser, opt = {}){
   const W = 900, H = opt.h || 260, L = 42, R = 12, T = 28, B = 34; const meta = IND[k].meta();
@@ -1079,9 +1078,8 @@ function tiles(k, a, list){
   return T('clock', k === 'liq' ? 'Liquidación promedio' : k === 'tml' ? 'TML promedio' : k === 'tm' ? 'Horas promedio' : k === 'pp' ? 'Hora prom. llegada' : 'Promedio', fmtVal(k, a.val), unit(k), `<span class="pill st-${st}">${ST_LBL[st]}</span> meta ${metaTxt(k)}`, true) + T('target','% Cumplimiento', a.pct == null ? '–' : fmtVal('cd', a.pct), '%', nf(a.okN) + ' de ' + nf(a.n) + ' dentro de meta') + T('warn','Fuera de meta', nf(a.bad), '', 'eventos') + T('truck','Mejor / peor placa', best ? fmtVal(k, best.v) + ' / ' + fmtVal(k, worst.v) : '–', unit(k), best ? esc(best.p) + ' · ' + esc(worst.p) : '');
 }
 function gapOf(k, v){ if (v == null) return null; const m = IND[k].meta(); return IND[k].kind === 'pct' ? v - m : v - m; }
-function gapTxt(k, v){ const g = gapOf(k, v); if (g == null) return 'sin datos'; const u = IND[k].kind === 'pct' ? ' pts' : ' min';
+function gapTxt(k, v){ const g = gapOf(k, v); if (g == null) return 'sin datos'; const u = IND[k].kind === 'pct' ? ' pts' : k === 'tm' ? ' h' : ' min';
   if (IND[k].kind === 'dev'){ const e = Math.abs(v) - IND[k].meta(); return e <= 0 ? 'en meta' : 'excede ' + fmtMin(e) + ' pts'; }
-  if (k === 'tm' && v < CFG.tmMin) return 'faltan ' + fmtMin(CFG.tmMin - v) + ' h';
   const hiK = IND[k].kind === 'pct' || IND[k].hi; const ok = hiK ? g >= 0 : g <= 0; return (ok ? 'en meta' : (hiK ? 'faltan ' + fmtVal(k, Math.abs(g)) + u : 'excede ' + fmtVal(k, Math.abs(g)) + u)); }
 function lectura(k, list, a, wk){
   const I = IND[k]; const pct = I.kind === 'pct'; const li = [];
