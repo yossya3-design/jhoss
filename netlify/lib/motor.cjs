@@ -210,7 +210,7 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
     ts.forEach(t=>{if(t.v!==1)return;t.salF=t.sal;t.sal=row.ini||null;t.salSrc=row.ini?'SIC':'SIC-CD'});return row});
   if(sic.length)tours.forEach(t=>{if(t.v===1&&!t.salSrc)t.salSrc='BEES'});
   tours.forEach(t=>t.placa=noPE(t.placa));sic.forEach(s=>s.placa=noPE(s.placa));
-  return {fecha:pad(Dd)+'/'+pad(M)+'/'+Y,dia,cortes:CORTES,tours,cd:[-12.0335,-77.1065],asis:ASIS,nasku:nasku.map(x=>[x[0],x[1]]),naskuD:nasku,sic,ped};
+  return {mv:2,fecha:pad(Dd)+'/'+pad(M)+'/'+Y,dia,cortes:CORTES,tours,cd:[-12.0335,-77.1065],asis:ASIS,nasku:nasku.map(x=>[x[0],x[1]]),naskuD:nasku,sic,ped};
 }
 
 /* ---------- bitácora ---------- */

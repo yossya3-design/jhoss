@@ -293,6 +293,7 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
   <div class="bar"><span class="fecha" id="f7"></span><span class="fecha" id="upCorte" style="margin-left:6px"></span></div>
   <div class="card" style="display:flex;flex-direction:column;gap:10px">
    <label class="btn gold" style="text-align:center;font-size:16px;padding:14px">📤 Elegir archivos del corte<input id="upIn" type="file" multiple accept=".xlsx,.xls,.xlsm,.csv" hidden></label>
+   <button class="btn" id="upRecalc">↻ Recalcular con lo guardado (sin subir nada)</button>
    <div id="upMsg" class="nota" style="white-space:pre-line"></div>
    <div id="upSlots" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px"></div>
    <p class="nota" id="upNota"></p>
@@ -604,7 +605,7 @@ function renderRuta(){
   $('avance').innerHTML=D.cortes.map((h,i)=>{const p=pc(a.av[i],a.cli);return `<div class="hb"><span class="k">${h}</span><div class="track"><div class="fill" style="width:${p}%"></div></div><span class="p">${p}% <span style="color:var(--mut);font-weight:500">${a.av[i]}</span></span></div>`}).join('')+`<p class="nota">Avance según Foxtrot. El número gris es la cantidad de clientes atendidos a esa hora, de ${a.cli} programados.</p>`;
   $('edtT').innerHTML=EDTS.map(e=>{const x=agg(byEdt(e));return `<tr><td><b>${e}</b></td><td>${asisOf(e)}</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span></td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP??'—'}%</span></td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P??'—'}%</span></td>${salv(byEdt(e))}</tr>`}).join('')+(()=>{const x=agg(T);return `<tr class="tot"><td><b>TOTAL</b></td><td>${ASIS.length} asistentes</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span></td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP}%</span></td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P}%</span></td>${salv(T)}</tr>`})();resort('edtT');
   $('rutT').innerHTML=[...ts].sort((x,y)=>x.ruta.localeCompare(y.ruta)||x.v-y.v).map(t=>{const at=t.av[t.av.length-1],ap=pc(at,t.cli),hp=pc(t.hle,t.hl);
-   return `<tr class="click" data-id="${t.id}"><td><b>${t.ruta}</b></td><td>${t.v}</td><td>${t.edt}</td><td class="mono">${t.placa}</td><td>${salCell(t)}</td><td>${hcell(t.p1,'08:00',t.v)}</td><td>${t.cli}</td><td>${t.pe}</td><td><span class="pill ${cls(ap)}">${at}/${t.cli}</span></td><td>${f1(t.hl)}${t.na?' <span class="pill y">'+t.na+' NA</span>':''}</td><td><span class="pill ${cls(hp)}">${hp}%</span></td><td>${t.al?`<span class="pill r">${t.al}</span>`:'0'}</td></tr>`}).join('')+(()=>{const at=a.av[a.av.length-1];return `<tr class="tot"><td><b>TOTAL</b></td><td>${ts.length}</td><td></td><td></td><td><span class="pill ${cls(a.salP)}">${a.sal}/${a.v1}</span></td><td><span class="pill ${cls(a.p1P)}">${a.p1}/${a.v1}</span></td><td>${a.cli}</td><td>${a.pe}</td><td><span class="pill ${cls(pc(at,a.cli))}">${at}/${a.cli}</span></td><td>${f1(a.hl)}${a.na?' <span class="pill y">'+a.na+' NA</span>':''}</td><td><span class="pill ${cls(a.hlP)}">${a.hlP}%</span></td><td>${a.al}</td></tr>`})();resort('rutT');if(D.sic)renderCx();{const ev=ts.flatMap(t=>(t.env||[]).map(x=>t.ruta+' · '+x[0]+' '+x[1]));$('rutS').innerHTML=`${ts.length} viajes · ${a.cli} clientes`+(ev.length?`<br><small style="color:#ff6b7a;font-size:11px" title="${esc(ev.join('\n'))}">+${ev.length} cliente${ev.length>1?'s':''} recojo de envases (BLGA, no suman al indicador)</small>`:'')}
+   return `<tr class="click" data-id="${t.id}"><td><b>${t.ruta}</b></td><td>${t.v}</td><td>${t.edt}</td><td class="mono">${t.placa}</td><td>${salCell(t)}</td><td>${hcell(t.p1,'08:00',t.v)}</td><td>${t.cli}</td><td>${t.pe}</td><td><span class="pill ${cls(ap)}">${at}/${t.cli}</span></td><td>${f1(t.hl)}${t.na?' <span class="pill y">'+t.na+' NA</span>':''}</td><td><span class="pill ${cls(hp)}">${hp}%</span></td><td>${t.al?`<span class="pill r">${t.al}</span>`:'0'}</td></tr>`}).join('')+(()=>{const at=a.av[a.av.length-1];return `<tr class="tot"><td><b>TOTAL</b></td><td>${ts.length}</td><td></td><td></td><td><span class="pill ${cls(a.salP)}">${a.sal}/${a.v1}</span></td><td><span class="pill ${cls(a.p1P)}">${a.p1}/${a.v1}</span></td><td>${a.cli}</td><td>${a.pe}</td><td><span class="pill ${cls(pc(at,a.cli))}">${at}/${a.cli}</span></td><td>${f1(a.hl)}${a.na?' <span class="pill y">'+a.na+' NA</span>':''}</td><td><span class="pill ${cls(a.hlP)}">${a.hlP}%</span></td><td>${a.al}</td></tr>`})();resort('rutT');if(D.sic)renderCx();{const ev=ts.flatMap(t=>(t.env||[]).map(x=>t.ruta+' · '+x[0]+' '+x[1]));$('rutS').innerHTML=`${ts.length} viajes · ${a.cli} clientes`+(ev.length?`<br><small style="color:#ff6b7a;font-size:11px" title="${esc(ev.join('\n'))}">+${ev.length} por envases (BLGA)</small>`:'')}
   $('rutT').querySelectorAll('tr[data-id]').forEach(r=>r.onclick=()=>{go('det');showRoute(r.dataset.id)});
 }
 
@@ -1053,12 +1054,12 @@ async function getDia(dia){
   if(NET){const r=await afetch(API+'?op=dia&dia='+dia,{cache:'no-store'});const j=await r.json();return j.ok?j.dia:null}
   if(!DB)return null;const sn=await DB.doc('dias/'+dia).get();return sn.exists?sn.data():null}
 function snapDe(out){const o={h:nowHM(),e:{}};const prevD=D;try{D=out;[...new Set(out.tours.map(t=>t.edt))].forEach(e=>{const a=agg(out.tours.filter(t=>t.edt===e));o.e[e]=[a.salP,a.p1P,a.hlP]});const a=agg(out.tours);o.e['CD']=[a.salP,a.p1P,a.hlP]}finally{D=prevD}return o}
-$('upIn').onchange=async ev=>{
-  const files=[...ev.target.files];ev.target.value='';if(!files.length)return;
+$('upIn').onchange=ev=>{const files=[...ev.target.files];ev.target.value='';if(files.length)procesar(files,false)};
+async function procesar(files,forzar){
   const msg=$('upMsg');const log=t=>{msg.textContent+=t+'\n'};msg.textContent='';
   try{
     log('Preparando…');await loadJS(XLSX_URL,()=>window.XLSX);await loadJS('motor.js',()=>window.MOTOR);
-    const est=JSON.parse(JSON.stringify(UPST||{files:{}}));est.files=est.files||{};let daily=false,bnew=null;const NUEVO=new Set();
+    const est=JSON.parse(JSON.stringify(UPST||{files:{}}));est.files=est.files||{};let daily=!!forzar,bnew=null;const NUEVO=new Set();if(forzar)log('↻ Recalculando con los archivos guardados de hoy…');
     for(const f of files){
       log('📄 '+f.name+': leyendo…');
       const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});const sh={};wb.SheetNames.forEach(n=>sh[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null}));
@@ -1096,8 +1097,8 @@ $('upIn').onchange=async ev=>{
       UPST=est;renderSlots();
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
-};
-const VERSION='2026-11-25f';
+}
+const VERSION='2026-11-25g';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1141,12 +1142,13 @@ async function bitaYa(){
   catch(e){say('✖ No se pudo actualizar: '+e.message+'. Intenta de nuevo en un minuto.')}
   finally{btns.forEach(b=>b.disabled=false)}}
 document.addEventListener('click',ev=>{if(ev.target.closest('.bitaYa'))bitaYa()});
+const MOTOR_V=2;
 const hoyL=()=>new Date(Date.now()-5*3600e3).toISOString().slice(0,10);
 let VIEW=null,DIAH=null; // VIEW: día elegido (null = el último cargado)
 async function cargarHist(dia){try{const x=await getDia(dia);DIAH=x&&x.hist||[];if(D)renderCk()}catch(e){DIAH=[]}}
 function infoDia(){if(!D)return;$('diaSel').value=D.dia||'';const hoy=hoyL();
   $('diaInfo').textContent='DATA DEL '+D.fecha+(D.dia===hoy?' · HOY':'');
-  const av=$('diaAviso');if(!VIEW&&D.dia&&D.dia!==hoy){av.hidden=false;av.textContent='⚠ Aún no se carga la data de hoy ('+dmy(hoy)+'). Estás viendo la del '+D.fecha+'.'}else av.hidden=true;
+  const av=$('diaAviso');if(NET&&!VIEW&&D.dia===hoy&&(D.mv||0)<MOTOR_V){av.hidden=false;av.innerHTML='La data de hoy se calculó con una versión anterior. <button class="btn gold" style="padding:4px 10px" onclick="go(\'carga\');procesar([],true)">↻ Recalcular ahora</button>'}else if(!VIEW&&D.dia&&D.dia!==hoy){av.hidden=false;av.textContent='⚠ Aún no se carga la data de hoy ('+dmy(hoy)+'). Estás viendo la del '+D.fecha+'.'}else av.hidden=true;
   $('diaHoy').classList.toggle('gold',D.dia!==hoy)}
 async function verDia(dia){const av=$('diaAviso');
   if(!dia){VIEW=null;if(UPST){LASTD=null;await onEstado(UPST)}infoDia();return}
@@ -1154,6 +1156,7 @@ async function verDia(dia){const av=$('diaAviso');
     const ultimo=UPST&&UPST.dia===dia;VIEW=ultimo?null:dia;const d=await getJSON(x.data);d._id=x.data;boot(d);DIAH=x.hist||[];renderCk();infoDia()}
   catch(e){av.hidden=false;av.textContent='No se pudo abrir el '+dmy(dia)+' ('+e.message+').'}}
 $('diaSel').onchange=()=>verDia($('diaSel').value);
+$('upRecalc').onclick=()=>{go('carga');procesar([],true)};
 $('diaHoy').onclick=()=>verDia(hoyL());
 async function onEstado(e){UPST=JSON.parse(JSON.stringify(e));renderSlots();
   try{if(!VIEW&&e.data&&e.data.id&&e.data.id!==LASTD){LASTD=e.data.id;if(!D||D._id!==e.data.id){const d=await getJSON(e.data.id);d._id=e.data.id;boot(d);if(e.dia)cargarHist(e.dia)}}infoDia();
