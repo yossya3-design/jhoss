@@ -302,6 +302,11 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
   <div id="dlList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px"></div>
   <p class="nota" id="dlMsg"></p>
  </section>
+ <section>
+  <h2><span class="n">28</span>Formatos para carga manual</h2>
+  <p class="sub">Si un día no hay descarga automática, baja el formato, pega la data con las mismas columnas y súbelo arriba. La página reconoce el archivo por sus columnas, no por el nombre.</p>
+  <div id="fmtList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px"></div>
+ </section>
 </div>
 
 <!-- CHECKLIST -->
@@ -998,8 +1003,17 @@ function renderCarga(){
    {ic:'📦',t:'Pedidos del Radar',s:`Pedido · IDCli · Cliente · Ruta · BDR · Supervisor · Viaje · Transporte · Placas · CantPed. · HL (${(D.ped?D.ped.length:T.reduce((a,t)=>a+t.pe,0)).toLocaleString('es-PE')} pedidos del ${D.fecha})`,go:async()=>saveFile(`Pedidos_Radar_${F}.xlsx`,await xlPedidos())}];
   $('dlList').innerHTML=items.map((x,i)=>`<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:10px;align-items:center"><span style="font-size:28px">${x.ic}</span><div><div style="font:800 19px 'Big Shoulders Display';text-transform:uppercase;color:var(--gold1)">${x.t}</div><span class="pill n">Excel</span></div></div><p style="font-size:12px;color:var(--mut);flex:1">${x.s}</p><button class="btn gold" data-i="${i}">⬇ Descargar</button></div>`).join('');
   $('dlList').querySelectorAll('button').forEach(b=>b.onclick=()=>items[+b.dataset.i].go().catch(e=>{$('dlMsg').textContent='No se pudo armar el Excel ('+e.message+').'}));
-  renderSlots();
+  renderSlots();renderFmt();
 }
+const FMT=[['radar','Radar','FORMATO_RADAR.xlsx'],['mod','Modulación','FORMATO_MODULACION.xlsx'],['bees','BEES Delivery','FORMATO_BEES.xlsx'],['geo','Geotab','FORMATO_GEOTAB.xlsx'],['sic','SIC de ruta','FORMATO_SIC_RUTA.xlsx']];
+function renderFmt(){const box=$('fmtList');if(!box)return;
+  box.innerHTML=FMT.map(([k,n],i)=>`<button class="btn" data-f="${i}" style="padding:12px;text-align:left"><b>⬇ ${n}</b><br><small style="color:var(--mut)">Formato vacío con sus columnas</small></button>`).join('');
+  box.querySelectorAll('[data-f]').forEach(b=>b.onclick=async()=>{const [k,n,file]=FMT[+b.dataset.f];
+    try{await loadJS(XLSX_URL,()=>window.XLSX);await loadJS('motor.js',()=>window.MOTOR);
+      const cols=MOTOR.TIPOS[k].cols,wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([cols]);ws['!cols']=cols.map(c=>({wch:Math.max(12,c.length+2)}));XLSX.utils.book_append_sheet(wb,ws,n.slice(0,30));
+      const nota=XLSX.utils.aoa_to_sheet([['Formato '+n+' · Control T2 CD Callao'],[''],['1. Pega la data desde la fila 2, con las columnas en este mismo nombre (el orden puede variar).'],['2. Puede llevar más columnas: la página solo usa estas.'],['3. Súbelo en Carga y descarga → Elegir archivos del corte.']]);nota['!cols']=[{wch:90}];XLSX.utils.book_append_sheet(wb,nota,'Instrucciones');
+      await saveFile(file,new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))}
+    catch(e){$('dlMsg').textContent='No se pudo armar el formato ('+e.message+').'}})}
 /* ---- carga por corte ---- */
 const SLOTS=[['radar','Radar','Pedidos, clientes y HL programado'],['bees','BEES (Foxtrot)','Estado por cliente, HL entregado / rechazado, avance'],['mod','Modulación','Alertados, motivo, vendedor y supervisor'],['geo','Geotab','Llegada GPS, secuencia, tiempo parado, km'],['sic','SIC de ruta','Salida del CD, fin real, jornada'],['bita','Bitácora de transportes','Desplanificación, reclamos, adulterado, agendas']];
 let UPST=null,DB=null,AS=null,SL={};
@@ -1065,7 +1079,7 @@ $('upIn').onchange=async ev=>{
 let LASTD=null,POLL=null;
 async function pollNet(){try{const r=await afetch(API+'?op=estado',{cache:'no-store'});if(r.ok){const j=await r.json();
   if(j.ok&&j.estado)await onEstado(j.estado);
-  if(!D&&!(j.estado&&j.estado.data)){$('sinData').hidden=false;go('carga');renderSlots()}else $('sinData').hidden=true}}catch(e){console.warn(e)}}
+  if(!D&&!(j.estado&&j.estado.data)){$('sinData').hidden=false;go('carga');renderSlots();renderFmt()}else $('sinData').hidden=true}}catch(e){console.warn(e)}}
 async function cargarCk(){try{const r=await afetch(API+'?op=ck',{cache:'no-store'});const j=await r.json();if(j.ok){ck=j.ck||{};if(D)renderCk()}}catch(e){}}
 function entrar(u){USER=u;$('login').hidden=true;document.body.classList.remove('bloq');
   $('quien').innerHTML=`👤 ${esc(u.n)} <small>${u.r==='admin'?'Administradora':'Asistente'}</small>`;$('userBar').hidden=false;$('btnUsers').hidden=u.r!=='admin';
