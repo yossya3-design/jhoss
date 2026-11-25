@@ -8,7 +8,15 @@
   const CT2 = 'https://seguimiento-delivery-t2.netlify.app/control-actividades/';
   const XLSX_URL = CT2 + 'lib/xlsx.full.min.js';
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  const loadXLSX = () => window.XLSX ? Promise.resolve() : new Promise((ok, ko) => { const s = document.createElement('script'); s.src = XLSX_URL; s.onload = ok; s.onerror = () => ko(new Error('no cargó SheetJS')); document.head.appendChild(s); });
+  // SheetJS propio (algunas páginas ya tienen otro "XLSX"): se carga, se guarda aparte y se restaura el de la página
+  let SJS = null;
+  const loadXLSX = async () => {
+    if (SJS) return;
+    if (window.XLSX && window.XLSX.read && window.XLSX.utils && window.SJS.utils.sheet_to_json) { SJS = window.XLSX; return; }
+    const prev = window.XLSX;
+    await new Promise((ok, ko) => { const s = document.createElement('script'); s.src = XLSX_URL; s.onload = ok; s.onerror = () => ko(new Error('no cargó SheetJS')); document.head.appendChild(s); });
+    SJS = window.XLSX; if (prev !== undefined) window.XLSX = prev;
+  };
   async function b64gz(obj) {
     const gz = await new Response(new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
     let s = ''; const u = new Uint8Array(gz); for (let i = 0; i < u.length; i += 8192) s += String.fromCharCode.apply(null, u.subarray(i, i + 8192));
@@ -39,8 +47,8 @@
     try { it.querySelector('button').click(); await sleep(800); } finally { HTMLFormElement.prototype.submit = os; }
     if (!F) throw new Error('no se capturó la descarga del SIC');
     const blob = await (await fetch(F.action, { method: 'POST', body: new URLSearchParams(new FormData(F)) })).blob();
-    const wb = XLSX.read(await blob.arrayBuffer(), { type: 'array' });
-    const det = XLSX.utils.sheet_to_json(wb.Sheets.Detalle, { header: 1, raw: true, defval: null });
+    const wb = SJS.read(await blob.arrayBuffer(), { type: 'array' });
+    const det = SJS.utils.sheet_to_json(wb.Sheets.Detalle, { header: 1, raw: true, defval: null });
     const rows = pick(det, ['Unidad', 'Hora Ini. Real', 'H. Fin Real', 'Hora Fin Plan (lim. 10:30)', 'Tiempo Avance', 'Tiempo Restante', 'Dist. (Km)', 'Tiempo en CD', 'Ubicación']).filter((r, i) => i === 0 || /^PE/.test(String(r[0])));
     const hhmm = new Date(t).toISOString().slice(11, 16); // hora local mostrada en Geotab
     return enviar('SIC Geotab ' + hhmm, { Detalle: rows });
@@ -54,8 +62,8 @@
     await loadXLSX();
     const u = new URL(a.getAttribute('href'), location.href);
     const blob = await (await fetch(u.pathname)).blob();
-    const wb = XLSX.read(await blob.arrayBuffer(), { type: 'array' });
-    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null });
+    const wb = SJS.read(await blob.arrayBuffer(), { type: 'array' });
+    const aoa = SJS.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null });
     const rows = pick(aoa, ['Placa', 'Viaje', 'Codigo Cliente', 'Secuencia', 'Secuencia real', 'Cliente visitado', 'Tiempo visita Plan', 'Tiempo visita Real', 'Latitud', 'Longitud', 'Distancia Plan Cliente Ant', 'Distancia ejec Cliente Ant', 'Hora plan Llegada cliente', 'Hora ejec Llegada cliente', 'Hora plan Salida cliente', 'Hora ejec Salida cliente', 'Fecha']);
     return enviar('Geotab tiempo de entrega ' + new Date(Date.now() - 5 * 3600e3).toISOString().slice(11, 16), { Data: rows });
   }
@@ -74,8 +82,8 @@
     finally { URL.createObjectURL = oc; HTMLAnchorElement.prototype.click = ac; }
     if (!blob) throw new Error('BEES no generó el CSV');
     await loadXLSX();
-    const wb = XLSX.read(await blob.text(), { type: 'string', FS: ';', raw: true });
-    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null });
+    const wb = SJS.read(await blob.text(), { type: 'string', FS: ';', raw: true });
+    const aoa = SJS.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null });
     const rows = pick(aoa, ['tour_display_id', 'poc_external_id', 'tour_date', 'truck_license_plate', 'status', 'tour_status', 'trip_start_timestamp', 'arrived_at', 'finished_at', 'within_radius', 'out_of_radius_reason', 'total_delivered_vol', 'total_refused_vol', 'volume_hectoliters_sum']);
     return enviar('BEES ' + (nombre.match(/(\d\dh\d\dm)/) || ['', new Date(Date.now() - 5 * 3600e3).toISOString().slice(11, 16)])[1].replace('h', ':').replace('m', ''), { BEES: rows });
   }
