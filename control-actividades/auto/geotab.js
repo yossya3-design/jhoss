@@ -12,7 +12,7 @@
   let SJS = null;
   const loadXLSX = async () => {
     if (SJS) return;
-    if (window.XLSX && window.XLSX.read && window.XLSX.utils && window.SJS.utils.sheet_to_json) { SJS = window.XLSX; return; }
+    if (window.XLSX && window.XLSX.read && window.XLSX.utils && window.XLSX.utils.sheet_to_json) { SJS = window.XLSX; return; }
     const prev = window.XLSX;
     await new Promise((ok, ko) => { const s = document.createElement('script'); s.src = XLSX_URL; s.onload = ok; s.onerror = () => ko(new Error('no cargó SheetJS')); document.head.appendChild(s); });
     SJS = window.XLSX; if (prev !== undefined) window.XLSX = prev;
