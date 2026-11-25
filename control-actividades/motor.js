@@ -111,7 +111,7 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
   const rBy=groupBy(R,r=>r.tour),fBy=groupBy(f,r=>r.tour);
   const tt=[...rBy.keys()].sort((a,b)=>a.length-b.length||a.localeCompare(b)).map(k=>{const g=rBy.get(k),fg=fBy.get(k)||[];const hl=fg.map(r=>r.HL);
     return {tour:k,ruta:str(firstNN(g,'Ruta')),viaje:id(firstNN(g,'Viaje')),emp:firstNN(g,'Empresa'),placa:str(firstNN(g,'Placa')),cond:firstNN(g,'Liquidador'),ini:firstNN(g,'Inicio'),
-      pe:nuniq(fg,'Pedido'),cli:nuniq(g,'IDCli'),ent:nuniq(fg,'Entrega'),hl:sumMin1(hl),na:hl.filter(isNaN).length}});
+      pe:nuniq(fg,'Pedido'),cli:nuniq(fg,'IDCli'),ent:nuniq(fg,'Entrega'),hl:sumMin1(hl),na:hl.filter(isNaN).length}});
   const ttRV=new Map();tt.forEach(t=>{const k=t.ruta+'|'+t.viaje;if(!ttRV.has(k))ttRV.set(k,t.tour)});
   // Geotab
   GE.forEach(g=>{const m=String(g.Viaje||'').match(/Trip (\d+)/);g.trip=m?m[1]:'';g.pl=str(g.Placa);g.cc=id(g['Codigo Cliente']);g.sr=num(g['Secuencia real']);g.sp=num(g['Secuencia']);});
@@ -133,9 +133,10 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
     const av=CORTES.map(h=>fin.filter(b=>b.fi!=null&&b.fi<=dayMs(h)).length);
     const g1r=g1.get(pk);const p1=g1r?s5(g1r['Hora ejec Llegada cliente']):null,p1p=g1r?s5(g1r['Hora plan Llegada cliente']):null;
     // clientes
-    // todos los clientes del viaje (también los que solo llevan envases BLGA); el HL sale solo de FERT
-    const fc=groupBy((rBy.get(t.tour)||[]),r=>r.ic);
-    const rc=[...fc.entries()].sort((a,b)=>a[0].length-b[0].length||a[0].localeCompare(b[0])).map(([ic,ga])=>{const g0=ga.filter(r=>r.TpMt==='FERT'),env=!g0.length,g=env?ga:g0;const hl=env?[0]:g.map(r=>r.HL);const ords=g.map(r=>num(r.Orden)).filter(x=>!isNaN(x));
+    // clientes con producto (FERT); los que solo llevan envases (BLGA) se informan aparte en t.env
+    const fc=groupBy((fBy.get(t.tour)||[]),r=>r.ic);
+    const fset=new Set(fc.keys());const envL=[...groupBy((rBy.get(t.tour)||[]),r=>r.ic).entries()].filter(([ic])=>!fset.has(ic)).map(([ic,g])=>[Number(ic),title(str(firstNN(g,'Cliente'))).slice(0,38)]);
+    const rc=[...fc.entries()].sort((a,b)=>a[0].length-b[0].length||a[0].localeCompare(b[0])).map(([ic,g])=>{const env=false;const hl=g.map(r=>r.HL);const ords=g.map(r=>num(r.Orden)).filter(x=>!isNaN(x));
       return {ic,nom:firstNN(g,'Cliente'),hl:sumMin1(hl),na:hl.filter(isNaN).length,pe:nuniq(g,'Pedido'),ent:nuniq(g,'Entrega'),ab:firstNN(g,'abre'),ci:firstNN(g,'cierra'),ord:ords.length?Math.min(...ords):NaN,dist:firstNN(g,'Distrito'),env}});
     rc.sort((a,b)=>(isNaN(a.ord)?1:0)-(isNaN(b.ord)?1:0)||(isNaN(a.ord)?0:a.ord-b.ord));
     const sbP=new Map();sb.forEach(b=>{if(!sbP.has(b.poc))sbP.set(b.poc,b)});
@@ -161,7 +162,7 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
         ee:a?str(a.Estado_entrega):null,ch:canal(x.ic,str(x.nom),a),
         tv:a&&!NA(a.telefono_vendedor)?(typeof a.telefono_vendedor==='number'?String(Math.trunc(a.telefono_vendedor)):String(a.telefono_vendedor).split('.')[0]):null,
         rt:a&&!NA(a.retroalimentacion)?String(a.retroalimentacion).trim().slice(0,140):null,
-        n3:N3[x.ic]!=null?N3[x.ic]:null,env:x.env?1:undefined,vw:vent?ab+'-'+ci:null,vok,
+        n3:N3[x.ic]!=null?N3[x.ic]:null,vw:vent?ab+'-'+ci:null,vok,
         la:lat==null?null:r_(lat,5),lo:lon==null?null:r_(lon,5)};
     });
     // eficiencia Geotab
@@ -189,7 +190,7 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
     const sdv=sb.reduce((s,b)=>s+(isNaN(b.dv)?0:b.dv),0),srv=sb.reduce((s,b)=>s+(isNaN(b.rv)?0:b.rv),0);
     const cnt={};sb.forEach(b=>cnt[b.est]=(cnt[b.est]||0)+1);
     tours.push({id:t.tour,ruta:t.ruta,v,edt:EDT[et]||et||'—',placa:t.placa,cond:title(str(t.cond)),ini:s5(t.ini)||'nan',
-      cli:t.cli,pe:t.pe,ent:t.ent,hlr0:isNaN(t.hl)?null:r_(t.hl,1),hl:r_(Math.max(isNaN(t.hl)?0:t.hl,hlb,sdv+srv),1),na:t.na,
+      cli:t.cli,env:envL.length?envL:undefined,pe:t.pe,ent:t.ent,hlr0:isNaN(t.hl)?null:r_(t.hl,1),hl:r_(Math.max(isNaN(t.hl)?0:t.hl,hlb,sdv+srv),1),na:t.na,
       sal:start[t.tour]!=null?hmT(start[t.tour]):null,p1,p1p,hle:r_(sdv,1),hlr:r_(srv,1),eff,av,cnt,al:cl.filter(z=>z.al).length,cl});
   }
   // SKU sin volumen y pedidos del Radar
