@@ -695,7 +695,7 @@ function renderList(){
   $('dF').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{dFil=b.dataset.f;renderList()});
   const L=t.cl.filter(F[dFil]);$('dS').textContent=`${t.cl.length} clientes · ${t.cl.filter(isRej).length} rechazados`;
   $('dList').innerHTML=L.map(c=>{const late=c.hp&&c.hr&&(toM(c.hr)-toM(c.hp)>30);
-   return `<div class="cli" data-c="${c.c}"><span class="sq">${c.sq||'–'}</span><div class="nm">${c.n}<small>${c.c} · ${f1(c.hl)} HL${c.na?' (SKU NA)':''}${c.hlr?` · rech ${f1(c.hlr)}`:''} · plan ${c.hp||'—'} → real <span style="color:${late?'#ff6b7a':'inherit'}">${c.hr||'—'}</span>${c.vw?` · ventana ${c.vw}${c.vok===false?' <b style="color:#ff6b7a">fuera</b>':''}`:''}</small>${c.al?`<span class="al">⚠ ${c.al}${c.ah?' · '+c.ah:''}</span>`:''}${isN3(c)?`<span class="bank">💳 ${c.n3} · cobro en bancarización</span>`:''}${noLleg(c)?'<span class="bank" style="background:rgba(216,37,58,.22);color:#ff6b7a">📡 no llegó · '+llTxt(c)+'</span>':(c.e!=='NOV'&&c.e!=='SD'?'<span class="bank" style="background:rgba(255,255,255,.06);color:var(--mut)">📡 '+llTxt(c)+'</span>':'')}</div><div class="rgt">${chip(c.e)}</div></div>`}).join('')||'<p class="nota">Sin clientes en este filtro.</p>';
+   return `<div class="cli" data-c="${c.c}"><span class="sq">${c.sq||'–'}</span><div class="nm">${c.n}<small>${c.c} · ${c.env?'solo envases (BLGA)':f1(c.hl)+' HL'}${c.na?' (SKU NA)':''}${c.hlr?` · rech ${f1(c.hlr)}`:''} · plan ${c.hp||'—'} → real <span style="color:${late?'#ff6b7a':'inherit'}">${c.hr||'—'}</span>${c.vw?` · ventana ${c.vw}${c.vok===false?' <b style="color:#ff6b7a">fuera</b>':''}`:''}</small>${c.al?`<span class="al">⚠ ${c.al}${c.ah?' · '+c.ah:''}</span>`:''}${isN3(c)?`<span class="bank">💳 ${c.n3} · cobro en bancarización</span>`:''}${noLleg(c)?'<span class="bank" style="background:rgba(216,37,58,.22);color:#ff6b7a">📡 no llegó · '+llTxt(c)+'</span>':(c.e!=='NOV'&&c.e!=='SD'?'<span class="bank" style="background:rgba(255,255,255,.06);color:var(--mut)">📡 '+llTxt(c)+'</span>':'')}</div><div class="rgt">${chip(c.e)}</div></div>`}).join('')||'<p class="nota">Sin clientes en este filtro.</p>';
   $('dList').querySelectorAll('.cli').forEach(el=>el.onclick=()=>{popCli(+el.dataset.c);$('map').scrollIntoView({behavior:'smooth',block:'center'})});
 }
 const toM=h=>{const[a,b]=h.split(':');return +a*60+ +b};
@@ -1097,7 +1097,7 @@ $('upIn').onchange=async ev=>{
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 };
-const VERSION='2026-11-25d';
+const VERSION='2026-11-25e';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
