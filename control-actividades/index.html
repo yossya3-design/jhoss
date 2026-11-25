@@ -357,6 +357,7 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
   <div class="bar"><span class="fecha" id="f1"></span></div>
   <div class="chips edtF"></div>
   <div class="kpis" id="rKpi" style="margin-top:10px"></div>
+  <div class="card" id="enCD" style="margin-top:10px;cursor:pointer"></div>
  </section>
  <section>
   <h2><span class="n">04</span>Avance por corte</h2>
@@ -365,7 +366,7 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
  </section>
  <section>
   <h2><span class="n">05</span>Resumen por empresario</h2>
-  <div class="card tw"><table><thead><tr><th>EDT</th><th>Asistente</th><th>Rutas</th><th>Recargas</th><th>Clientes</th><th>Pedidos</th><th>HL prog.</th><th>HL entreg.</th><th>Salida ≤7:30</th><th title="Unidades del viaje 1 registradas como pendientes de carga en almacén">📦 Pend. carga</th><th>1er pto ≤8:00</th><th>Alertados</th><th>Salvados</th></tr></thead><tbody id="edtT"></tbody></table></div>
+  <div class="card tw"><table><thead><tr><th>EDT</th><th>Asistente</th><th>Rutas</th><th>Recargas</th><th>Clientes</th><th>Pedidos</th><th>HL prog.</th><th>HL entreg.</th><th>Salida ≤7:30</th><th>1er pto ≤8:00</th><th>Alertados</th><th>Salvados</th><th title="Unidades del viaje 1 registradas como pendientes de carga en almacén">📦 Pend. carga</th></tr></thead><tbody id="edtT"></tbody></table></div>
  </section>
  <section>
   <details class="col"><summary><span><span class="n2">06</span>Rutas del día</span><span class="sm" id="rutS"></span></summary>
@@ -623,12 +624,13 @@ const hcell=(h,lim,v)=>!h?'<span class="pill n">—</span>':v!==1?`<span class="
 const salv=ts=>{const s=alertStats(ts),p=pc(s.res,s.n);return `<td><span class="pill r">${s.n}</span></td><td><span class="pill ${cls(p)}">${s.res} · ${p??'—'}%</span></td>`};
 function renderRuta(){
   const ts=byEdt(edtSel),a=agg(ts);
+  try{renderEnCD(ts)}catch(e){console.error(e)}
   $('rKpi').innerHTML=kpi('Rutas programadas',a.rutas,`viaje 1 · +${a.rec} recargas`)+kpi('Pedidos planeados',a.pe.toLocaleString('es-PE'),`${a.cli.toLocaleString('es-PE')} clientes · solo FERT`)
    +kpi('HL programado',f1(a.hl),a.na?`${a.na} líneas con SKU NA`:'solo FERT')+kpi('HL entregado',a.hlP+'%',`${f1(a.hle)} HL · rech. ${f1(a.hlr)}`,a.hlP)
    +kpi('Salida ≤7:30',a.salP+'%',`${a.sal}/${a.v1} unidades`,a.salP)+kpi('1er punto ≤8:00',a.p1P+'%',`${a.p1}/${a.v1} unidades · Geotab`,a.p1P)
    +kpi('Ventana horaria',a.vwP==null?'—':a.vwP+'%',`${a.vok}/${a.vw} clientes con ventana`,a.vwP)+kpi('Clientes N3',a.n3,'cobro en bancarización')+kpi('No llegó',ts.reduce((s,t)=>s+t.cl.filter(noLleg).length,0),'cerrado en BEES sin GPS Geotab ni radio Foxtrot')+kpi('Salida por validar',ts.filter(t=>t.salX).length,'Foxtrot después del 1er punto');
   $('avance').innerHTML=D.cortes.map((h,i)=>{if(futuro(h))return `<div class="hb"><span class="k">${h}</span><div class="track"></div><span class="p" style="color:var(--mut)">—</span></div>`;const p=pc(a.av[i],a.cli);return `<div class="hb"><span class="k">${h}</span><div class="track"><div class="fill" style="width:${p}%"></div></div><span class="p">${p}% <span style="color:var(--mut);font-weight:500">${a.av[i]}</span></span></div>`}).join('')+`<p class="nota">Avance según Foxtrot: clientes atendidos hasta cada corte, de ${a.cli} programados. Los cortes que aún no llegan salen en blanco (—).</p>`;
-  $('edtT').innerHTML=EDTS.map(e=>{const x=agg(byEdt(e));return `<tr><td><b>${e}</b></td><td>${asisOf(e)}</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span>${sinLleg(byEdt(e))}</td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP??'—'}%</span></td><td>${pcCell(byEdt(e))}</td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P??'—'}%</span></td>${salv(byEdt(e))}</tr>`}).join('')+(()=>{const x=agg(T);return `<tr class="tot"><td><b>TOTAL</b></td><td>${ASIS.length} asistentes</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span>${sinLleg(T)}</td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP}%</span></td><td>${pcCell(T)}</td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P}%</span></td>${salv(T)}</tr>`})();resort('edtT');
+  $('edtT').innerHTML=EDTS.map(e=>{const x=agg(byEdt(e));return `<tr><td><b>${e}</b></td><td>${asisOf(e)}</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span>${sinLleg(byEdt(e))}</td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP??'—'}%</span></td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P??'—'}%</span></td>${salv(byEdt(e))}<td>${pcCell(byEdt(e))}</td></tr>`}).join('')+(()=>{const x=agg(T);return `<tr class="tot"><td><b>TOTAL</b></td><td>${ASIS.length} asistentes</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span>${sinLleg(T)}</td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP}%</span></td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P}%</span></td>${salv(T)}<td>${pcCell(T)}</td></tr>`})();resort('edtT');
   $('rutT').innerHTML=[...ts].sort((x,y)=>x.ruta.localeCompare(y.ruta)||x.v-y.v).map(t=>{const at=t.av[t.av.length-1],ap=pc(at,t.cli),hp=pc(t.hle,t.hl);
    return `<tr class="click" data-id="${t.id}"><td><b>${t.ruta}</b></td><td>${t.v}</td><td>${t.edt}</td><td class="mono">${t.placa}</td><td>${salCell(t)}</td><td>${hcell(t.p1,'08:00',t.v)}</td><td>${t.cli}</td><td>${t.pe}</td><td><span class="pill ${cls(ap)}">${at}/${t.cli}</span></td><td>${f1(t.hl)}${t.na?' <span class="pill y">'+t.na+' NA</span>':''}</td><td><span class="pill ${cls(hp)}">${hp}%</span></td><td>${t.al?`<span class="pill r">${t.al}</span>`:'0'}</td></tr>`}).join('')+(()=>{const at=a.av[a.av.length-1];return `<tr class="tot"><td><b>TOTAL</b></td><td>${ts.length}</td><td></td><td></td><td><span class="pill ${cls(a.salP)}">${a.sal}/${a.v1}</span></td><td><span class="pill ${cls(a.p1P)}">${a.p1}/${a.v1}</span></td><td>${a.cli}</td><td>${a.pe}</td><td><span class="pill ${cls(pc(at,a.cli))}">${at}/${a.cli}</span></td><td>${f1(a.hl)}${a.na?' <span class="pill y">'+a.na+' NA</span>':''}</td><td><span class="pill ${cls(a.hlP)}">${a.hlP}%</span></td><td>${a.al}</td></tr>`})();resort('rutT');if(D.sic)renderCx();{const ev=ts.flatMap(t=>(t.env||[]).map(x=>t.ruta+' · '+x[0]+' '+x[1]));$('rutS').innerHTML=`${ts.length} viajes · ${a.cli} clientes`+(ev.length?`<br><small style="color:#ff6b7a;font-size:11px" title="${esc(ev.join('\n'))}">+${ev.length} por envases (BLGA)</small>`:'')}
   $('rutT').querySelectorAll('tr[data-id]').forEach(r=>r.onclick=()=>{go('det');showRoute(r.dataset.id)});
@@ -651,6 +653,16 @@ function renderAlert(){
 /* ---------- detalle + mapa ---------- */
 let cur=null,dFil='Todos';
 const llego=c=>c.gv===true||c.fr===true;
+// viaje 1 que aún no sale del CD: sin salida en el SIC, sin 1er punto en Geotab y sin clientes atendidos
+const enCD=t=>t.v===1&&!t.sal&&!t.p1&&!(t.av&&t.av[t.av.length-1])&&!t.cl.some(c=>c.gv||c.fr);
+let enCDopen=false;
+function renderEnCD(ts){const box=$('enCD');if(!box)return;const L=ts.filter(enCD).sort((a,b)=>a.edt.localeCompare(b.edt)||a.ruta.localeCompare(b.ruta));
+  const sic=(D.sic||[]),sx=p=>sic.find(x=>x.placa===p)||{};const tarde=nowHM()>'07:30'&&esHoy();
+  const col=!L.length?'g':tarde?'r':'y';
+  box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div style="font:700 11px Barlow;color:var(--gold2);text-transform:uppercase">🏁 Unidades que aún no salen del CD</div><div style="font:800 30px 'Big Shoulders Display'">${L.length} <small style="font-size:14px;color:var(--mut)">${L.length===1?'placa pendiente':'placas pendientes'} de salir${L.length?'':' · todas en ruta ✔'}</small></div></div><span class="pill ${col}">${L.length?(enCDopen?'▴ ocultar':'▾ ver placas'):'0 pendientes'}</span></div>`+
+   (enCDopen&&L.length?`<div class="tw" style="margin-top:8px"><table><thead><tr><th>Ruta</th><th>EDT</th><th>Placa</th><th>Ubicación (SIC)</th><th>Tiempo en CD</th><th>Nota</th></tr></thead><tbody>${L.map(t=>{const x=sx(t.placa);return `<tr class="click" data-id="${t.id}"><td><b>${t.ruta}</b></td><td>${t.edt}</td><td class="mono">${t.placa}</td><td>${esc(x.ub||'—')}</td><td class="mono">${x.tcd||'—'}</td><td>${esPC(t)?'<span class="pill y">📦 pendiente de carga</span>':(x.placa?'':'<span class="pill n">aún no figura en el SIC</span>')}</td></tr>`}).join('')}<tr class="tot"><td><b>TOTAL</b></td><td colspan="5">${L.length} placas · ${L.filter(esPC).length} pendientes de carga</td></tr></tbody></table></div>`:'');
+  box.querySelectorAll('tr.click').forEach(r=>r.onclick=ev=>{ev.stopPropagation();showRoute(r.dataset.id);go('det')})}
+$('enCD').onclick=()=>{enCDopen=!enCDopen;renderEnCD(byEdt(edtSel))};
 const futuro=h=>esHoy()&&h>nowHM();
 // clientes cerrados en BEES (entregado/parcial/rechazo) sin llegada de la unidad: ni GPS (Geotab) ni dentro del radio (Foxtrot)
 const sinLleg=ts=>{const L=ts.flatMap(t=>t.cl.filter(c=>['ENT','PAR','REC'].includes(c.e)&&!llego(c)&&c.mp==null).map(c=>`${t.ruta} · ${c.c} ${c.n} · cerró ${c.hf||'—'} · ${f1(c.hle)} HL`));return L.length?` <span class="pill y" title="Cerrados en BEES sin que la unidad llegue (sin GPS ni radio):\n${esc(L.join('\n'))}">⚠ ${L.length} sin llegada</span>`:''};
@@ -1130,7 +1142,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25j';
+const VERSION='2026-11-25k';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
