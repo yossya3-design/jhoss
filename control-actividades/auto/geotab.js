@@ -28,9 +28,9 @@
 
   // ---- SIC Retorno de Unidades (página Mis reportes de MyGeotab) ----
   async function sic({ desde } = {}) {
-    for (let i = 0; i < 30 && !document.querySelector('.zen-feed-item, tr'); i++) await sleep(500);
     const ts = (e) => { const m = e.textContent.match(/(\d\d)\/(\d\d)\/(\d\d) (\d\d):(\d\d):(\d\d) (am|pm)/); if (!m) return 0; const h = (+m[4] % 12) + (m[7] === 'pm' ? 12 : 0); return Date.UTC(2000 + +m[3], m[2] - 1, +m[1], h, +m[5], +m[6]); };
-    const items = [...document.querySelectorAll('.zen-feed-item, tr')].filter((e) => /SIC Retorno de Unidades/.test(e.textContent) && e.textContent.split('SIC Retorno').length === 2 && /Listo/.test(e.textContent) && e.querySelector('button')).sort((a, b) => ts(b) - ts(a));
+    let items = [];
+    for (let i = 0; i < 40 && !items.length; i++) { if (i) await sleep(500); items = [...document.querySelectorAll('.zen-feed-item, tr')].filter((e) => /SIC Retorno de Unidades/.test(e.textContent) && e.textContent.split('SIC Retorno').length === 2 && /Listo/.test(e.textContent) && e.querySelector('button')).sort((a, b) => ts(b) - ts(a)); }
     if (!items.length) throw new Error('no hay un SIC Retorno de Unidades listo en Mis reportes');
     const it = items[0], t = ts(it);
     if (desde && t < desde) throw new Error('el SIC más reciente aún no está listo (último: ' + new Date(t).toISOString().slice(11, 16) + ')');
