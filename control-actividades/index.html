@@ -1106,7 +1106,7 @@ async function procesar(files,forzar){
     const est=JSON.parse(JSON.stringify(UPST||{files:{}}));est.files=est.files||{};let daily=!!forzar,bnew=null;const NUEVO=new Set();if(forzar)log('↻ Recalculando con los archivos guardados de hoy…');
     for(const f of files){
       log('📄 '+f.name+': leyendo…');
-      const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});const sh={};wb.SheetNames.forEach(n=>sh[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null}));
+      let sh=f.sheets;if(!sh){const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});sh={};wb.SheetNames.forEach(n=>sh[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null}))}
       const d=MOTOR.detect(sh);
       if(d.tipo==='bita'){bnew=MOTOR.bita(sh);log(`   ✔ Bitácora: ${bnew.d.length} desplanificaciones, ${bnew.r.length} reclamos, ${bnew.a.length} adulterado`);
         const id=await putJSON(bnew);est.bita={id,n:f.name,at:nowL(),act:bnew.act,_new:1};continue}
@@ -1142,7 +1142,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25k';
+const VERSION='2026-11-25l';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1201,6 +1201,17 @@ async function verDia(dia){const av=$('diaAviso');
   catch(e){av.hidden=false;av.textContent='No se pudo abrir el '+dmy(dia)+' ('+e.message+').'}}
 $('diaSel').onchange=()=>verDia($('diaSel').value);
 $('upRecalc').onclick=()=>{go('carga');procesar([],true)};
+/* ---- carga automática desde Geotab / BEES (otra pestaña del mismo navegador) ----
+   La pestaña de Geotab abre Control T2 y le envía las hojas del Excel con postMessage.
+   Solo se aceptan mensajes de los orígenes de Backus listados y con sesión iniciada. */
+const ORIG_OK=[/^https:\/\/my\.geotab\.com$/,/^https:\/\/[a-z0-9.-]+\.geotab\.com$/,/^https:\/\/[a-z0-9.-]+\.bees-platform\.com$/,/^https:\/\/[a-z0-9.-]+\.ab-inbev\.com$/];
+let AUTO_Q=Promise.resolve();
+async function cargarAuto(files){if(NET&&!USER)throw new Error('Control T2 sin sesión: ingresa con tu usuario');go('carga');await procesar(files,false);return $('upMsg').textContent}
+window.CT2={cargar:(name,sheets)=>cargarAuto([{name,sheets}])};
+window.addEventListener('message',ev=>{const d=ev.data;if(!d||d.tipo!=='ct2-archivos'||!Array.isArray(d.files))return;
+  if(!ORIG_OK.some(r=>r.test(ev.origin))){console.warn('origen no permitido',ev.origin);return}
+  AUTO_Q=AUTO_Q.then(()=>cargarAuto(d.files.map(f=>({name:String(f.name||'archivo'),sheets:f.sheets})))).then(m=>ev.source&&ev.source.postMessage({tipo:'ct2-ok',msg:m},ev.origin),e=>ev.source&&ev.source.postMessage({tipo:'ct2-error',msg:String(e&&e.message||e)},ev.origin))});
+if(window.opener)try{window.opener.postMessage({tipo:'ct2-listo'},'*')}catch(e){}
 $('diaHoy').onclick=()=>verDia(hoyL());
 async function onEstado(e){UPST=JSON.parse(JSON.stringify(e));renderSlots();
   try{if(!VIEW&&e.data&&e.data.id&&e.data.id!==LASTD){LASTD=e.data.id;if(!D||D._id!==e.data.id){const d=await getJSON(e.data.id);d._id=e.data.id;boot(d);if(e.dia)cargarHist(e.dia)}}infoDia();

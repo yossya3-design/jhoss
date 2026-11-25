@@ -5,7 +5,7 @@ import { scryptSync, randomBytes, createHmac, timingSafeEqual } from "node:crypt
 const OPT = { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
 // Primer usuario (administradora). Solo se usa si aún no existe en la base de usuarios.
 const SEED = { "yossya3@gmail.com": Object.assign({ nombre: "Mayra Torres", rol: "admin" }, {"salt":"21490f33534f0ff2d42109e24ab6e613","h":"a102c104894e6b097758e9a2610efe524c5fbfe436e510239c61fb7952fd8d58c8d0384e355d58892e9cb4173380ea00309c6d546df5f3c2ba76be33d014f412"}) };
-const DIAS_SESION = 7;
+const DIAS_SESION = 30;
 
 export const store = () => getStore({ name: "control-actividades", consistency: "strong" });
 const norm = (u) => String(u || "").trim().toLowerCase();

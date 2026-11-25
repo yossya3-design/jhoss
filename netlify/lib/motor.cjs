@@ -62,8 +62,8 @@ function detect(sheets){
   const names=Object.keys(sheets);
   if(names.some(n=>/DESPLANIFICACI/i.test(n)))return {tipo:'bita'};
   for(const n of names){const aoa=sheets[n];if(!aoa||!aoa.length)continue;
-    // la cabecera puede no estar en la primera fila: buscar en las 5 primeras
-    for(let hi=0;hi<Math.min(5,aoa.length);hi++){const h=(aoa[hi]||[]).map(x=>x==null?'':String(x).trim());
+    // la cabecera puede no estar en la primera fila (ej. hoja Detalle del SIC de Geotab): buscar en las 15 primeras
+    for(let hi=0;hi<Math.min(15,aoa.length);hi++){const h=(aoa[hi]||[]).map(x=>x==null?'':String(x).trim());
       for(const [k,t] of Object.entries(TIPOS)){if(t.need.every(c=>h.includes(c))){
         if(k==='fox')return {tipo:'fox'};
         const idx=t.cols.map(c=>h.indexOf(c));const rows=[t.cols];
