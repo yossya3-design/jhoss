@@ -683,7 +683,7 @@ function showRoute(id){
    <div class="minibars">${D.cortes.map((h,i)=>futuro(h)?`<div class="mb"><span>—</span><i style="height:2px;opacity:.3"></i><span>${h}</span></div>`:`<div class="mb"><span>${pc(t.av[i],mx)}%</span><i style="height:${Math.max(2,t.av[i]/mx*44)}px"></i><span>${h}</span></div>`).join('')}</div>`;
   renderMap(t);renderSide(t);renderObs(t);renderSal(t);renderList();renderPE(t);renderTime(t);
 }
-/* ---------- mapa base con calles (CARTO Voyager / OpenStreetMap) ---------- */
+/* ---------- mapa base con calles (OpenStreetMap; respaldo Esri) ---------- */
 const MXg=lo=>(lo+180)/360,MYg=la=>{const s=Math.sin(la*Math.PI/180);return .5-Math.log((1+s)/(1-s))/(4*Math.PI)};
 function geoP(P){
   const xs=P.map(c=>MXg(c.lo)),ys=P.map(c=>MYg(c.la));
@@ -691,11 +691,11 @@ function geoP(P){
   const S=Math.max(x1-x0,y1-y0,3e-6)*1.18,cx=(x0+x1)/2,cy=(y0+y1)/2;
   const vx=m=>(m-cx+S/2)/S*1000,vy=m=>(m-cy+S/2)/S*1000;
   const X=c=>vx(MXg(c.lo)).toFixed(1),Y=c=>vy(MYg(c.la)).toFixed(1);
-  const z=Math.max(3,Math.min(18,Math.ceil(Math.log2(1000/(400*S))))),n=2**z,ts=1000/(S*n);
+  const z=Math.max(3,Math.min(18,Math.ceil(Math.log2(1000/(300*S))))),n=2**z,ts=1000/(S*n);
   const tx0=Math.floor((cx-S/2)*n),tx1=Math.floor((cx+S/2)*n),ty0=Math.floor((cy-S/2)*n),ty1=Math.floor((cy+S/2)*n);
   let bg='';
-  for(let x=tx0;x<=tx1;x++)for(let y=ty0;y<=ty1;y++)bg+=`<image href="https://${'abcd'[(x+y)&3]}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}@2x.png" x="${vx(x/n).toFixed(1)}" y="${vy(y/n).toFixed(1)}" width="${(ts+.8).toFixed(1)}" height="${(ts+.8).toFixed(1)}" preserveAspectRatio="none" onerror="this.onerror=null;this.setAttribute('href','https://tile.openstreetmap.org/${z}/${x}/${y}.png')"/>`;
-  bg=`<g class="tiles">${bg}</g><text x="500" y="994" text-anchor="middle" font-size="12" fill="#333" stroke="#fff" stroke-width="3" paint-order="stroke" font-family="sans-serif">© OpenStreetMap · © CARTO</text>`;
+  for(let x=tx0;x<=tx1;x++)for(let y=ty0;y<=ty1;y++)bg+=`<image href="https://tile.openstreetmap.org/${z}/${x}/${y}.png" x="${vx(x/n).toFixed(1)}" y="${vy(y/n).toFixed(1)}" width="${(ts+.8).toFixed(1)}" height="${(ts+.8).toFixed(1)}" preserveAspectRatio="none" onerror="this.onerror=null;this.setAttribute('href','https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}')"/>`;
+  bg=`<g class="tiles">${bg}</g><text x="500" y="994" text-anchor="middle" font-size="12" fill="#333" stroke="#fff" stroke-width="3" paint-order="stroke" font-family="sans-serif">© OpenStreetMap</text>`;
   return {X,Y,bg};
 }
 const HALO='stroke="#070707" stroke-width="5" paint-order="stroke"';
@@ -1153,7 +1153,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25o';
+const VERSION='2026-11-25p';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
