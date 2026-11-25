@@ -60,5 +60,25 @@
     return enviar('Geotab tiempo de entrega ' + new Date(Date.now() - 5 * 3600e3).toISOString().slice(11, 16), { Data: rows });
   }
 
-  window.CT2AUTO = { sic, geo, version: '2026-11-25' };
+  // ---- BEES Deliver: Detalles de los transportes → Descargar CSV (página /control-tower) ----
+  async function bees() {
+    if (!/\/control-tower/.test(location.pathname)) throw new Error('abre primero https://deliver-portal.bees-platform.com/control-tower');
+    let btn = null;
+    for (let i = 0; i < 30 && !btn; i++) { btn = [...document.querySelectorAll('button')].find((b) => /^\s*DESCARGAR\s*$/i.test(b.textContent)); if (!btn) await sleep(500); }
+    if (!btn) throw new Error('no encontré el botón DESCARGAR');
+    let blob = null, nombre = '';
+    const oc = URL.createObjectURL, ac = HTMLAnchorElement.prototype.click;
+    URL.createObjectURL = function (b) { if (b instanceof Blob) blob = b; return oc.call(URL, b); };
+    HTMLAnchorElement.prototype.click = function () { if (String(this.href).startsWith('blob:')) { nombre = this.download || ''; return; } return ac.call(this); };
+    try { btn.click(); for (let i = 0; i < 90 && !blob; i++) await sleep(500); }
+    finally { URL.createObjectURL = oc; HTMLAnchorElement.prototype.click = ac; }
+    if (!blob) throw new Error('BEES no generó el CSV');
+    await loadXLSX();
+    const wb = XLSX.read(await blob.text(), { type: 'string', FS: ';', raw: true });
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null });
+    const rows = pick(aoa, ['tour_display_id', 'poc_external_id', 'tour_date', 'truck_license_plate', 'status', 'tour_status', 'trip_start_timestamp', 'arrived_at', 'finished_at', 'within_radius', 'out_of_radius_reason', 'total_delivered_vol', 'total_refused_vol', 'volume_hectoliters_sum']);
+    return enviar('BEES ' + (nombre.match(/(\d\dh\d\dm)/) || ['', new Date(Date.now() - 5 * 3600e3).toISOString().slice(11, 16)])[1].replace('h', ':').replace('m', ''), { BEES: rows });
+  }
+
+  window.CT2AUTO = { sic, geo, bees, version: '2026-11-25b' };
 })();
