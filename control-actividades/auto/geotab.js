@@ -13,9 +13,18 @@
   const loadXLSX = async () => {
     if (SJS) return;
     if (window.XLSX && window.XLSX.read && window.XLSX.utils && window.XLSX.utils.sheet_to_json) { SJS = window.XLSX; return; }
-    const prev = window.XLSX;
-    await new Promise((ok, ko) => { const s = document.createElement('script'); s.src = XLSX_URL; s.onload = ok; s.onerror = () => ko(new Error('no cargó SheetJS')); document.head.appendChild(s); });
+    // se evalúa como módulo aislado (la página puede tener AMD/define o su propio XLSX)
+    try {
+      const code = await (await fetch(XLSX_URL)).text();
+      const m = { exports: {} };
+      new Function('module', 'exports', 'define', 'require', code)(m, m.exports, undefined, undefined);
+      if (m.exports && m.exports.read) { SJS = m.exports; return; }
+    } catch (e) { /* sigue con <script> */ }
+    const prev = window.XLSX, pd = window.define; window.define = undefined;
+    try { await new Promise((ok, ko) => { const s = document.createElement('script'); s.src = XLSX_URL; s.onload = ok; s.onerror = () => ko(new Error('no cargó SheetJS')); document.head.appendChild(s); }); }
+    finally { window.define = pd; }
     SJS = window.XLSX; if (prev !== undefined) window.XLSX = prev;
+    if (!SJS || !SJS.read) throw new Error('no se pudo cargar SheetJS en esta página');
   };
   async function b64gz(obj) {
     const gz = await new Response(new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();

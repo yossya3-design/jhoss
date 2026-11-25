@@ -9,6 +9,6 @@ export default async () => {
     }
   }
   if (!JS) return new Response("// no disponible", { status: 404, headers: { "content-type": "text/javascript" } });
-  return new Response(JS, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=86400" } });
+  return new Response(JS, { headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=86400", "access-control-allow-origin": "*" } });
 };
 export const config = { path: "/control-actividades/lib/xlsx.full.min.js" };
