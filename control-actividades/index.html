@@ -694,7 +694,7 @@ function geoP(P){
   const z=Math.max(3,Math.min(18,Math.ceil(Math.log2(1000/(300*S))))),n=2**z,ts=1000/(S*n);
   const tx0=Math.floor((cx-S/2)*n),tx1=Math.floor((cx+S/2)*n),ty0=Math.floor((cy-S/2)*n),ty1=Math.floor((cy+S/2)*n);
   let bg='';
-  for(let x=tx0;x<=tx1;x++)for(let y=ty0;y<=ty1;y++)bg+=`<image href="https://tile.openstreetmap.org/${z}/${x}/${y}.png" x="${vx(x/n).toFixed(1)}" y="${vy(y/n).toFixed(1)}" width="${(ts+.8).toFixed(1)}" height="${(ts+.8).toFixed(1)}" preserveAspectRatio="none" onerror="this.onerror=null;this.setAttribute('href','https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}')"/>`;
+  for(let x=tx0;x<=tx1;x++)for(let y=ty0;y<=ty1;y++)bg+=`<image href="${NET?'tiles/':'https://tile.openstreetmap.org/'}${z}/${x}/${y}.png" x="${vx(x/n).toFixed(1)}" y="${vy(y/n).toFixed(1)}" width="${(ts+.8).toFixed(1)}" height="${(ts+.8).toFixed(1)}" preserveAspectRatio="none" onerror="this.onerror=null;this.setAttribute('href','https://tile.openstreetmap.org/${z}/${x}/${y}.png')"/>`;
   bg=`<g class="tiles">${bg}</g><text x="500" y="994" text-anchor="middle" font-size="12" fill="#333" stroke="#fff" stroke-width="3" paint-order="stroke" font-family="sans-serif">© OpenStreetMap</text>`;
   return {X,Y,bg};
 }
@@ -1153,7 +1153,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25p';
+const VERSION='2026-11-25q';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
