@@ -1031,7 +1031,7 @@ function renderSlots(){
 }
 const nowL=()=>new Date(Date.now()-5*3600e3).toISOString().slice(0,19).replace('T',' ');
 async function getJSON(id){
-  if(NET){const r=await afetch(API+'?op=get&id='+encodeURIComponent(id));if(!r.ok)throw new Error('no se pudo leer un archivo guardado');return JSON.parse(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text())}
+  if(NET){const r=await afetch(API+'?op=get&id='+encodeURIComponent(id));if(!r.ok)throw new Error('código '+r.status);return JSON.parse(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text())}
   const r=await fetch('/_blob/'+id);if(!r.ok)throw new Error('no se pudo leer un archivo guardado');return r.json()}
 async function putJSON(o){
   if(NET){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);const body=await new Response(new Blob([JSON.stringify(o)]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
@@ -1046,7 +1046,7 @@ $('upIn').onchange=async ev=>{
   const msg=$('upMsg');const log=t=>{msg.textContent+=t+'\n'};msg.textContent='';
   try{
     log('Preparando…');await loadJS(XLSX_URL,()=>window.XLSX);await loadJS('motor.js',()=>window.MOTOR);
-    const est=JSON.parse(JSON.stringify(UPST||{files:{}}));est.files=est.files||{};let daily=false,bnew=null;
+    const est=JSON.parse(JSON.stringify(UPST||{files:{}}));est.files=est.files||{};let daily=false,bnew=null;const NUEVO=new Set();
     for(const f of files){
       log('📄 '+f.name+': leyendo…');
       const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});const sh={};wb.SheetNames.forEach(n=>sh[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null}));
@@ -1055,13 +1055,22 @@ $('upIn').onchange=async ev=>{
         const id=await putJSON(bnew);est.bita={id,n:f.name,at:nowL(),act:bnew.act,_new:1};continue}
       if(d.tipo==='fox'){log('   ℹ Este resumen de Foxtrot no hace falta: el avance ya viene en el archivo BEES.');continue}
       if(!d.tipo){log('   ✖ No lo reconozco. Debe ser Radar, BEES, Modulación, Geotab, SIC de ruta o Bitácora.');continue}
-      SL[d.tipo]=d.rows;daily=true;const fe=MOTOR.fechaDe(d.tipo,d.rows);
+      SL[d.tipo]=d.rows;NUEVO.add(d.tipo);daily=true;const fe=MOTOR.fechaDe(d.tipo,d.rows);
       log(`   ✔ ${MOTOR.TIPOS[d.tipo].n}: ${(d.rows.length-1).toLocaleString('es-PE')} filas${fe?' · data del '+dmy(fe):''}`);
       const id=await putJSON(d.rows);est.files[d.tipo]={id,n:f.name,at:nowL(),fecha:fe};
     }
     if(bnew){BX=bnew;$('bxAct').textContent='BITÁCORA AL '+BX.act;renderBX()}
     if(daily||bnew){
-      for(const k of ['radar','bees','mod','geo','sic'])if(!SL[k]&&est.files[k]&&est.files[k].id){log('↺ usando '+MOTOR.TIPOS[k].n+' del corte anterior');SL[k]=await getJSON(est.files[k].id)}
+      // solo se reutilizan archivos guardados del MISMO día que el Radar
+      const dia=(est.files.radar&&est.files.radar.fecha)||(est.files.bees&&est.files.bees.fecha);
+      const mismoDia=k=>{const f=est.files[k];if(!f||!dia)return false;return f.fecha?f.fecha===dia:String(f.at||'').slice(0,10)===dia};
+      for(const k of ['radar','bees','mod','geo','sic']){
+        if(NUEVO.has(k))continue;
+        if(!mismoDia(k)){if(SL[k]||est.files[k])log('· '+MOTOR.TIPOS[k].n+': el guardado es de otro día, no se usa'+(dia?' (falta el del '+dmy(dia)+')':''));delete SL[k];continue}
+        if(SL[k])continue;
+        try{log('↺ usando '+MOTOR.TIPOS[k].n+' del corte anterior');SL[k]=await getJSON(est.files[k].id)}
+        catch(e){log('⚠ No se pudo recuperar '+MOTOR.TIPOS[k].n+' guardado ('+e.message+'). Vuelve a subirlo.');delete est.files[k]}
+      }
       if(SL.radar&&SL.bees){
         log('⚙ Recalculando…');const base=await (await fetch('base.json')).json();
         const out=MOTOR.calc(SL,base);const dias=['bees','mod','geo'].map(k=>est.files[k]&&est.files[k].fecha).filter(x=>x&&x!==out.dia);
@@ -1069,13 +1078,16 @@ $('upIn').onchange=async ev=>{
         const id=await putJSON(out);est.data={id,at:nowL()};est.fecha=out.fecha;est.dia=out.dia;
         boot(out);log(`✅ Listo: ${out.tours.length} rutas del ${out.fecha} recalculadas.`);
         if(CAN_SAVE()&&id)await saveDia(out.dia,{data:id,fecha:out.fecha,at:nowL()});
-      }else if(daily)log('Falta '+(!SL.radar?'el Radar':'el BEES')+' para recalcular. Súbelo y se arma todo.');
+      }else if(daily)log('Falta '+(!SL.radar?'el Radar':'el BEES')+(dia?' del '+dmy(dia):'')+' para recalcular. Súbelo y se arma todo.');
       est.at=nowL();
       if(CAN_SAVE()){await saveEstado(est);delete (est.bita||{})._new;log('💾 Guardado: todos ven esta data.')}else log('⚠ No se pudo guardar para los demás. La data se ve solo en esta pantalla.');
       UPST=est;renderSlots();
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 };
+const VERSION='2026-11-25b';
+async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
+if(NET){chkVersion();setInterval(chkVersion,120000)}
 let LASTD=null,POLL=null;
 async function pollNet(){try{const r=await afetch(API+'?op=estado',{cache:'no-store'});if(r.ok){const j=await r.json();
   if(j.ok&&j.estado)await onEstado(j.estado);
