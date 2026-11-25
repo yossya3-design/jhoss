@@ -14,7 +14,7 @@ html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--txt);font-family:Barlow,system-ui,sans-serif;font-size:15px;line-height:1.4;min-height:100vh}
 .tapiz{position:fixed;inset:0;background:url(img/tapiz-noche.svg) center/cover no-repeat;opacity:.5;z-index:0;pointer-events:none}
 .tapiz::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,7,7,.55),rgba(7,7,7,.85) 40%,rgba(7,7,7,.93))}
-.wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:14px 12px 40px}
+.wrap{position:relative;z-index:1;max-width:min(1480px,96vw);margin:0 auto;padding:14px 12px 40px}
 .mono{font-family:"JetBrains Mono",monospace}
 header{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:4px 0 12px;border-bottom:1px solid var(--line)}
 .logos{display:flex;gap:8px;align-items:center}.logos img{height:28px;display:block}
@@ -41,6 +41,8 @@ h2 .n{font:700 11px "JetBrains Mono";color:#070707;background:var(--gold2);borde
 .sub{color:var(--mut);margin:4px 0 10px;font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.btn.gold{background:linear-gradient(135deg,#F2C52A,#C8960F);color:#1a1300;border-color:#F2C52A}.btn.gold:disabled{opacity:.6}
+label.cal{display:flex;align-items:center;gap:6px;font:700 12px Barlow;color:var(--gold2);text-transform:uppercase}label.cal input{min-width:150px;color-scheme:dark}
 select,input,.btn{font:600 14px Barlow;color:var(--txt);background:#14120d;border:1px solid var(--line);border-radius:8px;padding:9px 10px}
 input::placeholder{color:#7d776a}.btn{cursor:pointer}
 .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
@@ -197,10 +199,10 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
  <section>
   <h2><span class="n">25</span>Estatus de desplanificación</h2>
   <p class="sub">Bitácora de transportes: desplanificación, reclamos de ventas y recojo de adulterado.</p>
-  <div class="bar"><span class="fecha" id="bxAct"></span></div>
+  <div class="bar"><span class="fecha" id="bxAct"></span><button class="btn gold bitaYa" style="padding:6px 12px;font-size:13px">🔄 Actualizar bitácora</button><span class="nota bitaMsg" style="margin:0"></span></div>
   <div class="bar">
-   <select id="bxMes"></select>
-   <input type="date" id="bxDia" title="Día">
+   <label class="cal">📅 Desde<input type="date" id="bxDe"></label>
+   <label class="cal">📅 Hasta<input type="date" id="bxHa"></label>
    <select id="bxSv"></select>
    <button class="btn" id="bxHoy">Hoy</button>
    <button class="btn" id="bxReset">Quitar filtros</button>
@@ -961,7 +963,7 @@ function renderSlots(){
     let pill='<span class="pill r">sin cargar</span>',det='';
     if(f){const vie=k!=='bita'&&k!=='sic'&&f.fecha&&dia&&f.fecha!==dia;pill=`<span class="pill ${vie?'y':'g'}">${vie?'⚠ otro día':'✔ '+esc(f.at.slice(11,16))}</span>`;det=`${esc(f.n||'')} · ${esc(f.at.slice(8,10)+'/'+f.at.slice(5,7)+' '+f.at.slice(11,16))}${f.fecha?' · data del '+esc(dmy(f.fecha)):''}`}
     else if(k!=='bita'&&!(UPST&&UPST.data)){pill='<span class="pill n">data de ejemplo</span>';det='Aún no se sube nada desde aquí'}
-    return `<div class="card" style="padding:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><b>${n}</b>${pill}</div><small style="color:var(--mut)">${u}</small><small class="mono" style="font-size:10px;color:var(--mut)">${det}</small></div>`}).join('')
+    return `<div class="card" style="padding:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><b>${n}</b>${pill}</div><small style="color:var(--mut)">${u}</small><small class="mono" style="font-size:10px;color:var(--mut)">${det}${k==='bita'&&f&&f.chk?' · revisado '+esc(f.chk.slice(11,16)):''}</small>${k==='bita'?'<button class="btn gold bitaYa" style="padding:6px;font-size:13px;margin-top:4px">🔄 Actualizar ahora desde el Drive</button><small class="nota bitaMsg" style="margin:0"></small>':''}</div>`}).join('')
    +`<div class="card" style="padding:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:6px"><b>Bases fijas</b><span class="pill n">fija</span></div><small style="color:var(--mut)">Maestro de clientes (coordenadas y N3), placas por EDT y maestro SKU × volumen. No se suben cada día.</small></div>`;
   $('upNota').textContent=(UPST&&UPST.data?`Última recalculada: ${UPST.data.at.slice(8,10)}/${UPST.data.at.slice(5,7)} ${UPST.data.at.slice(11,16)} · data del ${UPST.fecha}. `:'')+'Mínimo para recalcular: Radar y BEES. Lo que no subas en un corte se mantiene del corte anterior. La bitácora se actualiza sola desde el Drive cada hora (6:00–22:00); si la subes aquí, se usa la tuya.';
 }
@@ -1013,6 +1015,17 @@ $('upIn').onchange=async ev=>{
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 };
 let LASTD=null;
+async function bitaYa(){
+  const msgs=document.querySelectorAll('.bitaMsg'),say=t=>msgs.forEach(m=>m.textContent=t),btns=document.querySelectorAll('.bitaYa');
+  if(!NET){say('Aquí se actualiza sola cada hora (6:00–22:00).');return}
+  btns.forEach(b=>b.disabled=true);say('Leyendo la bitácora del Drive…');
+  try{const r=await fetch('/.netlify/functions/control-bitacora-ya',{method:'POST'});const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok)throw new Error(j.error||('error '+r.status));
+    const rr=await fetch(API+'?op=estado',{cache:'no-store'});const e=(await rr.json()).estado;if(e)await onEstado(e);
+    say(j.cambio?`✔ Actualizada: ${j.d} desplanificaciones (${j.chk.slice(11,16)})`:`✔ Sin cambios en el Drive desde la última carga (revisado ${j.chk.slice(11,16)})`)}
+  catch(e){say('✖ No se pudo actualizar: '+e.message+'. Intenta de nuevo en un minuto.')}
+  finally{btns.forEach(b=>b.disabled=false)}}
+document.addEventListener('click',ev=>{if(ev.target.closest('.bitaYa'))bitaYa()});
 async function onEstado(e){UPST=JSON.parse(JSON.stringify(e));renderSlots();
   try{if(e.data&&e.data.id&&e.data.id!==LASTD){LASTD=e.data.id;if(!D||D._id!==e.data.id){const d=await getJSON(e.data.id);d._id=e.data.id;boot(d)}}
     if(e.bita&&e.bita.id&&(!BX||BX._id!==e.bita.id)){const b=await getJSON(e.bita.id);b._id=e.bita.id;BX=b;$('bxAct').textContent='BITÁCORA AL '+b.act;renderBX();if(D){renderCx();renderMx();renderCarga()}}}catch(err){console.error(err)}}
@@ -1022,21 +1035,21 @@ async function onEstado(e){UPST=JSON.parse(JSON.stringify(e));renderSlots();
   DB.doc('cfg/estado').onSnapshot(sn=>{if(sn.exists)onEstado(sn.data())},err=>console.warn(err))}catch(e){console.warn(e)}})();
 
 /* ---------- reporte para ventas (bitácora) ---------- */
-let BXDT=[],BX=null,bxSub='des',bxF={mes:'',dia:'',sv:'',edt:'Todos',acc:'Todos',q:''};
+let BXDT=[],BX=null,bxSub='des',bxF={de:'',ha:'',sv:'',edt:'Todos',acc:'Todos',q:''};
 const BACC={REP:['Reprogramación','#F5B800'],ZT:['ZT (rechazo)','#D8253A'],SC:['Sin clasificar','#6b665b']};
 const ucl=v=>new Set(v.map(r=>r[4]+'|'+r[0])).size;
 const dmy=s=>s.slice(8,10)+'/'+s.slice(5,7);
 const MESN=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
-function bxFil(rows,iF,iE,iS){return rows.filter(r=>(!bxF.mes||r[iF].slice(0,7)===bxF.mes)&&(!bxF.dia||r[iF]===bxF.dia)&&(bxF.edt==='Todos'||r[iE]===bxF.edt)&&(!bxF.sv||iS==null||r[iS]===bxF.sv))}
+function bxFil(rows,iF,iE,iS){return rows.filter(r=>(!bxF.de||r[iF]>=bxF.de)&&(!bxF.ha||r[iF]<=bxF.ha)&&(bxF.edt==='Todos'||r[iE]===bxF.edt)&&(!bxF.sv||iS==null||r[iS]===bxF.sv))}
 function hbar(list,col,unit){const mx=Math.max(...list.map(x=>x.v),.01);return list.map((x,i)=>`<div class="hb mot" style="grid-template-columns:22px minmax(0,1fr) 1.3fr 92px"><span class="k mono" style="color:var(--gold2)">${i+1}</span><span class="k" title="${x.l}">${x.l}</span><div class="track"><div class="fill" style="width:${x.v/mx*100}%;background:${col}"></div></div><span class="p">${x.t}</span></div>`).join('')||'<p class="nota">Sin registros.</p>'}
 function renderBX(){
   if(!BX)return;
   const allD=BX.d;
   const meses=[...new Set(allD.map(r=>r[0].slice(0,7)))].sort().reverse();
-  $('bxMes').innerHTML='<option value="">Todos los meses</option>'+meses.map(m=>`<option value="${m}"${m===bxF.mes?' selected':''}>${MESN[+m.slice(5)-1]} ${m.slice(0,4)}</option>`).join('');
+  {const fs0=allD.map(r=>r[0]).sort();if(fs0.length){['bxDe','bxHa'].forEach(k=>{$(k).min=fs0[0];$(k).max=fs0[fs0.length-1]})}}
   const svs=[...new Set(allD.map(r=>r[10]))].sort();
   $('bxSv').innerHTML='<option value="">Todos los supervisores</option>'+svs.map(s=>`<option${s===bxF.sv?' selected':''}>${s}</option>`).join('');
-  $('bxDia').value=bxF.dia;
+  $('bxDe').value=bxF.de;$('bxHa').value=bxF.ha;
   const edts=['Todos',...new Set(allD.map(r=>r[3]))];
   $('bxEdt').innerHTML=edts.map(e=>`<button class="chip${e===bxF.edt?' on':''}" data-e="${e}">${e}</button>`).join('');
   $('bxEdt').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{bxF.edt=b.dataset.e;renderBX()});
@@ -1070,7 +1083,7 @@ function renderBX(){
   $('bxDetS').textContent=`${dt.length} línea(s) · ${f1(sum(dt,7))} HL · ${sum(dt,6).toLocaleString('es-PE')} cajas`;BXDT=dt;
   $('bxDetT').innerHTML=dt.slice(0,400).map(r=>`<tr><td class="mono">${dmy(r[0])}</td><td>${r[1]}</td><td>${r[3]}</td><td class="mono">${r[4]}</td><td>${r[5]}</td><td class="mono">${r[12]||'—'}</td><td>${r[10]}</td><td>${r[6]}</td><td>${f1(r[7])}</td><td><span class="est" style="background:${BACC[r[8]][1]};color:${r[8]==='REP'?'#1a1300':'#fff'}">${BACC[r[8]][0]}</span></td><td>${r[9]||'—'}</td></tr>`).join('')+`<tr class="tot"><td><b>TOTAL</b></td><td>${dt.length} líneas${dt.length>400?' (se muestran 400)':''}</td><td></td><td></td><td></td><td></td><td></td><td>${sum(dt,6).toLocaleString('es-PE')}</td><td>${f1(sum(dt,7))}</td><td></td><td></td></tr>`;
   resort('bxDetT');
-  $('bxDD').classList.toggle('gold',!!bxF.dia);$('bxAA').classList.toggle('gold',!bxF.dia&&!bxF.mes);
+  $('bxDD').classList.toggle('gold',!!bxF.de&&bxF.de===bxF.ha);$('bxAA').classList.toggle('gold',!bxF.de&&!bxF.ha);
   { const wk=s=>{const t=new Date(s+'T12:00:00Z'),k=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-k);return t.toISOString().slice(0,10)};
     const W={};d.forEach(r=>{const k=wk(r[0]);(W[k]=W[k]||{d:[],r:0,a:0}).d.push(r)});rc.forEach(r=>{const k=wk(r[0]);(W[k]=W[k]||{d:[],r:0,a:0}).r++});ad.forEach(r=>{const k=wk(r[0]);(W[k]=W[k]||{d:[],r:0,a:0}).a+=r[4]});
     const ks=Object.keys(W).sort(),mx=Math.max(...ks.map(k=>sum(W[k].d,7)),.01);
@@ -1088,13 +1101,13 @@ function renderBX(){
   $('bxAT').innerHTML=[...ad].sort((a,b)=>b[0].localeCompare(a[0])).map(r=>`<tr><td class="mono">${dmy(r[0])}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[2]}</td><td style="white-space:normal;min-width:160px">${r[3]}</td><td>${r[4]}</td></tr>`).join('')+`<tr class="tot"><td><b>TOTAL</b></td><td>${ad.length} líneas</td><td></td><td></td><td></td><td>${ad.reduce((a,r)=>a+r[4],0)}</td></tr>`;
   resort('bxAT');
 }
-$('bxMes').onchange=()=>{bxF.mes=$('bxMes').value;bxF.dia='';renderBX()};
-$('bxDia').onchange=()=>{bxF.dia=$('bxDia').value;if(bxF.dia)bxF.mes='';renderBX()};
+$('bxDe').onchange=()=>{bxF.de=$('bxDe').value;if(bxF.de&&bxF.ha&&bxF.ha<bxF.de)bxF.ha=bxF.de;renderBX()};
+$('bxHa').onchange=()=>{bxF.ha=$('bxHa').value;if(bxF.de&&bxF.ha&&bxF.ha<bxF.de)bxF.de=bxF.ha;renderBX()};
 $('bxSv').onchange=()=>{bxF.sv=$('bxSv').value;renderBX()};
 $('bxQ').oninput=()=>{bxF.q=$('bxQ').value;renderBX();$('bxQ').focus()};
-$('bxHoy').onclick=()=>{const t=new Date(Date.now()-5*3600e3).toISOString().slice(0,10);bxF.dia=bxF.dia===t?'':t;bxF.mes='';renderBX()};
-$('bxDD').onclick=()=>{const fs=BX.d.map(r=>r[0]).sort();bxF.dia=fs[fs.length-1];bxF.mes='';renderBX()};
-$('bxAA').onclick=()=>{bxF.dia='';bxF.mes='';renderBX()};
+$('bxHoy').onclick=()=>{const t=new Date(Date.now()-5*3600e3).toISOString().slice(0,10);if(bxF.de===t&&bxF.ha===t){bxF.de=bxF.ha=''}else{bxF.de=bxF.ha=t}renderBX()};
+$('bxDD').onclick=()=>{const fs=BX.d.map(r=>r[0]).sort();bxF.de=bxF.ha=fs[fs.length-1];renderBX()};
+$('bxAA').onclick=()=>{bxF.de=bxF.ha='';renderBX()};
 $('bxXL').onclick=async()=>{const m=$('bxXLmsg');m.textContent='Preparando Excel…';
   try{if(!window.XLSX)await new Promise((ok,ko)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=ok;s.onerror=ko;document.head.appendChild(s)});
    const rows=[['Fecha','Ruta','EDT','Código','Cliente','Zona','Supervisor','Cajas','HL','Qué se hace','Motivo'],...BXDT.map(r=>[r[0].split('-').reverse().join('/'),r[1],r[3],r[4],r[5],r[12]||'',r[10],r[6],r[7],BACC[r[8]][0],r[9]||''])];
@@ -1102,9 +1115,9 @@ $('bxXL').onclick=async()=>{const m=$('bxXLmsg');m.textContent='Preparando Excel
    const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[10,8,16,11,34,9,26,8,8,15,22].map(w=>({wch:w}));ws['!autofilter']={ref:'A1:K'+(rows.length-1)};
    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Clientes desplanificados');
    const buf=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-   await saveFile(`Clientes_desplanificados_${bxF.dia||'acumulado'}.xlsx`,new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));m.textContent=$('dlMsg').textContent}
+   await saveFile(`Clientes_desplanificados_${bxF.de&&bxF.de===bxF.ha?bxF.de:(bxF.de||bxF.ha?(bxF.de||'inicio')+'_a_'+(bxF.ha||'hoy'):'acumulado')}.xlsx`,new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));m.textContent=$('dlMsg').textContent}
   catch(e){m.textContent='No se pudo generar el Excel.'}};
-$('bxReset').onclick=()=>{bxF={mes:'',dia:'',sv:'',edt:'Todos',acc:'Todos',q:''};$('bxQ').value='';renderBX()};
+$('bxReset').onclick=()=>{bxF={de:'',ha:'',sv:'',edt:'Todos',acc:'Todos',q:''};$('bxQ').value='';renderBX()};
 fetch('bitacora.json').then(r=>r.json()).then(b=>{BX=b;$('bxAct').textContent='BITÁCORA AL '+b.act;renderBX();try{if(D){renderCx();renderMx();if(cur)showRoute(cur.id)}}catch(e){}}).catch(()=>{});
 
 
