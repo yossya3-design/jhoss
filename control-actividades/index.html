@@ -339,6 +339,15 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
   <div class="card tw"><table><thead><tr><th>#</th><th>Asistente</th><th>EDT · turno</th><th>Checklist</th><th>Salida ≤7:30</th><th>1er punto ≤8:00</th><th>HL entregado</th></tr></thead><tbody id="rk"></tbody></table></div>
   <p class="nota">Meta en semáforo: ≥ 90% verde · 75–89% amarillo · &lt; 75% rojo. Las marcas del checklist se guardan en este dispositivo.</p>
  </section>
+ <section>
+  <h2><span class="n">03</span>Placas pendientes por cargar en almacén</h2>
+  <p class="sub">Pega o escribe las placas que aún no terminan de cargar (con o sin PE, una por línea o separadas por coma). Se cuentan en Seguimiento de ruta como <b>pendiente de carga</b>, para que una salida tarde o un 1er punto tarde se vea por almacén y no solo por transporte.</p>
+  <div class="card" style="display:flex;flex-direction:column;gap:8px">
+   <textarea id="pcIn" rows="3" placeholder="Ej: BML-869, AZK-908&#10;PEBNA-867" style="width:100%;box-sizing:border-box;font:15px Barlow;padding:10px;background:rgba(0,0,0,.35);color:var(--txt);border:1px solid rgba(242,197,42,.35);border-radius:10px"></textarea>
+   <div class="bar" style="margin:0"><button class="btn gold" id="pcAdd">📦 Agregar pendientes</button><button class="btn" id="pcClr">Limpiar todo</button><span class="nota" id="pcMsg" style="margin:0"></span></div>
+   <div id="pcList" class="chips"></div>
+  </div>
+ </section>
 </div>
 
 <!-- RUTA -->
@@ -356,7 +365,7 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
  </section>
  <section>
   <h2><span class="n">05</span>Resumen por empresario</h2>
-  <div class="card tw"><table><thead><tr><th>EDT</th><th>Asistente</th><th>Rutas</th><th>Recargas</th><th>Clientes</th><th>Pedidos</th><th>HL prog.</th><th>HL entreg.</th><th>Salida ≤7:30</th><th>1er pto ≤8:00</th><th>Alertados</th><th>Salvados</th></tr></thead><tbody id="edtT"></tbody></table></div>
+  <div class="card tw"><table><thead><tr><th>EDT</th><th>Asistente</th><th>Rutas</th><th>Recargas</th><th>Clientes</th><th>Pedidos</th><th>HL prog.</th><th>HL entreg.</th><th>Salida ≤7:30</th><th title="Unidades del viaje 1 registradas como pendientes de carga en almacén">📦 Pend. carga</th><th>1er pto ≤8:00</th><th>Alertados</th><th>Salvados</th></tr></thead><tbody id="edtT"></tbody></table></div>
  </section>
  <section>
   <details class="col"><summary><span><span class="n2">06</span>Rutas del día</span><span class="sm" id="rutS"></span></summary>
@@ -563,6 +572,21 @@ function dato(code,a,al){
   if(code==='al')return [`${al.res}/${al.n} alertados entregaron`,pc(al.res,al.n)];
 }
 function ckPct(a){const x=getA(a.n);let t=0,o=0;turnos(a).forEach(k=>x[k].forEach(s=>{if(s.s!=='pend'){t++;if(s.s==='ok')o++}}));return t?Math.round(o/t*100):null}
+/* ---- placas pendientes por cargar (almacén) ---- */
+let PC={placas:[]};
+const normP=p=>String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^PE(?=[A-Z0-9]{6}$)/,'');
+const esPC=t=>PC.placas.some(x=>x.p===normP(t.placa));
+const pcCell=ts=>{const v=ts.filter(t=>t.v===1&&esPC(t));if(!v.length)return '<span class="pill n">0</span>';const sin=v.filter(t=>!t.sal||t.sal>'07:30').length;return `<span class="pill y" title="${esc(v.map(t=>t.ruta+' · '+t.placa+(t.sal?' salió '+t.sal:' en CD')).join('\n'))}">${v.length}${sin?` · ${sin} tarde/en CD`:''}</span>`};
+const pcDia=()=>(D&&D.dia)||new Date(Date.now()-5*3600e3).toISOString().slice(0,10);
+async function pcLoad(){try{if(NET){const r=await afetch(API+'?op=pend&dia='+pcDia(),{cache:'no-store'});const j=await r.json();if(j.ok)PC=j.pend||{placas:[]}}else if(DB){const sn=await DB.doc('pend/'+pcDia()).get();PC=sn.exists?sn.data():{placas:[]}}}catch(e){}pcRender();if(D){try{renderRuta()}catch(e){}}}
+async function pcSave(){if(NET)return postAPI('pend',Object.assign({dia:pcDia()},PC));if(DB)return DB.doc('pend/'+pcDia()).set(PC);try{localStorage.setItem('pc_'+pcDia(),JSON.stringify(PC))}catch(e){}}
+function pcRender(){const box=$('pcList');if(!box)return;const tl=(D&&D.tours||[]).filter(t=>t.v===1);
+  box.innerHTML=PC.placas.length?PC.placas.map((x,i)=>{const t=tl.find(t=>normP(t.placa)===x.p);return `<span class="chip on" style="cursor:default">${esc(x.p)}${t?' · '+esc(t.ruta)+' · '+esc(t.edt)+(t.sal?' · salió '+t.sal:''):' · <i>no está en el Radar</i>'} <small>${esc(x.at||'')}</small> <b data-i="${i}" style="cursor:pointer;margin-left:4px">✕</b></span>`}).join(''):'<span class="nota">Sin placas pendientes registradas hoy.</span>';
+  box.querySelectorAll('[data-i]').forEach(b=>b.onclick=async()=>{PC.placas.splice(+b.dataset.i,1);await pcSave().catch(e=>$('pcMsg').textContent='✖ '+e.message);pcRender();if(D)renderRuta()})}
+$('pcAdd').onclick=async()=>{const ps=$('pcIn').value.split(/[\s,;]+/).map(normP).filter(p=>p.length>=5);if(!ps.length)return;const h=new Date(Date.now()-5*3600e3).toISOString().slice(11,16);
+  ps.forEach(p=>{if(!PC.placas.some(x=>x.p===p))PC.placas.push({p,at:h,por:USER?USER.n:''})});$('pcIn').value='';
+  try{await pcSave();$('pcMsg').textContent='✔ '+ps.length+' placa(s) registradas'}catch(e){$('pcMsg').textContent='✖ '+e.message}pcRender();if(D)renderRuta()};
+$('pcClr').onclick=async()=>{if(!PC.placas.length||!confirm('¿Quitar todas las placas pendientes de hoy?'))return;PC.placas=[];try{await pcSave()}catch(e){}pcRender();if(D)renderRuta()};
 function renderCk(){
   $('ckEdt').innerHTML=ASIS.map((a,i)=>`<button class="chip${i===ckA?' on':''}" data-i="${i}">${a.n}</button>`).join('');
   $('ckEdt').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ckA=+b.dataset.i;const A=ASIS[ckA];$('tur').value=turnos(A)[0];renderCk()});
@@ -592,7 +616,8 @@ function renderEdtF(){
   document.querySelectorAll('.edtF').forEach(el=>{el.innerHTML=['Todos',...EDTS].map(e=>`<button class="chip${e===edtSel?' on':''}" data-e="${e}">${e}</button>`).join('');
    el.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{edtSel=b.dataset.e;renderEdtF();renderRuta();renderAlert()})});
 }
-const salCell=t=>t.v===1&&t.salSrc==='SIC-CD'?'<span class="pill '+(nowHM()>'07:30'&&esHoy()?'r':'n')+'" title="El SIC aún no registra salida de la geocerca">en CD</span>':t.v===1&&t.salSrc==='BEES'?'<span title="Esta placa no está en el SIC: hora de inicio en BEES">'+hcell(t.sal,'07:30',t.v)+' <small style="color:var(--mut)">BEES</small></span>':t.salX?`<span class="pill y" title="Inicio Foxtrot ${t.salX} es posterior al 1er punto GPS">⚠ ${t.salX}</span>`:hcell(t.sal,'07:30',t.v);
+const salCell=t=>(t.v===1&&esPC(t)?'<span class="pill y" title="Registrada como pendiente de carga en almacén" style="margin-right:3px">📦</span>':'')+salCell0(t);
+const salCell0=t=>t.v===1&&t.salSrc==='SIC-CD'?'<span class="pill '+(nowHM()>'07:30'&&esHoy()?'r':'n')+'" title="El SIC aún no registra salida de la geocerca">en CD</span>':t.v===1&&t.salSrc==='BEES'?'<span title="Esta placa no está en el SIC: hora de inicio en BEES">'+hcell(t.sal,'07:30',t.v)+' <small style="color:var(--mut)">BEES</small></span>':t.salX?`<span class="pill y" title="Inicio Foxtrot ${t.salX} es posterior al 1er punto GPS">⚠ ${t.salX}</span>`:hcell(t.sal,'07:30',t.v);
 const nowHM=()=>new Date(Date.now()-5*3600e3).toISOString().slice(11,16),esHoy=()=>!!(D&&D.dia)&&D.dia===new Date(Date.now()-5*3600e3).toISOString().slice(0,10);
 const hcell=(h,lim,v)=>!h?'<span class="pill n">—</span>':v!==1?`<span class="mono">${h}</span>`:`<span class="pill ${h<=lim?'g':'r'}">${h}</span>`;
 const salv=ts=>{const s=alertStats(ts),p=pc(s.res,s.n);return `<td><span class="pill r">${s.n}</span></td><td><span class="pill ${cls(p)}">${s.res} · ${p??'—'}%</span></td>`};
@@ -603,7 +628,7 @@ function renderRuta(){
    +kpi('Salida ≤7:30',a.salP+'%',`${a.sal}/${a.v1} unidades`,a.salP)+kpi('1er punto ≤8:00',a.p1P+'%',`${a.p1}/${a.v1} unidades · Geotab`,a.p1P)
    +kpi('Ventana horaria',a.vwP==null?'—':a.vwP+'%',`${a.vok}/${a.vw} clientes con ventana`,a.vwP)+kpi('Clientes N3',a.n3,'cobro en bancarización')+kpi('No llegó',ts.reduce((s,t)=>s+t.cl.filter(noLleg).length,0),'cerrado en BEES sin GPS Geotab ni radio Foxtrot')+kpi('Salida por validar',ts.filter(t=>t.salX).length,'Foxtrot después del 1er punto');
   $('avance').innerHTML=D.cortes.map((h,i)=>{const p=pc(a.av[i],a.cli);return `<div class="hb"><span class="k">${h}</span><div class="track"><div class="fill" style="width:${p}%"></div></div><span class="p">${p}% <span style="color:var(--mut);font-weight:500">${a.av[i]}</span></span></div>`}).join('')+`<p class="nota">Avance según Foxtrot. El número gris es la cantidad de clientes atendidos a esa hora, de ${a.cli} programados.</p>`;
-  $('edtT').innerHTML=EDTS.map(e=>{const x=agg(byEdt(e));return `<tr><td><b>${e}</b></td><td>${asisOf(e)}</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span></td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP??'—'}%</span></td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P??'—'}%</span></td>${salv(byEdt(e))}</tr>`}).join('')+(()=>{const x=agg(T);return `<tr class="tot"><td><b>TOTAL</b></td><td>${ASIS.length} asistentes</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span></td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP}%</span></td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P}%</span></td>${salv(T)}</tr>`})();resort('edtT');
+  $('edtT').innerHTML=EDTS.map(e=>{const x=agg(byEdt(e));return `<tr><td><b>${e}</b></td><td>${asisOf(e)}</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span></td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP??'—'}%</span></td><td>${pcCell(byEdt(e))}</td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P??'—'}%</span></td>${salv(byEdt(e))}</tr>`}).join('')+(()=>{const x=agg(T);return `<tr class="tot"><td><b>TOTAL</b></td><td>${ASIS.length} asistentes</td><td>${x.rutas}</td><td>${x.rec}</td><td>${x.cli}</td><td>${x.pe}</td><td>${f1(x.hl)}</td><td>${f1(x.hle)} <span class="pill ${cls(x.hlP)}">${x.hlP}%</span></td><td><span class="pill ${cls(x.salP)}">${x.sal}/${x.v1} · ${x.salP}%</span></td><td>${pcCell(T)}</td><td><span class="pill ${cls(x.p1P)}">${x.p1}/${x.v1} · ${x.p1P}%</span></td>${salv(T)}</tr>`})();resort('edtT');
   $('rutT').innerHTML=[...ts].sort((x,y)=>x.ruta.localeCompare(y.ruta)||x.v-y.v).map(t=>{const at=t.av[t.av.length-1],ap=pc(at,t.cli),hp=pc(t.hle,t.hl);
    return `<tr class="click" data-id="${t.id}"><td><b>${t.ruta}</b></td><td>${t.v}</td><td>${t.edt}</td><td class="mono">${t.placa}</td><td>${salCell(t)}</td><td>${hcell(t.p1,'08:00',t.v)}</td><td>${t.cli}</td><td>${t.pe}</td><td><span class="pill ${cls(ap)}">${at}/${t.cli}</span></td><td>${f1(t.hl)}${t.na?' <span class="pill y">'+t.na+' NA</span>':''}</td><td><span class="pill ${cls(hp)}">${hp}%</span></td><td>${t.al?`<span class="pill r">${t.al}</span>`:'0'}</td></tr>`}).join('')+(()=>{const at=a.av[a.av.length-1];return `<tr class="tot"><td><b>TOTAL</b></td><td>${ts.length}</td><td></td><td></td><td><span class="pill ${cls(a.salP)}">${a.sal}/${a.v1}</span></td><td><span class="pill ${cls(a.p1P)}">${a.p1}/${a.v1}</span></td><td>${a.cli}</td><td>${a.pe}</td><td><span class="pill ${cls(pc(at,a.cli))}">${at}/${a.cli}</span></td><td>${f1(a.hl)}${a.na?' <span class="pill y">'+a.na+' NA</span>':''}</td><td><span class="pill ${cls(a.hlP)}">${a.hlP}%</span></td><td>${a.al}</td></tr>`})();resort('rutT');if(D.sic)renderCx();{const ev=ts.flatMap(t=>(t.env||[]).map(x=>t.ruta+' · '+x[0]+' '+x[1]));$('rutS').innerHTML=`${ts.length} viajes · ${a.cli} clientes`+(ev.length?`<br><small style="color:#ff6b7a;font-size:11px" title="${esc(ev.join('\n'))}">+${ev.length} por envases (BLGA)</small>`:'')}
   $('rutT').querySelectorAll('tr[data-id]').forEach(r=>r.onclick=()=>{go('det');showRoute(r.dataset.id)});
@@ -752,6 +777,7 @@ function renderDesp(){
   const mot=p=>{const m=[],av=pc(p.done,p.t.cli),sr=s.find(x=>x.placa===p.t.placa);
     if(H!=='Cierre'){m.push(`a este ritmo le faltarían ${p.nol} cliente${p.nol>1?'s':''} al llegar a su límite ${m2h(p.lim)}`);if(av!=null&&av<40&&toM(HH)>=toM('13:00'))m.push(`avance bajo (${av}%)`)}
     else m.push(`${p.nol} cliente${p.nol>1?'s':''} no visitado${p.nol>1?'s':''} o reprogramado${p.nol>1?'s':''}`);
+    if(p.t.v===1&&esPC(p.t))m.push('pendiente de carga en almacén');
     if(p.t.sal&&p.t.sal>'07:30'&&p.t.v===1)m.push(`salió tarde (${p.t.sal})`);
     if(p.t.p1&&p.t.p1>'08:00'&&p.t.v===1)m.push(`1er punto tarde (${p.t.p1})`);
     if(sr&&(sr.cl==='S'||sr.cl==='M'))m.push(SICC[sr.cl][0].toLowerCase());
@@ -1101,7 +1127,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25h';
+const VERSION='2026-11-25i';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1385,7 +1411,7 @@ function boot(d){
   $('f1').textContent=$('f2').textContent=$('f3').textContent=$('f4').textContent=$('f6').textContent=$('f7').textContent='DATA DEL '+d.fecha;
   if(!$('tur').value)$('tur').value='T1';renderCk();renderEdtF();renderRuta();renderAlert();
   const s=[...T].sort((x,y)=>x.ruta.localeCompare(y.ruta)||x.v-y.v);fillSel(s);$('selV').innerHTML=s.map(t=>`<option value="${t.id}">${t.ruta} · V${t.v} · ${t.edt}</option>`).join('');$('selV').value=(T.find(t=>t.ruta==='BK3445'&&t.v===1)||s[0]).id;renderMR();renderVen();renderSIC();renderTorre();renderCarga();
-  try{infoDia();$('sinData').hidden=true}catch(e){}
+  try{infoDia();$('sinData').hidden=true;pcLoad()}catch(e){}
   const keep=cur&&T.find(t=>t.ruta===cur.ruta&&t.v===cur.v);showRoute(keep?keep.id:(T.find(t=>t.ruta==='BK3445'&&t.v===1)||s[0]).id);
 }
 let BOOTED=false;

@@ -7,6 +7,7 @@
 // POST ?op=put&id=ID                      -> guarda un archivo (cuerpo gzip, máx. 5 MB)
 // POST ?op=estado | bitaptr | dia         -> guarda estado del corte / bitácora subida a mano / índice por día (+ tendencia)
 // GET  ?op=dia&dia=YYYY-MM-DD             -> data e historial de avance de ese día
+// GET/POST ?op=pend (&dia=)               -> placas pendientes por cargar en almacén
 // GET  ?op=ck  ·  POST ?op=ck (admin)     -> checklist por asistente (solo la administradora marca)
 // GET  ?op=users · POST ?op=adduser · POST ?op=deluser (admin) · POST ?op=passwd (propia clave)
 import { store, login, sesion, usuarios, guardarUsuarios, hashClave, claveOk, norm } from "../lib/auth.mjs";
@@ -49,6 +50,11 @@ export default async (req) => {
         return new Response(v, { headers: { "content-type": "application/octet-stream", "cache-control": "private, max-age=31536000, immutable" } });
       }
       if (op === "ck") return json({ ok: true, ck: (await st.get("ck", { type: "json" })) || {} });
+      if (op === "pend") {
+        const dia = url.searchParams.get("dia") || "";
+        if (!DIA_OK.test(dia)) return json({ ok: false, error: "dia" }, 400);
+        return json({ ok: true, pend: (await st.get("pend/" + dia, { type: "json" })) || { placas: [] } });
+      }
       if (op === "dia") {
         const dia = url.searchParams.get("dia") || "";
         if (!DIA_OK.test(dia)) return json({ ok: false, error: "dia" }, 400);
@@ -98,6 +104,13 @@ export default async (req) => {
         if (d.snap) hist.push(d.snap);
         delete d.snap;
         await st.setJSON("dia/" + d.dia, Object.assign({}, d, { hist }));
+        return json({ ok: true });
+      }
+      if (op === "pend") {
+        const d = limpio(await req.json(), 20000);
+        if (!DIA_OK.test(d.dia || "")) return json({ ok: false, error: "dia" }, 400);
+        const placas = (Array.isArray(d.placas) ? d.placas : []).slice(0, 200).map((x) => ({ p: String(x.p || "").slice(0, 12), at: String(x.at || "").slice(0, 5), por: String(x.por || "").slice(0, 60) }));
+        await st.setJSON("pend/" + d.dia, { placas, at: new Date().toISOString(), por: s.n });
         return json({ ok: true });
       }
       if (op === "ck") {
