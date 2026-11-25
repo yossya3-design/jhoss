@@ -203,6 +203,8 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
  <h1>Control de Actividades</h1>
  <p class="lema">Asistentes de transporte por empresario: cada corte, <em>a tiempo y medido</em>.</p>
  <div class="hr"></div>
+ <div class="bar" id="diaBar" style="justify-content:center;margin-top:6px"><label class="cal">📅 Día<input type="date" id="diaSel"></label><button class="btn gold" id="diaHoy">Hoy</button><span class="fecha" id="diaInfo"></span></div>
+ <p id="diaAviso" class="nota" hidden style="text-align:center;font-size:14px;color:#F5B800"></p>
  <p id="sinData" class="nota" hidden style="text-align:center;font-size:15px;color:var(--gold2)">Aún no hay data del día: sube los archivos del corte en 📂 Carga y descarga.</p>
 </div>
 
@@ -318,6 +320,7 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
   <div class="card" style="margin-top:10px">
    <div class="asis"><span id="asisInfo" style="flex:1;font-weight:600"></span><select id="tur"><option value="T1">Turno 1</option><option value="T2">Turno 2</option></select><button class="btn" id="reset">Limpiar</button></div>
    <div class="kpis" id="ckKpi" style="margin:12px 0"></div>
+   <div id="ckTend" style="margin:-4px 0 12px"></div>
    <div class="ck">
     <p id="ckSolo" class="nota" hidden style="color:var(--amb,#F5B800)">Solo la administradora marca el checklist. Tú puedes verlo.</p>
   <div class="rows" id="rows"></div>
@@ -567,6 +570,8 @@ function renderCk(){
   if(!tl.includes($('tur').value))$('tur').value=tl[0];
   const t=$('tur').value,x=getA(A.n),st=x[t],ts=byEdt(A.edt),a=agg(ts),al=alertStats(ts);
   $('asisInfo').innerHTML=`<span class="mono" style="font-size:11px;color:var(--mut)">ASISTENTE</span><br>${A.n} · <span style="color:var(--gold2)">${A.edt}</span> · ${A.t==='T1T2'?'T1 y T2':A.t}`;
+  {const H=(DIAH||[]).filter(h=>h.e&&h.e[A.edt]);const pl=(v,n)=>`<span class="pill ${cls(v)}" title="${n}">${v==null?'—':v+'%'}</span>`;
+   $('ckTend').innerHTML=H.length?`<div class="card" style="padding:8px 10px;overflow-x:auto"><div style="font:700 11px Barlow;color:var(--gold2);text-transform:uppercase;margin-bottom:4px">Tendencia del día · ${A.edt} (cada carga)</div><table style="font-size:12px"><tr><th style="text-align:left">Hora</th>${H.map(h=>`<th class="mono">${h.h}</th>`).join('')}</tr><tr><td>Salida ≤7:30</td>${H.map(h=>`<td>${pl(h.e[A.edt][0],'Salida')}</td>`).join('')}</tr><tr><td>1er punto ≤8:00</td>${H.map(h=>`<td>${pl(h.e[A.edt][1],'1er punto')}</td>`).join('')}</tr><tr><td>HL entregado</td>${H.map(h=>`<td>${pl(h.e[A.edt][2],'HL')}</td>`).join('')}</tr></table></div>`:''}
   $('ckKpi').innerHTML=kpi('Rutas',a.rutas,`+${a.rec} recargas · ${a.pe} pedidos`)+kpi('Salida ≤7:30',a.salP+'%',`${a.sal}/${a.v1} unidades`,a.salP)+kpi('1er punto ≤8:00',a.p1P+'%',`${a.p1}/${a.v1} unidades`,a.p1P)+kpi('HL entregado',a.hlP+'%',`${f1(a.hle)} de ${f1(a.hl)} HL`,a.hlP);
   $('rows').innerHTML=CORTES[t].map((c,i)=>{let dd='';if(c.d){const [txt,p]=dato(c.d,a,al);dd=`<span class="pill dat ${p==null?'n':cls(p)}">DATO · ${txt}</span>`}
     return `<div class="row${c.key?' key':''}"><span class="h">${c.h}</span><span class="t">${c.n}${c.key?' <span class="pill r">SÍ O SÍ</span>':''}<small>${c.s}${st[i].at?' · marcado '+st[i].at:''}</small>${dd}</span><button class="st ${st[i].s}" data-i="${i}">${LBL[st[i].s]}</button></div>`}).join('');
@@ -1041,7 +1046,13 @@ async function putJSON(o){
 const postAPI=async(op,o)=>{const r=await afetch(API+'?op='+op,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(o)});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||('no se pudo guardar ('+r.status+')'))}};
 const CAN_SAVE=()=>NET||!!DB;
 async function saveEstado(est){if(NET){const e=Object.assign({},est);if(e.bita&&e.bita._new){const b=e.bita;delete b._new;await postAPI('bitaptr',b)}delete e.bita;return postAPI('estado',e)}if(est.bita)delete est.bita._new;return DB.doc('cfg/estado').set(est)}
-async function saveDia(dia,o){if(NET)return postAPI('dia',Object.assign({dia},o));return DB.doc('dias/'+dia).set(o)}
+async function saveDia(dia,o){
+  if(NET)return postAPI('dia',Object.assign({dia},o));
+  const r=DB.doc('dias/'+dia),sn=await r.get(),prev=sn.exists?sn.data():{};const hist=(prev.hist||[]).slice(-39);if(o.snap)hist.push(o.snap);const x=Object.assign({},o,{hist});delete x.snap;return r.set(x)}
+async function getDia(dia){
+  if(NET){const r=await afetch(API+'?op=dia&dia='+dia,{cache:'no-store'});const j=await r.json();return j.ok?j.dia:null}
+  if(!DB)return null;const sn=await DB.doc('dias/'+dia).get();return sn.exists?sn.data():null}
+function snapDe(out){const o={h:nowHM(),e:{}};const prevD=D;try{D=out;[...new Set(out.tours.map(t=>t.edt))].forEach(e=>{const a=agg(out.tours.filter(t=>t.edt===e));o.e[e]=[a.salP,a.p1P,a.hlP]});const a=agg(out.tours);o.e['CD']=[a.salP,a.p1P,a.hlP]}finally{D=prevD}return o}
 $('upIn').onchange=async ev=>{
   const files=[...ev.target.files];ev.target.value='';if(!files.length)return;
   const msg=$('upMsg');const log=t=>{msg.textContent+=t+'\n'};msg.textContent='';
@@ -1078,7 +1089,7 @@ $('upIn').onchange=async ev=>{
         if(dias.length)log('⚠ Ojo: hay archivos de otro día ('+[...new Set(dias)].map(dmy).join(', ')+') que el Radar del '+dmy(out.dia)+'.');
         const id=await putJSON(out);est.data={id,at:nowL()};est.fecha=out.fecha;est.dia=out.dia;
         boot(out);log(`✅ Listo: ${out.tours.length} rutas del ${out.fecha} recalculadas.`);
-        if(CAN_SAVE()&&id)await saveDia(out.dia,{data:id,fecha:out.fecha,at:nowL()});
+        if(CAN_SAVE()&&id){await saveDia(out.dia,{data:id,fecha:out.fecha,at:nowL(),snap:snapDe(out)});DIAH=null;cargarHist(out.dia)}
       }else if(daily)log('Falta '+(!SL.radar?'el Radar':'el BEES')+(dia?' del '+dmy(dia):'')+' para recalcular. Súbelo y se arma todo.');
       est.at=nowL();
       if(CAN_SAVE()){await saveEstado(est);delete (est.bita||{})._new;log('💾 Guardado: todos ven esta data.')}else log('⚠ No se pudo guardar para los demás. La data se ve solo en esta pantalla.');
@@ -1086,7 +1097,7 @@ $('upIn').onchange=async ev=>{
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 };
-const VERSION='2026-11-25c';
+const VERSION='2026-11-25d';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 let LASTD=null,POLL=null;
@@ -1129,8 +1140,22 @@ async function bitaYa(){
   catch(e){say('✖ No se pudo actualizar: '+e.message+'. Intenta de nuevo en un minuto.')}
   finally{btns.forEach(b=>b.disabled=false)}}
 document.addEventListener('click',ev=>{if(ev.target.closest('.bitaYa'))bitaYa()});
+const hoyL=()=>new Date(Date.now()-5*3600e3).toISOString().slice(0,10);
+let VIEW=null,DIAH=null; // VIEW: día elegido (null = el último cargado)
+async function cargarHist(dia){try{const x=await getDia(dia);DIAH=x&&x.hist||[];if(D)renderCk()}catch(e){DIAH=[]}}
+function infoDia(){if(!D)return;$('diaSel').value=D.dia||'';const hoy=hoyL();
+  $('diaInfo').textContent='DATA DEL '+D.fecha+(D.dia===hoy?' · HOY':'');
+  const av=$('diaAviso');if(!VIEW&&D.dia&&D.dia!==hoy){av.hidden=false;av.textContent='⚠ Aún no se carga la data de hoy ('+dmy(hoy)+'). Estás viendo la del '+D.fecha+'.'}else av.hidden=true;
+  $('diaHoy').classList.toggle('gold',D.dia!==hoy)}
+async function verDia(dia){const av=$('diaAviso');
+  if(!dia){VIEW=null;if(UPST){LASTD=null;await onEstado(UPST)}infoDia();return}
+  try{const x=await getDia(dia);if(!x||!x.data){av.hidden=false;av.textContent='No hay data cargada del '+dmy(dia)+'.'+(dia===hoyL()?' Sube los archivos del corte en 📂 Carga y descarga.':'');$('diaSel').value=D?D.dia:'';return}
+    const ultimo=UPST&&UPST.dia===dia;VIEW=ultimo?null:dia;const d=await getJSON(x.data);d._id=x.data;boot(d);DIAH=x.hist||[];renderCk();infoDia()}
+  catch(e){av.hidden=false;av.textContent='No se pudo abrir el '+dmy(dia)+' ('+e.message+').'}}
+$('diaSel').onchange=()=>verDia($('diaSel').value);
+$('diaHoy').onclick=()=>verDia(hoyL());
 async function onEstado(e){UPST=JSON.parse(JSON.stringify(e));renderSlots();
-  try{if(e.data&&e.data.id&&e.data.id!==LASTD){LASTD=e.data.id;if(!D||D._id!==e.data.id){const d=await getJSON(e.data.id);d._id=e.data.id;boot(d)}}
+  try{if(!VIEW&&e.data&&e.data.id&&e.data.id!==LASTD){LASTD=e.data.id;if(!D||D._id!==e.data.id){const d=await getJSON(e.data.id);d._id=e.data.id;boot(d);if(e.dia)cargarHist(e.dia)}}infoDia();
     if(e.bita&&e.bita.id&&(!BX||BX._id!==e.bita.id)){const b=await getJSON(e.bita.id);b._id=e.bita.id;BX=b;$('bxAct').textContent='BITÁCORA AL '+b.act;renderBX();if(D){renderCx();renderMx();renderCarga()}}}catch(err){console.error(err)}}
 (async()=>{try{
   if(NET){return}
@@ -1353,6 +1378,7 @@ function boot(d){
   $('f1').textContent=$('f2').textContent=$('f3').textContent=$('f4').textContent=$('f6').textContent=$('f7').textContent='DATA DEL '+d.fecha;
   if(!$('tur').value)$('tur').value='T1';renderCk();renderEdtF();renderRuta();renderAlert();
   const s=[...T].sort((x,y)=>x.ruta.localeCompare(y.ruta)||x.v-y.v);fillSel(s);$('selV').innerHTML=s.map(t=>`<option value="${t.id}">${t.ruta} · V${t.v} · ${t.edt}</option>`).join('');$('selV').value=(T.find(t=>t.ruta==='BK3445'&&t.v===1)||s[0]).id;renderMR();renderVen();renderSIC();renderTorre();renderCarga();
+  try{infoDia();$('sinData').hidden=true}catch(e){}
   const keep=cur&&T.find(t=>t.ruta===cur.ruta&&t.v===cur.v);showRoute(keep?keep.id:(T.find(t=>t.ruta==='BK3445'&&t.v===1)||s[0]).id);
 }
 let BOOTED=false;
