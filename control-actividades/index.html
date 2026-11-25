@@ -42,6 +42,21 @@ h2 .n{font:700 11px "JetBrains Mono";color:#070707;background:var(--gold2);borde
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
 .btn.gold{background:linear-gradient(135deg,#F2C52A,#C8960F);color:#1a1300;border-color:#F2C52A}.btn.gold:disabled{opacity:.6}
+body.bloq>*:not(#login):not(script){display:none!important}
+#login{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse at top,rgba(242,197,42,.12),transparent 60%),var(--bg) url(img/tapiz-noche.svg) center/cover}
+#login[hidden],#usrDlg[hidden],#userBar[hidden]{display:none!important}
+.lgCard{width:100%;max-width:380px;background:rgba(10,9,6,.92);border:1px solid rgba(242,197,42,.45);border-radius:18px;padding:22px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:10px}
+.lgIns{width:118px;height:118px;object-fit:contain;margin:0 auto;animation:flot 4s ease-in-out infinite}@keyframes flot{50%{transform:translateY(-6px) rotate(-2deg)}}
+.lgLogos{display:flex;justify-content:center;gap:16px;align-items:center}.lgLogos img{height:24px}
+.lgCard h1{font:800 30px/1.05 'Big Shoulders Display',sans-serif;text-transform:uppercase;color:var(--txt);margin:4px 0 0}.lgCard h1 span{color:var(--gold1)}
+.lgSub{color:var(--mut);font-size:13px;margin:0 0 6px}.lgCard label{display:flex;flex-direction:column;gap:4px;text-align:left;font:700 12px Barlow;color:var(--gold2);text-transform:uppercase}
+.lgCard input,.lgCard select{width:100%;font-size:16px;padding:11px 12px}.lgPw{display:flex;gap:6px}.lgPw button{background:none;border:1px solid rgba(242,197,42,.35);border-radius:10px;color:var(--txt);padding:0 12px;cursor:pointer}
+#lgBtn{font-size:17px;padding:13px;margin-top:6px}.lgMsg{min-height:18px;color:#ff6b6b;font-size:13px;margin:0}
+#usrDlg{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.8);display:flex;justify-content:center;align-items:flex-start;padding:14px;overflow:auto}
+#usrDlg .lgCard{width:min(560px,94vw);max-width:none;min-width:0;background:#0b0a07;box-sizing:border-box}#usrDlg form{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))!important}#usrDlg input,#usrDlg select{min-width:0;width:100%;box-sizing:border-box}#usrList{overflow-x:auto}
+#usrDlg table{width:100%;font-size:13px}#usrDlg td,#usrDlg th{padding:5px 6px;text-align:left}
+#userBar{position:relative;z-index:2;display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;max-width:min(1480px,96vw);margin:8px auto 0;padding:0 12px;font-size:13px}
+#userBar .btn{padding:5px 10px;font-size:12px}#quien small{color:var(--gold2);margin-left:4px}
 label.cal{display:flex;align-items:center;gap:6px;font:700 12px Barlow;color:var(--gold2);text-transform:uppercase}label.cal input{min-width:150px;color-scheme:dark}
 select,input,.btn{font:600 14px Barlow;color:var(--txt);background:#14120d;border:1px solid var(--line);border-radius:8px;padding:9px 10px}
 input::placeholder{color:#7d776a}.btn{cursor:pointer}
@@ -147,8 +162,37 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
 </style>
 </head>
 <body>
+<div id="login" hidden>
+ <form id="lgForm" class="lgCard" autocomplete="on">
+  <img src="img/cd-callao-op.png" alt="CD Callao" class="lgIns">
+  <div class="lgLogos"><img src="img/abinbev-blanco.png" alt="AB InBev"><img src="img/t77.png" alt="Transportes 77"></div>
+  <h1>Bienvenido al<br><span>Control T2</span></h1>
+  <p class="lgSub">CD Callao · Asistentes de transporte</p>
+  <label>Usuario<input id="lgU" type="text" inputmode="email" autocomplete="username" placeholder="tu correo" required></label>
+  <label>Clave<span class="lgPw"><input id="lgC" type="password" autocomplete="current-password" required><button type="button" id="lgVer" title="Ver clave">👁</button></span></label>
+  <button class="btn gold" id="lgBtn" type="submit">Ingresar</button>
+  <p id="lgMsg" class="lgMsg"></p>
+ </form>
+</div>
+<div id="usrDlg" hidden><div class="lgCard" style="max-width:560px;text-align:left">
+ <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">👤 Usuarios</h2><button class="btn" id="usrCerrar">✕</button></div>
+ <div id="usrAdm">
+  <p class="sub">Crea los usuarios de las asistentes. Ellas ven, cargan y descargan; solo la administradora marca el checklist.</p>
+  <div id="usrList" class="tw"></div>
+  <form id="usrForm" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+   <input id="nuU" placeholder="Usuario o correo" required><input id="nuN" placeholder="Nombre">
+   <input id="nuC" type="text" placeholder="Clave (mín. 6)" required minlength="6"><select id="nuR"><option value="asistente">Asistente</option><option value="admin">Administradora</option></select>
+   <button class="btn gold" style="grid-column:1/-1">Crear / actualizar usuario</button>
+  </form><p id="usrMsg" class="nota"></p>
+ </div>
+ <h3 style="margin:14px 0 6px">Cambiar mi clave</h3>
+ <form id="pwForm" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px"><input id="pwA" type="password" placeholder="Clave actual" required autocomplete="current-password"><input id="pwN" type="password" placeholder="Clave nueva" required minlength="6" autocomplete="new-password"><button class="btn gold">Cambiar</button></form>
+ <p id="pwMsg" class="nota"></p>
+</div></div>
+
 <div class="tapiz"></div>
 <div class="wrap">
+<div id="userBar" hidden><span id="quien"></span><button class="btn" id="btnUsers" hidden>Usuarios</button><button class="btn" id="btnClave">Mi clave</button><button class="btn" id="btnSalir">Salir</button></div>
 <header>
  <div class="logos"><img src="img/abinbev-blanco.png" alt="AB InBev"><img class="t77" src="img/t77.png" alt="Transportes 77"></div>
  <div class="reloj"><b id="hora">--:--</b><span id="fecha"></span></div>
@@ -159,6 +203,7 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
  <h1>Control de Actividades</h1>
  <p class="lema">Asistentes de transporte por empresario: cada corte, <em>a tiempo y medido</em>.</p>
  <div class="hr"></div>
+ <p id="sinData" class="nota" hidden style="text-align:center;font-size:15px;color:var(--gold2)">Aún no hay data del día: sube los archivos del corte en 📂 Carga y descarga.</p>
 </div>
 
 <nav id="nav">
@@ -269,7 +314,8 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
    <div class="asis"><span id="asisInfo" style="flex:1;font-weight:600"></span><select id="tur"><option value="T1">Turno 1</option><option value="T2">Turno 2</option></select><button class="btn" id="reset">Limpiar</button></div>
    <div class="kpis" id="ckKpi" style="margin:12px 0"></div>
    <div class="ck">
-    <div class="rows" id="rows"></div>
+    <p id="ckSolo" class="nota" hidden style="color:var(--amb,#F5B800)">Solo la administradora marca el checklist. Tú puedes verlo.</p>
+  <div class="rows" id="rows"></div>
     <div class="score">
      <svg class="ring" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="#2E9E4A" stroke-width="12" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 314"/><text id="pct" x="60" y="68" text-anchor="middle" font-size="30" fill="#F4F1E8">0%</text><text x="60" y="86" text-anchor="middle" font-size="9" fill="#B9B3A3" style="font-family:JetBrains Mono">CHECKLIST</text></svg>
      <div class="cnt"><div><b id="cOk" style="color:var(--ok)">0</b>a tiempo</div><div><b id="cTa" style="color:var(--warn)">0</b>tarde</div><div><b id="cNo" style="color:var(--bad)">0</b>no cumplió</div></div>
@@ -495,7 +541,7 @@ T2:[
  {h:"21:00",n:"Correo de cierre",s:"Desplanif., resumen EDT, reclamos",key:1}]};
 const ST=["pend","ok","tarde","no"],LBL={pend:"Pendiente",ok:"✔ A tiempo",tarde:"⏱ Tarde",no:"✖ No cumplió"};
 let ck={};try{ck=JSON.parse(localStorage.getItem('ctrlAct3')||'{}')}catch(e){}
-const save=()=>{try{localStorage.setItem('ctrlAct3',JSON.stringify(ck))}catch(e){}};
+let ckT=null;const save=()=>{try{localStorage.setItem('ctrlAct3',JSON.stringify(ck))}catch(e){}if(typeof NET!=='undefined'&&NET&&USER&&USER.r==='admin'){clearTimeout(ckT);ckT=setTimeout(()=>postAPI('ck',ck).catch(e=>console.warn(e)),800)}};
 const getA=n=>ck[n]||(ck[n]={T1:CORTES.T1.map(()=>({s:'pend',at:''})),T2:CORTES.T2.map(()=>({s:'pend',at:''}))});
 const turnos=a=>a.t==='T1T2'?['T1','T2']:[a.t];
 function dato(code,a,al){
@@ -519,7 +565,7 @@ function renderCk(){
   $('ckKpi').innerHTML=kpi('Rutas',a.rutas,`+${a.rec} recargas · ${a.pe} pedidos`)+kpi('Salida ≤7:30',a.salP+'%',`${a.sal}/${a.v1} unidades`,a.salP)+kpi('1er punto ≤8:00',a.p1P+'%',`${a.p1}/${a.v1} unidades`,a.p1P)+kpi('HL entregado',a.hlP+'%',`${f1(a.hle)} de ${f1(a.hl)} HL`,a.hlP);
   $('rows').innerHTML=CORTES[t].map((c,i)=>{let dd='';if(c.d){const [txt,p]=dato(c.d,a,al);dd=`<span class="pill dat ${p==null?'n':cls(p)}">DATO · ${txt}</span>`}
     return `<div class="row${c.key?' key':''}"><span class="h">${c.h}</span><span class="t">${c.n}${c.key?' <span class="pill r">SÍ O SÍ</span>':''}<small>${c.s}${st[i].at?' · marcado '+st[i].at:''}</small>${dd}</span><button class="st ${st[i].s}" data-i="${i}">${LBL[st[i].s]}</button></div>`}).join('');
-  $('rows').querySelectorAll('.st').forEach(b=>b.onclick=()=>{const c=st[+b.dataset.i];c.s=ST[(ST.indexOf(c.s)+1)%4];c.at=c.s==='pend'?'':new Date().toTimeString().slice(0,5);save();renderCk()});
+  $('rows').querySelectorAll('.st').forEach(b=>b.onclick=()=>{if(NET&&(!USER||USER.r!=='admin')){b.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'none'}],{duration:250});$('ckSolo').hidden=false;return}const c=st[+b.dataset.i];c.s=ST[(ST.indexOf(c.s)+1)%4];c.at=c.s==='pend'?'':new Date().toTimeString().slice(0,5);save();renderCk()});
   const ok=st.filter(s=>s.s==='ok').length,p=Math.round(ok/st.length*100);
   $('pct').textContent=p+'%';$('arc').setAttribute('stroke-dasharray',(p*3.14).toFixed(1)+' 314');$('arc').setAttribute('stroke',sem(p));
   $('cOk').textContent=ok;$('cTa').textContent=st.filter(s=>s.s==='tarde').length;$('cNo').textContent=st.filter(s=>s.s==='no').length;
@@ -887,6 +933,8 @@ function renderTorre(){
 const csvEsc=v=>{v=v==null?'':String(v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
 const toCSV=(head,rows)=>'﻿'+[head,...rows].map(r=>r.map(csvEsc).join(';')).join('\r\n');
 const NET=!window.claude,API='/.netlify/functions/control';
+let TOKEN='',USER=null;try{TOKEN=localStorage.getItem('ct2tok')||''}catch(e){}
+async function afetch(u,o={}){o.headers=Object.assign({},o.headers||{},TOKEN?{authorization:'Bearer '+TOKEN}:{});const r=await fetch(u,o);if(r.status===401&&NET&&!/op=login/.test(u)){salir(true);throw new Error('sesión vencida')}return r}
 async function saveFile(name,blobOrFetch){
   const msg=$('dlMsg');msg.textContent='Preparando '+name+'…';
   try{const data=typeof blobOrFetch==='string'?await (await fetch(blobOrFetch)).blob():blobOrFetch;
@@ -969,13 +1017,13 @@ function renderSlots(){
 }
 const nowL=()=>new Date(Date.now()-5*3600e3).toISOString().slice(0,19).replace('T',' ');
 async function getJSON(id){
-  if(NET){const r=await fetch(API+'?op=get&id='+encodeURIComponent(id));if(!r.ok)throw new Error('no se pudo leer un archivo guardado');return JSON.parse(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text())}
+  if(NET){const r=await afetch(API+'?op=get&id='+encodeURIComponent(id));if(!r.ok)throw new Error('no se pudo leer un archivo guardado');return JSON.parse(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text())}
   const r=await fetch('/_blob/'+id);if(!r.ok)throw new Error('no se pudo leer un archivo guardado');return r.json()}
 async function putJSON(o){
   if(NET){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);const body=await new Response(new Blob([JSON.stringify(o)]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
-    const r=await fetch(API+'?op=put&id='+id,{method:'POST',body});if(!r.ok)throw new Error('no se pudo guardar ('+r.status+')');return id}
+    const r=await afetch(API+'?op=put&id='+id,{method:'POST',body});if(!r.ok)throw new Error('no se pudo guardar ('+r.status+')');return id}
   if(!AS)return null;const a=await AS.upload(new Blob([JSON.stringify(o)],{type:'application/json'}));return a.id}
-const postAPI=async(op,o)=>{const r=await fetch(API+'?op='+op,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(o)});if(!r.ok)throw new Error('no se pudo guardar ('+r.status+')')};
+const postAPI=async(op,o)=>{const r=await afetch(API+'?op='+op,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(o)});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||('no se pudo guardar ('+r.status+')'))}};
 const CAN_SAVE=()=>NET||!!DB;
 async function saveEstado(est){if(NET){const e=Object.assign({},est);if(e.bita&&e.bita._new){const b=e.bita;delete b._new;await postAPI('bitaptr',b)}delete e.bita;return postAPI('estado',e)}if(est.bita)delete est.bita._new;return DB.doc('cfg/estado').set(est)}
 async function saveDia(dia,o){if(NET)return postAPI('dia',Object.assign({dia},o));return DB.doc('dias/'+dia).set(o)}
@@ -1014,14 +1062,42 @@ $('upIn').onchange=async ev=>{
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 };
-let LASTD=null;
+let LASTD=null,POLL=null;
+async function pollNet(){try{const r=await afetch(API+'?op=estado',{cache:'no-store'});if(r.ok){const j=await r.json();
+  if(j.ok&&j.estado)await onEstado(j.estado);
+  if(!D&&!(j.estado&&j.estado.data)){$('sinData').hidden=false;go('carga');renderSlots()}else $('sinData').hidden=true}}catch(e){console.warn(e)}}
+async function cargarCk(){try{const r=await afetch(API+'?op=ck',{cache:'no-store'});const j=await r.json();if(j.ok){ck=j.ck||{};if(D)renderCk()}}catch(e){}}
+function entrar(u){USER=u;$('login').hidden=true;document.body.classList.remove('bloq');
+  $('quien').innerHTML=`👤 ${esc(u.n)} <small>${u.r==='admin'?'Administradora':'Asistente'}</small>`;$('userBar').hidden=false;$('btnUsers').hidden=u.r!=='admin';
+  pollNet();cargarCk();clearInterval(POLL);POLL=setInterval(()=>{pollNet();if(USER&&USER.r!=='admin')cargarCk()},60000)}
+function salir(vencida){TOKEN='';USER=null;try{localStorage.removeItem('ct2tok')}catch(e){}clearInterval(POLL);$('userBar').hidden=true;$('login').hidden=false;document.body.classList.add('bloq');$('lgMsg').textContent=vencida?'Tu sesión venció. Vuelve a ingresar.':''}
+if(NET){document.body.classList.add('bloq');$('login').hidden=false;
+  $('lgForm').onsubmit=async ev=>{ev.preventDefault();const m=$('lgMsg');m.textContent='Ingresando…';$('lgBtn').disabled=true;
+    try{const r=await fetch(API+'?op=login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({usuario:$('lgU').value,clave:$('lgC').value})});const j=await r.json().catch(()=>({}));
+      if(!j.ok)throw new Error(j.error||'No se pudo ingresar');TOKEN=j.token;try{localStorage.setItem('ct2tok',TOKEN);localStorage.setItem('ct2usr',$('lgU').value)}catch(e){}$('lgC').value='';m.textContent='';entrar(j.user)}
+    catch(e){m.textContent='✖ '+e.message}finally{$('lgBtn').disabled=false}};
+  $('lgVer').onclick=()=>{const c=$('lgC');c.type=c.type==='password'?'text':'password'};
+  try{$('lgU').value=localStorage.getItem('ct2usr')||''}catch(e){}
+  if(TOKEN)afetch(API+'?op=me').then(r=>r.json()).then(j=>{if(j.ok)entrar(j.user)}).catch(()=>{});
+  $('btnSalir').onclick=()=>salir(false);
+  $('btnUsers').onclick=()=>{$('usrDlg').hidden=false;listarUsers()};$('btnClave').onclick=()=>{$('usrDlg').hidden=false;listarUsers()};
+  $('usrCerrar').onclick=()=>$('usrDlg').hidden=true;
+  $('usrForm').onsubmit=async ev=>{ev.preventDefault();const m=$('usrMsg');m.textContent='Guardando…';
+    try{await postAPI('adduser',{usuario:$('nuU').value,nombre:$('nuN').value,clave:$('nuC').value,rol:$('nuR').value});m.textContent='✔ Usuario guardado: '+$('nuU').value;$('usrForm').reset();listarUsers()}catch(e){m.textContent='✖ '+e.message}};
+  $('pwForm').onsubmit=async ev=>{ev.preventDefault();const m=$('pwMsg');m.textContent='Guardando…';
+    try{await postAPI('passwd',{actual:$('pwA').value,nueva:$('pwN').value});m.textContent='✔ Clave cambiada';$('pwForm').reset()}catch(e){m.textContent='✖ '+e.message}};
+}
+async function listarUsers(){const box=$('usrList');const adm=USER&&USER.r==='admin';$('usrAdm').hidden=!adm;if(!adm){box.innerHTML='';return}
+  box.textContent='Cargando…';try{const j=await (await afetch(API+'?op=users',{cache:'no-store'})).json();
+  box.innerHTML='<table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th></th></tr></thead><tbody>'+j.users.map(u=>`<tr><td>${esc(u.u)}</td><td>${esc(u.nombre)}</td><td>${u.rol==='admin'?'Administradora':'Asistente'}</td><td>${u.u===USER.u?'':`<button class="btn" data-del="${esc(u.u)}" style="padding:3px 8px">Eliminar</button>`}</td></tr>`).join('')+'</tbody></table>';
+  box.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(!confirm('¿Eliminar el usuario '+b.dataset.del+'?'))return;try{await postAPI('deluser',{usuario:b.dataset.del});listarUsers()}catch(e){alert(e.message)}})}catch(e){box.textContent='✖ '+e.message}}
 async function bitaYa(){
   const msgs=document.querySelectorAll('.bitaMsg'),say=t=>msgs.forEach(m=>m.textContent=t),btns=document.querySelectorAll('.bitaYa');
   if(!NET){say('Aquí se actualiza sola cada hora (6:00–22:00).');return}
   btns.forEach(b=>b.disabled=true);say('Leyendo la bitácora del Drive…');
-  try{const r=await fetch('/.netlify/functions/control-bitacora-ya',{method:'POST'});const j=await r.json().catch(()=>({}));
+  try{const r=await afetch('/.netlify/functions/control-bitacora-ya',{method:'POST'});const j=await r.json().catch(()=>({}));
     if(!r.ok||!j.ok)throw new Error(j.error||('error '+r.status));
-    const rr=await fetch(API+'?op=estado',{cache:'no-store'});const e=(await rr.json()).estado;if(e)await onEstado(e);
+    const rr=await afetch(API+'?op=estado',{cache:'no-store'});const e=(await rr.json()).estado;if(e)await onEstado(e);
     say(j.cambio?`✔ Actualizada: ${j.d} desplanificaciones (${j.chk.slice(11,16)})`:`✔ Sin cambios en el Drive desde la última carga (revisado ${j.chk.slice(11,16)})`)}
   catch(e){say('✖ No se pudo actualizar: '+e.message+'. Intenta de nuevo en un minuto.')}
   finally{btns.forEach(b=>b.disabled=false)}}
@@ -1030,7 +1106,7 @@ async function onEstado(e){UPST=JSON.parse(JSON.stringify(e));renderSlots();
   try{if(e.data&&e.data.id&&e.data.id!==LASTD){LASTD=e.data.id;if(!D||D._id!==e.data.id){const d=await getJSON(e.data.id);d._id=e.data.id;boot(d)}}
     if(e.bita&&e.bita.id&&(!BX||BX._id!==e.bita.id)){const b=await getJSON(e.bita.id);b._id=e.bita.id;BX=b;$('bxAct').textContent='BITÁCORA AL '+b.act;renderBX();if(D){renderCx();renderMx();renderCarga()}}}catch(err){console.error(err)}}
 (async()=>{try{
-  if(NET){const poll=async()=>{try{const r=await fetch(API+'?op=estado',{cache:'no-store'});if(r.ok){const j=await r.json();if(j.ok&&j.estado)await onEstado(j.estado)}}catch(e){console.warn(e)}};poll();setInterval(poll,60000);return}
+  if(NET){return}
   AS=await claude.use('assets');DB=await claude.use('db');if(!DB)return;
   DB.doc('cfg/estado').onSnapshot(sn=>{if(sn.exists)onEstado(sn.data())},err=>console.warn(err))}catch(e){console.warn(e)}})();
 
@@ -1118,7 +1194,7 @@ $('bxXL').onclick=async()=>{const m=$('bxXLmsg');m.textContent='Preparando Excel
    await saveFile(`Clientes_desplanificados_${bxF.de&&bxF.de===bxF.ha?bxF.de:(bxF.de||bxF.ha?(bxF.de||'inicio')+'_a_'+(bxF.ha||'hoy'):'acumulado')}.xlsx`,new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));m.textContent=$('dlMsg').textContent}
   catch(e){m.textContent='No se pudo generar el Excel.'}};
 $('bxReset').onclick=()=>{bxF={de:'',ha:'',sv:'',edt:'Todos',acc:'Todos',q:''};$('bxQ').value='';renderBX()};
-fetch('bitacora.json').then(r=>r.json()).then(b=>{BX=b;$('bxAct').textContent='BITÁCORA AL '+b.act;renderBX();try{if(D){renderCx();renderMx();if(cur)showRoute(cur.id)}}catch(e){}}).catch(()=>{});
+if(!NET)fetch('bitacora.json').then(r=>r.json()).then(b=>{BX=b;$('bxAct').textContent='BITÁCORA AL '+b.act;renderBX();try{if(D){renderCx();renderMx();if(cur)showRoute(cur.id)}}catch(e){}}).catch(()=>{});
 
 
 /* ---------- cruce con bitácora ---------- */
@@ -1253,7 +1329,7 @@ function boot(d){
   const keep=cur&&T.find(t=>t.ruta===cur.ruta&&t.v===cur.v);showRoute(keep?keep.id:(T.find(t=>t.ruta==='BK3445'&&t.v===1)||s[0]).id);
 }
 let BOOTED=false;
-fetch('data.json').then(r=>r.json()).then(d=>{if(!D)boot(d)}).catch(e=>{console.error(e);document.querySelector('.hero').insertAdjacentHTML('beforeend','<p class="nota">No se pudo cargar la data del día.</p>')});
+if(!NET)fetch('data.json').then(r=>r.json()).then(d=>{if(!D)boot(d)}).catch(e=>{console.error(e);document.querySelector('.hero').insertAdjacentHTML('beforeend','<p class="nota">No se pudo cargar la data del día.</p>')});
 </script>
 </body>
 </html>
