@@ -204,7 +204,9 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
     const row={placa:pl,edt:ts.length?ts[0].edt:(typeof et==='string'?(EDT[et]||et):'—'),rutas:[...new Set(ts.map(t=>t.ruta))].sort(),vj:ts.length,
       ini:s5(x['Hora Ini. Real']),fin:s5(x['H. Fin Real']),lim:s5(x['Hora Fin Plan (lim. 10:30)']),av:td(x['Tiempo Avance']),rest:td(x['Tiempo Restante']),
       km:NA(x['Dist. (Km)'])?null:r_(num(x['Dist. (Km)']),1),tcd:s5(x['Tiempo en CD']),ub:NA(x['Ubicación'])?null:String(x['Ubicación'])};
-    ts.forEach(t=>{if(t.v===1&&row.ini){t.salF=t.sal;t.sal=row.ini;t.salSrc='SIC'}});return row});
+    // salida del viaje 1 = salida de geocerca del SIC; si el SIC no la tiene, la unidad sigue en el CD (no se usa el inicio de BEES)
+    ts.forEach(t=>{if(t.v!==1)return;t.salF=t.sal;t.sal=row.ini||null;t.salSrc=row.ini?'SIC':'SIC-CD'});return row});
+  if(sic.length)tours.forEach(t=>{if(t.v===1&&!t.salSrc)t.salSrc='BEES'});
   tours.forEach(t=>t.placa=noPE(t.placa));sic.forEach(s=>s.placa=noPE(s.placa));
   return {fecha:pad(Dd)+'/'+pad(M)+'/'+Y,dia,cortes:CORTES,tours,cd:[-12.0335,-77.1065],asis:ASIS,nasku:nasku.map(x=>[x[0],x[1]]),naskuD:nasku,sic,ped};
 }

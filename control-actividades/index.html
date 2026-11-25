@@ -515,7 +515,7 @@ function agg(ts){
   const o={rutas:v1.length,rec:ts.length-v1.length,cli:0,pe:0,ent:0,hl:0,na:0,hle:0,hlr:0,al:0,sal:0,p1:0,v1:v1.length,cnt:{},av:D.cortes.map(()=>0),vw:0,vok:0,n3:0};
   ts.forEach(t=>{o.cli+=t.cli;o.pe+=t.pe;o.ent+=t.ent;o.hl+=t.hl||0;o.na+=t.na;o.hle+=t.hle;o.hlr+=t.hlr;o.al+=t.al;t.av.forEach((x,i)=>o.av[i]+=x);for(const k in t.cnt)o.cnt[k]=(o.cnt[k]||0)+t.cnt[k];
     t.cl.forEach(c=>{if(c.vok!=null){o.vw++;if(c.vok)o.vok++}if(isN3(c))o.n3++})});
-  v1.forEach(t=>{if(t.sal&&t.sal<='07:30')o.sal++;if(t.p1&&t.p1<='08:00')o.p1++});
+  const vs=v1.filter(t=>!(t.salSrc==='SIC-CD'&&esHoy()&&nowHM()<='07:30'));o.v1=vs.length;vs.forEach(t=>{if(t.sal&&t.sal<='07:30')o.sal++;if(t.p1&&t.p1<='08:00')o.p1++});
   o.salP=pc(o.sal,o.v1);o.p1P=pc(o.p1,o.v1);o.hlP=pc(o.hle,o.hl);o.vwP=pc(o.vok,o.vw);
   return o;
 }
@@ -586,7 +586,8 @@ function renderEdtF(){
   document.querySelectorAll('.edtF').forEach(el=>{el.innerHTML=['Todos',...EDTS].map(e=>`<button class="chip${e===edtSel?' on':''}" data-e="${e}">${e}</button>`).join('');
    el.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{edtSel=b.dataset.e;renderEdtF();renderRuta();renderAlert()})});
 }
-const salCell=t=>t.salX?`<span class="pill y" title="Inicio Foxtrot ${t.salX} es posterior al 1er punto GPS">⚠ ${t.salX}</span>`:hcell(t.sal,'07:30',t.v);
+const salCell=t=>t.v===1&&t.salSrc==='SIC-CD'?'<span class="pill '+(nowHM()>'07:30'&&esHoy()?'r':'n')+'" title="El SIC aún no registra salida de la geocerca">en CD</span>':t.v===1&&t.salSrc==='BEES'?'<span title="Esta placa no está en el SIC: hora de inicio en BEES">'+hcell(t.sal,'07:30',t.v)+' <small style="color:var(--mut)">BEES</small></span>':t.salX?`<span class="pill y" title="Inicio Foxtrot ${t.salX} es posterior al 1er punto GPS">⚠ ${t.salX}</span>`:hcell(t.sal,'07:30',t.v);
+const nowHM=()=>new Date(Date.now()-5*3600e3).toISOString().slice(11,16),esHoy=()=>!!(D&&D.dia)&&D.dia===new Date(Date.now()-5*3600e3).toISOString().slice(0,10);
 const hcell=(h,lim,v)=>!h?'<span class="pill n">—</span>':v!==1?`<span class="mono">${h}</span>`:`<span class="pill ${h<=lim?'g':'r'}">${h}</span>`;
 const salv=ts=>{const s=alertStats(ts),p=pc(s.res,s.n);return `<td><span class="pill r">${s.n}</span></td><td><span class="pill ${cls(p)}">${s.res} · ${p??'—'}%</span></td>`};
 function renderRuta(){
@@ -1085,7 +1086,7 @@ $('upIn').onchange=async ev=>{
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 };
-const VERSION='2026-11-25b';
+const VERSION='2026-11-25c';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 let LASTD=null,POLL=null;
