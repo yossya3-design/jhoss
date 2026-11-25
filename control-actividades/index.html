@@ -683,21 +683,33 @@ function showRoute(id){
    <div class="minibars">${D.cortes.map((h,i)=>futuro(h)?`<div class="mb"><span>—</span><i style="height:2px;opacity:.3"></i><span>${h}</span></div>`:`<div class="mb"><span>${pc(t.av[i],mx)}%</span><i style="height:${Math.max(2,t.av[i]/mx*44)}px"></i><span>${h}</span></div>`).join('')}</div>`;
   renderMap(t);renderSide(t);renderObs(t);renderSal(t);renderList();renderPE(t);renderTime(t);
 }
+/* ---------- mapa base con calles (CARTO Voyager / OpenStreetMap) ---------- */
+const MXg=lo=>(lo+180)/360,MYg=la=>{const s=Math.sin(la*Math.PI/180);return .5-Math.log((1+s)/(1-s))/(4*Math.PI)};
+function geoP(P){
+  const xs=P.map(c=>MXg(c.lo)),ys=P.map(c=>MYg(c.la));
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const S=Math.max(x1-x0,y1-y0,3e-6)*1.18,cx=(x0+x1)/2,cy=(y0+y1)/2;
+  const vx=m=>(m-cx+S/2)/S*1000,vy=m=>(m-cy+S/2)/S*1000;
+  const X=c=>vx(MXg(c.lo)).toFixed(1),Y=c=>vy(MYg(c.la)).toFixed(1);
+  const z=Math.max(3,Math.min(18,Math.ceil(Math.log2(1000/(400*S))))),n=2**z,ts=1000/(S*n);
+  const tx0=Math.floor((cx-S/2)*n),tx1=Math.floor((cx+S/2)*n),ty0=Math.floor((cy-S/2)*n),ty1=Math.floor((cy+S/2)*n);
+  let bg='';
+  for(let x=tx0;x<=tx1;x++)for(let y=ty0;y<=ty1;y++)bg+=`<image href="https://${'abcd'[(x+y)&3]}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}@2x.png" x="${vx(x/n).toFixed(1)}" y="${vy(y/n).toFixed(1)}" width="${(ts+.8).toFixed(1)}" height="${(ts+.8).toFixed(1)}" preserveAspectRatio="none" onerror="this.onerror=null;this.setAttribute('href','https://tile.openstreetmap.org/${z}/${x}/${y}.png')"/>`;
+  bg=`<g class="tiles">${bg}</g><text x="500" y="994" text-anchor="middle" font-size="12" fill="#333" stroke="#fff" stroke-width="3" paint-order="stroke" font-family="sans-serif">© OpenStreetMap · © CARTO</text>`;
+  return {X,Y,bg};
+}
+const HALO='stroke="#070707" stroke-width="5" paint-order="stroke"';
 function renderMap(t){
   const P=t.cl.filter(c=>c.la!=null);
   if(!P.length){$('map').innerHTML='<p class="nota" style="padding:14px">Sin coordenadas.</p>';return}
-  const k=Math.cos(-12*Math.PI/180);
-  let x0=Math.min(...P.map(c=>c.lo*k)),x1=Math.max(...P.map(c=>c.lo*k)),y0=Math.min(...P.map(c=>c.la)),y1=Math.max(...P.map(c=>c.la));
-  const span=Math.max(x1-x0,y1-y0)||.01,pad=span*.08,cx=(x0+x1)/2,cy=(y0+y1)/2,S=span/2+pad;
-  const X=c=>((c.lo*k-cx+S)/(2*S)*1000).toFixed(1),Y=c=>((cy-c.la+S)/(2*S)*1000).toFixed(1);
+  const {X,Y,bg}=geoP(P);
   const seq=P.filter(c=>c.sq).sort((a,b)=>a.sq-b.sq);
-  let grid='';for(let i=1;i<10;i++)grid+=`<line x1="${i*100}" y1="0" x2="${i*100}" y2="1000" stroke="rgba(242,197,42,.06)"/><line x1="0" y1="${i*100}" x2="1000" y2="${i*100}" stroke="rgba(242,197,42,.06)"/>`;
   const order=[...P].sort((a,b)=>(mcol(a)==='#6b665b'?0:1)-(mcol(b)==='#6b665b'?0:1));
-  $('map').innerHTML=`<svg viewBox="0 0 1000 1000">${grid}
-   <polyline points="${seq.map(c=>X(c)+','+Y(c)).join(' ')}" fill="none" stroke="rgba(242,197,42,.55)" stroke-width="3" stroke-dasharray="8 6"/>${arrows(seq.map(c=>[+X(c),+Y(c)]),'rgba(242,197,42,.9)')}
+  $('map').innerHTML=`<svg viewBox="0 0 1000 1000">${bg}
+   <polyline points="${seq.map(c=>X(c)+','+Y(c)).join(' ')}" fill="none" stroke="rgba(7,7,7,.55)" stroke-width="7" stroke-linejoin="round"/><polyline points="${seq.map(c=>X(c)+','+Y(c)).join(' ')}" fill="none" stroke="#F2C52A" stroke-width="3.5" stroke-dasharray="10 6" stroke-linejoin="round"/>${arrows(seq.map(c=>[+X(c),+Y(c)]),'rgba(242,197,42,.9)')}
    ${order.map(c=>`${isN3(c)?`<circle cx="${X(c)}" cy="${Y(c)}" r="22" fill="none" stroke="#FFE97A" stroke-width="3"/>`:''}<circle class="pt" data-c="${c.c}" cx="${X(c)}" cy="${Y(c)}" r="${Math.min(30,10+Math.sqrt(c.hl||0)*5).toFixed(1)}" fill="${noLleg(c)?'#3a372f':mcol(c)}" ${noLleg(c)?`style="stroke:${mcol(c)};stroke-width:5;stroke-dasharray:6 4"`:''}/>${c.sq?`<text x="${X(c)}" y="${+Y(c)+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" pointer-events="none" font-family="JetBrains Mono">${c.sq}</text>`:''}`).join('')}
-   <text x="20" y="40" font-size="30" fill="#F2C52A" font-family="Big Shoulders Display" font-weight="800">${t.ruta} · V${t.v}</text>
-   <text x="980" y="980" text-anchor="end" font-size="20" fill="#B9B3A3" font-family="JetBrains Mono">N ↑</text></svg>
+   <text x="20" y="40" font-size="30" fill="#F2C52A" font-family="Big Shoulders Display" font-weight="800" ${HALO}>${t.ruta} · V${t.v}</text>
+   <text x="980" y="980" text-anchor="end" font-size="20" fill="#fff" font-family="JetBrains Mono" ${HALO}>N ↑</text></svg>
    <div class="pop" id="pop"></div>`;
   $('map').querySelectorAll('.pt').forEach(el=>el.onclick=()=>popCli(+el.dataset.c));
   addPlay(t,'map','A');
@@ -876,15 +888,12 @@ const arrows=(pts,col)=>{let s='';for(let i=0;i<pts.length-1;i++){const [x1,y1]=
 let rend=8;
 function pmap(el,t,key,col){
   const P=t.cl.filter(c=>c.la!=null);if(!P.length){el.innerHTML='<p class="nota" style="padding:12px">Sin coordenadas.</p>';return}
-  const k=Math.cos(-12*Math.PI/180);
-  const x0=Math.min(...P.map(c=>c.lo*k)),x1=Math.max(...P.map(c=>c.lo*k)),y0=Math.min(...P.map(c=>c.la)),y1=Math.max(...P.map(c=>c.la));
-  const span=Math.max(x1-x0,y1-y0)||.01,S=span/2+span*.08,cx=(x0+x1)/2,cy=(y0+y1)/2;
-  const X=c=>((c.lo*k-cx+S)/(2*S)*1000).toFixed(1),Y=c=>((cy-c.la+S)/(2*S)*1000).toFixed(1);
+  const {X,Y,bg}=geoP(P);
   const seq=P.filter(c=>c[key]).sort((a,b)=>a[key]-b[key]);
-  el.innerHTML=`<svg viewBox="0 0 1000 1000"><polyline points="${seq.map(c=>X(c)+','+Y(c)).join(' ')}" fill="none" stroke="${key==='sp'?'#F2C52A':'#FF8A00'}" stroke-width="4" stroke-linejoin="round" opacity=".85"/>${arrows(seq.map(c=>[+X(c),+Y(c)]),key==='sp'?'#FFE97A':'#FFB255')}
-   ${seq.length?`<circle cx="${X(seq[0])}" cy="${Y(seq[0])}" r="26" fill="none" stroke="#fff" stroke-width="3"/>`:''}
+  el.innerHTML=`<svg viewBox="0 0 1000 1000">${bg}<polyline points="${seq.map(c=>X(c)+','+Y(c)).join(' ')}" fill="none" stroke="rgba(7,7,7,.55)" stroke-width="8" stroke-linejoin="round"/><polyline points="${seq.map(c=>X(c)+','+Y(c)).join(' ')}" fill="none" stroke="${key==='sp'?'#F2C52A':'#FF8A00'}" stroke-width="4" stroke-linejoin="round" opacity=".85"/>${arrows(seq.map(c=>[+X(c),+Y(c)]),key==='sp'?'#FFE97A':'#FFB255')}
+   ${seq.length?`<circle cx="${X(seq[0])}" cy="${Y(seq[0])}" r="26" fill="none" stroke="#070707" stroke-width="4"/>`:''}
    ${P.map(c=>{const ex=key==='sq',r=ex&&c.tvr!=null?Math.min(30,13+c.tvr/3):15,nw=ex&&noWait(c),dm=ex&&noMerit(c);
-     return `${nw?`<circle cx="${X(c)}" cy="${Y(c)}" r="${r+9}" fill="none" stroke="#D8253A" stroke-width="4" stroke-dasharray="5 4"/>`:''}${dm?`<circle cx="${X(c)}" cy="${Y(c)}" r="${r+9}" fill="none" stroke="#FF8A00" stroke-width="4"/>`:''}<circle cx="${X(c)}" cy="${Y(c)}" r="${r}" fill="${c[key]?col(c):'#3a372f'}" stroke="#070707" stroke-width="1.5"/>${c[key]?`<text x="${X(c)}" y="${+Y(c)+5}" text-anchor="middle" font-size="14" font-weight="700" fill="${key==='sp'?'#070707':'#fff'}" font-family="JetBrains Mono">${c[key]}</text>`:''}${ex&&c.tvr!=null&&(c.tvr>=15||nw)?`<text x="${X(c)}" y="${+Y(c)+r+16}" text-anchor="middle" font-size="13" font-weight="700" fill="${nw?'#ff6b7a':dm?'#FFB255':'#B9B3A3'}" font-family="JetBrains Mono">${c.tvr}′</text>`:''}`}).join('')}</svg>`;
+     return `${nw?`<circle cx="${X(c)}" cy="${Y(c)}" r="${r+9}" fill="none" stroke="#D8253A" stroke-width="4" stroke-dasharray="5 4"/>`:''}${dm?`<circle cx="${X(c)}" cy="${Y(c)}" r="${r+9}" fill="none" stroke="#FF8A00" stroke-width="4"/>`:''}<circle cx="${X(c)}" cy="${Y(c)}" r="${r}" fill="${c[key]?col(c):'#3a372f'}" stroke="#070707" stroke-width="1.5"/>${c[key]?`<text x="${X(c)}" y="${+Y(c)+5}" text-anchor="middle" font-size="14" font-weight="700" fill="${key==='sp'?'#070707':'#fff'}" font-family="JetBrains Mono">${c[key]}</text>`:''}${ex&&c.tvr!=null&&(c.tvr>=15||nw)?`<text x="${X(c)}" y="${+Y(c)+r+16}" text-anchor="middle" font-size="13" font-weight="700" fill="${nw?'#ff6b7a':dm?'#FFB255':'#fff'}" font-family="JetBrains Mono" ${HALO}>${c.tvr}′</text>`:''}`}).join('')}</svg>`;
 }
 const hh=x=>x==null?'—':`${Math.floor(x)}h ${String(Math.round((x%1)*60)).padStart(2,'0')}m`;
 function renderPE(t){
@@ -1142,7 +1151,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25m';
+const VERSION='2026-11-25n';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1410,10 +1419,8 @@ let playRAF=null;const RAF={};
 function addPlay(t,bid='mapE',sfx=''){
   const box=$(bid),svg=box.querySelector('svg');if(!svg)return;
   const P=t.cl.filter(c=>c.la!=null),seq=P.filter(c=>c.sq).sort((a,b)=>a.sq-b.sq);if(seq.length<2)return;
-  const k=Math.cos(-12*Math.PI/180),x0=Math.min(...P.map(c=>c.lo*k)),x1=Math.max(...P.map(c=>c.lo*k)),y0=Math.min(...P.map(c=>c.la)),y1=Math.max(...P.map(c=>c.la));
-  const span=Math.max(x1-x0,y1-y0)||.01,S=span/2+span*.08,cx=(x0+x1)/2,cy=(y0+y1)/2;
-  const pts=seq.map(c=>[(c.lo*k-cx+S)/(2*S)*1000,(cy-c.la+S)/(2*S)*1000,c]);
-  svg.insertAdjacentHTML('beforeend',`<g id="truck${sfx}" style="display:none"><circle r="22" fill="#FFE97A" stroke="#070707" stroke-width="3"/><text y="8" text-anchor="middle" font-size="24">🚚</text></g><text id="tclk${sfx}" x="980" y="975" text-anchor="end" font-size="30" font-weight="800" fill="#FFE97A" font-family="JetBrains Mono"></text>`);
+  const {X,Y}=geoP(P),pts=seq.map(c=>[+X(c),+Y(c),c]);
+  svg.insertAdjacentHTML('beforeend',`<g id="truck${sfx}" style="display:none"><circle r="22" fill="#FFE97A" stroke="#070707" stroke-width="3"/><text y="8" text-anchor="middle" font-size="24">🚚</text></g><text id="tclk${sfx}" x="980" y="975" text-anchor="end" font-size="30" font-weight="800" fill="#FFE97A" font-family="JetBrains Mono" ${HALO}></text>`);
   box.insertAdjacentHTML('beforeend',`<button class="btn gold" id="playB${sfx}" style="position:absolute;${sfx?'right:8px;top:8px':'left:8px;bottom:8px'};padding:6px 12px;z-index:2">▶ Play recorrido</button><div id="playL${sfx}" class="mono" style="position:absolute;left:8px;right:${sfx?'150px':'8px'};top:8px;font-size:11px;color:var(--txt);background:rgba(7,7,7,.75);border-radius:6px;padding:4px 8px;display:none"></div>`);
   $('playB'+sfx).onclick=()=>{
     if(RAF[sfx]){cancelAnimationFrame(RAF[sfx]);RAF[sfx]=null;$('playB'+sfx).textContent='▶ Play recorrido';return}
