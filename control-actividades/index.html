@@ -1142,7 +1142,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25l';
+const VERSION='2026-11-25m';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1212,6 +1212,21 @@ window.addEventListener('message',ev=>{const d=ev.data;if(!d||d.tipo!=='ct2-arch
   if(!ORIG_OK.some(r=>r.test(ev.origin))){console.warn('origen no permitido',ev.origin);return}
   AUTO_Q=AUTO_Q.then(()=>cargarAuto(d.files.map(f=>({name:String(f.name||'archivo'),sheets:f.sheets})))).then(m=>ev.source&&ev.source.postMessage({tipo:'ct2-ok',msg:m},ev.origin),e=>ev.source&&ev.source.postMessage({tipo:'ct2-error',msg:String(e&&e.message||e)},ev.origin))});
 if(window.opener)try{window.opener.postMessage({tipo:'ct2-listo'},'*')}catch(e){}
+/* ---- carga automática por enlace: la pestaña de Geotab navega a Control T2 con el archivo en el #fragmento ----
+   (el fragmento no viaja al servidor). Solo se acepta si la página anterior es de Geotab / Backus y hay sesión. */
+const REF_OK=/^https:\/\/([a-z0-9.-]+\.)?(geotab\.com|azurewebsites\.net|bees-platform\.com|ab-inbev\.com)\//i;
+window.__ct2auto=null;
+async function autoDesdeHash(){
+  const h=location.hash;if(!h.startsWith('#ct2='))return;
+  history.replaceState(null,'',location.pathname+location.search);
+  if(!REF_OK.test(document.referrer||'')){window.__ct2auto={ok:false,msg:'origen no permitido: '+(document.referrer||'(vacío)')};return}
+  for(let i=0;i<40&&NET&&!USER;i++)await new Promise(r=>setTimeout(r,500));
+  try{const b64=h.slice(5).replace(/-/g,'+').replace(/_/g,'/');const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    const pl=JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+    const files=(pl.files||[pl]).map(f=>({name:String(f.name||'archivo'),sheets:f.sheets}));
+    const m=await cargarAuto(files);window.__ct2auto={ok:/Guardado/.test(m),msg:m}}
+  catch(e){window.__ct2auto={ok:false,msg:String(e&&e.message||e)}}}
+setTimeout(autoDesdeHash,300);
 $('diaHoy').onclick=()=>verDia(hoyL());
 async function onEstado(e){UPST=JSON.parse(JSON.stringify(e));renderSlots();
   try{if(!VIEW&&e.data&&e.data.id&&e.data.id!==LASTD){LASTD=e.data.id;if(!D||D._id!==e.data.id){const d=await getJSON(e.data.id);d._id=e.data.id;boot(d);if(e.dia)cargarHist(e.dia)}}infoDia();
