@@ -1,2 +1,4 @@
 [build]
   publish = "."
+  # SheetJS servido desde el mismo sitio (las redes corporativas pueden bloquear cdnjs)
+  command = "mkdir -p control-actividades/lib && cp node_modules/xlsx/dist/xlsx.full.min.js control-actividades/lib/ || true"

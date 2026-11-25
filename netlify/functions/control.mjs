@@ -44,6 +44,8 @@ export default async (req) => {
         if (!ID_OK.test(id)) return json({ ok: false, error: "id" }, 400);
         const v = await st.get("f/" + id, { type: "arrayBuffer" });
         if (!v) return json({ ok: false }, 404);
+        // fmt=b64: JSON con el gzip en base64 (las redes corporativas bloquean descargas binarias)
+        if (url.searchParams.get("fmt") === "b64") return new Response(JSON.stringify({ ok: true, gz: Buffer.from(v).toString("base64") }), { headers: { "content-type": "application/json", "cache-control": "private, max-age=31536000, immutable" } });
         return new Response(v, { headers: { "content-type": "application/octet-stream", "cache-control": "private, max-age=31536000, immutable" } });
       }
       if (op === "ck") return json({ ok: true, ck: (await st.get("ck", { type: "json" })) || {} });
@@ -63,7 +65,12 @@ export default async (req) => {
       if (op === "put") {
         const id = url.searchParams.get("id") || "";
         if (!ID_OK.test(id)) return json({ ok: false, error: "id" }, 400);
-        const buf = await req.arrayBuffer();
+        let buf;
+        if ((req.headers.get("content-type") || "").includes("application/json")) {
+          const b = await req.json();
+          const x = Buffer.from(String(b.gz || ""), "base64");
+          buf = x.buffer.slice(x.byteOffset, x.byteOffset + x.byteLength);
+        } else buf = await req.arrayBuffer();
         if (!buf.byteLength || buf.byteLength > 5_000_000) return json({ ok: false, error: "tamaño" }, 400);
         const u = new Uint8Array(buf);
         if (u[0] !== 0x1f || u[1] !== 0x8b) return json({ ok: false, error: "formato" }, 400);

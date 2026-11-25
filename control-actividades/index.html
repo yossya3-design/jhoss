@@ -957,7 +957,10 @@ async function saveFile(name,blobOrFetch){
   catch(e){msg.textContent='No se descargó '+name+' ('+(e&&e.message||'cancelado')+').'}
 }
 const XLSX_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',JSZIP_URL='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-const loadJS=(src,ok)=>ok()?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=()=>rej(new Error('no cargó '+src));document.head.appendChild(sc)});
+const loadJS1=(src,ok)=>ok()?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=()=>rej(new Error('no cargó '+src));document.head.appendChild(sc)});
+// primero la copia del mismo sitio (redes corporativas pueden bloquear cdnjs), luego el CDN
+const LOCAL={[XLSX_URL]:'lib/xlsx.full.min.js',[JSZIP_URL]:'lib/jszip.min.js'};
+const loadJS=async(src,ok)=>{if(ok())return;if(typeof NET!=='undefined'&&NET&&LOCAL[src]){try{await loadJS1(LOCAL[src],ok);if(ok())return}catch(e){}}return loadJS1(src,ok)};
 const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ---- Excel desde plantilla (conserva formato) ---- */
 const COLL=i=>String.fromCharCode(65+i);
@@ -1038,11 +1041,11 @@ function renderSlots(){
 }
 const nowL=()=>new Date(Date.now()-5*3600e3).toISOString().slice(0,19).replace('T',' ');
 async function getJSON(id){
-  if(NET){const r=await afetch(API+'?op=get&id='+encodeURIComponent(id));if(!r.ok)throw new Error('código '+r.status);return JSON.parse(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text())}
+  if(NET){const r=await afetch(API+'?op=get&fmt=b64&id='+encodeURIComponent(id));if(!r.ok)throw new Error(r.status===403?'la red bloqueó la descarga (403)':'código '+r.status);const j=await r.json();const bin=atob(j.gz),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text())}
   const r=await fetch('/_blob/'+id);if(!r.ok)throw new Error('no se pudo leer un archivo guardado');return r.json()}
 async function putJSON(o){
   if(NET){const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);const body=await new Response(new Blob([JSON.stringify(o)]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
-    const r=await afetch(API+'?op=put&id='+id,{method:'POST',body});if(!r.ok)throw new Error('no se pudo guardar ('+r.status+')');return id}
+    const b64=await new Promise((ok,ko)=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(',')[1]);fr.onerror=ko;fr.readAsDataURL(body)});const r=await afetch(API+'?op=put&id='+id,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({gz:b64})});if(!r.ok)throw new Error(r.status===403?'la red bloqueó la subida (403)':'no se pudo guardar ('+r.status+')');return id}
   if(!AS)return null;const a=await AS.upload(new Blob([JSON.stringify(o)],{type:'application/json'}));return a.id}
 const postAPI=async(op,o)=>{const r=await afetch(API+'?op='+op,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(o)});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||('no se pudo guardar ('+r.status+')'))}};
 const CAN_SAVE=()=>NET||!!DB;
@@ -1098,7 +1101,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25g';
+const VERSION='2026-11-25h';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
