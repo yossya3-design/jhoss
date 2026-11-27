@@ -287,7 +287,7 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
    <div class="bar tar" id="bxTar"></div>
    <p class="nota">Deja de cobrar = cajas desplanificadas × tarifa por caja (supuesta: cámbiala con la tarifa real de cada empresario). Impacto día siguiente = POCs y HL reprogramados que se suman a la carga del día siguiente; "≈ camiones" usa el HL promedio por ruta de ese empresario en el día cargado en Control T2.</p></section>
   <section><h2><span class="n">D0b</span>Llenado de clientes desplanificados</h2><p class="sub">Hoja BITACORA: cada BK con desplanificación total o parcial (sin cambio de cabecera) debe tener sus clientes llenados en DESPLANIFICACIÓN. Toca un empresario para ver los BK sin llenar.</p>
-   <div class="card tw"><table><thead><tr><th>Empresario</th><th>Despla. total</th><th>Despla. parcial</th><th>BK desplan.</th><th>BKs de llenado de clientes desplanificados</th><th>Sin cumplimiento</th><th>% cumplimiento</th></tr></thead><tbody id="bxLlT"></tbody></table></div>
+   <div class="card tw"><table><thead><tr><th>Empresario</th><th>Despla. total</th><th>Despla. parcial</th><th>BK desplan.</th><th title="BKs con clientes desplanificados llenados en la bitácora">BKs llenados</th><th>Sin cumplimiento</th><th>% cumplimiento</th></tr></thead><tbody id="bxLlT"></tbody></table></div>
    <p class="nota" id="bxLlN"></p></section>
   <section><h2><span class="n">D1</span>Impacto diario</h2><p class="sub">HL desplanificado por día: reprogramación y ZT.</p><div class="card" id="bxDia2"></div></section>
   <section><h2><span class="n">D2</span>Impacto por supervisor de ventas</h2><p class="sub">Toca un supervisor para filtrar todo el reporte. Toca un título para ordenar.</p>
@@ -1222,7 +1222,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-27h';
+const VERSION='2026-11-27i';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
