@@ -1217,7 +1217,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-27e';
+const VERSION='2026-11-27f';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1375,7 +1375,7 @@ function renderBX(){
   const edtsT=new Set([...((BASE&&BASE.plr)||[]).map(r=>EN(r[4])),...((D&&D.tours)||[]).map(t=>t.edt),...allD.map(r=>r[3])].filter(e=>e&&e!=='—'&&e!=='Sin EDT'));dE.forEach(r=>edtsT.add(r[3]));
   const ER=[...edtsT].map(e=>{const v=dE.filter(r=>r[3]===e),p=v.filter(r=>r[8]==='REP'),z=v.filter(r=>r[8]==='ZT'),h=sum(v,7),hp=sum(p,7),hr=hlRuta(e),m={};v.forEach(r=>{if(r[9])m[r[9]]=(m[r[9]]||0)+1});const mm=Object.entries(m).sort((a,b)=>b[1]-a[1])[0];
     return {e,poc:ucl(v),hl:h,ca:sum(v,6),pp:ucl(p),ph:hp,pc:sum(p,6),zp:ucl(z),zh:sum(z,7),pz:h?sum(z,7)/h*100:0,cam:hr?hp/nd/hr:null,sol:sum(v,6)*tar(e),mot:mm?mm[0]:'—'}}).sort((a,b)=>b.hl-a.hl||a.e.localeCompare(b.e));
-  const camT=x=>x.cam==null||!x.pp?'':` · ≈ ${x.cam.toFixed(1)} camión${x.cam>=1.05?'es':''}${nd>1?'/día':''}`;
+  const camT=x=>x.cam==null||!x.pp?'':` · ≈ ${x.cam.toFixed(1)} ${x.cam>=1.05?'camiones':'camión'}${nd>1?'/día':''}`;
   const S2=n=>'S/ '+Math.round(n).toLocaleString('es-PE');
   const tot=ER.reduce((a,x)=>({poc:a.poc+x.poc,hl:a.hl+x.hl,ca:a.ca+x.ca,pp:a.pp+x.pp,ph:a.ph+x.ph,zp:a.zp+x.zp,zh:a.zh+x.zh,sol:a.sol+x.sol}),{poc:0,hl:0,ca:0,pp:0,ph:0,zp:0,zh:0,sol:0});
   $('bxEdtT').innerHTML=ER.map(x=>`<tr class="click${bxF.edt===x.e?' selr':''}" data-e="${x.e}"${x.poc?'':' style="opacity:.55"'}><td><b>${x.e}</b></td><td>${x.poc}</td><td>${f1(x.hl)}</td><td>${nf(x.ca)}</td><td>${x.pp}</td><td>${f1(x.ph)}</td><td>${x.zp}</td><td>${f1(x.zh)}</td><td><span class="pill ${x.pz>=30?'r':x.pz>=15?'y':'g'}">${x.pz.toFixed(0)}%</span></td><td>+${x.pp} POCs · +${f1(x.ph)} HL${camT(x)}</td><td><b>${S2(x.sol)}</b></td></tr>`).join('')+
