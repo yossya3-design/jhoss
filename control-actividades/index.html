@@ -94,6 +94,14 @@ input::placeholder{color:#7d776a}.btn{cursor:pointer}
 .hc .v{font:800 44px/1.05 "Big Shoulders Display";color:var(--txt);margin-top:6px}.hc .s{font-size:13px;color:var(--mut);margin-top:4px}
 .edc .row2{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-top:1px solid rgba(242,197,42,.1)}.edc .row2 b{color:var(--txt);font-family:"JetBrains Mono";font-size:12px;text-align:right}
 .tar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.tar label{display:flex;gap:6px;align-items:center;font:700 11px "JetBrains Mono";color:var(--mut)}.tar input{width:76px;padding:6px 8px}
+/* checklist en matriz */
+.ckm table{min-width:720px}.ckm th,.ckm td{vertical-align:middle}
+.ckm th:first-child,.ckm td:first-child{position:sticky;left:0;background:#100e0a;z-index:1;min-width:190px;white-space:normal}
+.ckm td.c{text-align:center;min-width:150px}.ckm .st{min-width:120px;width:100%}
+.ckm .h{font:700 12px "JetBrains Mono";color:var(--gold1);margin-right:6px}.ckm .t{font-weight:700}.ckm small{display:block;font:500 11px "JetBrains Mono";color:var(--mut)}
+.ckm .dat{display:block;font:700 10px "JetBrains Mono";margin-bottom:5px;padding:3px 6px;border-radius:5px;white-space:normal}
+.ckm tr.key td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+.ckm tfoot td{border-top:2px solid var(--gold2);font-weight:800;text-align:center}
 /* bars */
 .hb{display:grid;grid-template-columns:62px 1fr 64px;gap:8px;align-items:center;margin:6px 0;font-size:13px}
 .hb .k{font:700 12px "JetBrains Mono";color:var(--gold1)}
@@ -351,29 +359,19 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
 <!-- CHECKLIST -->
 <div class="page on" id="p-ck">
  <section>
-  <h2><span class="n">01</span>Checklist por asistente</h2>
-  <p class="sub">Cada asistente con su EDT y su turno. Los cortes con <b style="color:var(--gold2)">dato</b> se miden solos con la data del día.</p>
-  <div class="chips" id="ckEdt"></div>
-  <div class="card" style="margin-top:10px">
-   <div class="asis"><span id="asisInfo" style="flex:1;font-weight:600"></span><select id="tur"><option value="T1">Turno 1</option><option value="T2">Turno 2</option></select><button class="btn" id="reset">Limpiar</button></div>
-   <div class="kpis" id="ckKpi" style="margin:12px 0"></div>
-   <div id="ckTend" style="margin:-4px 0 12px"></div>
-   <div class="ck">
-    <p id="ckSolo" class="nota" hidden style="color:var(--amb,#F5B800)">Solo la administradora marca el checklist. Tú puedes verlo.</p>
-  <div class="rows" id="rows"></div>
-    <div class="score">
-     <svg class="ring" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="#2E9E4A" stroke-width="12" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 314"/><text id="pct" x="60" y="68" text-anchor="middle" font-size="30" fill="#F4F1E8">0%</text><text x="60" y="86" text-anchor="middle" font-size="9" fill="#B9B3A3" style="font-family:JetBrains Mono">CHECKLIST</text></svg>
-     <div class="cnt"><div><b id="cOk" style="color:var(--ok)">0</b>a tiempo</div><div><b id="cTa" style="color:var(--warn)">0</b>tarde</div><div><b id="cNo" style="color:var(--bad)">0</b>no cumplió</div></div>
-    </div>
-   </div>
-   <div class="legend"><span><i class="dot" style="background:var(--ok)"></i>A tiempo (suma)</span><span><i class="dot" style="background:var(--warn)"></i>Tarde (no suma)</span><span><i class="dot" style="background:var(--bad)"></i>No cumplió</span></div>
-  </div>
+  <h2><span class="n">01</span>Checklist por empresario</h2>
+  <p class="sub">Un check por empresario en cada corte. Toca la casilla para pasar de <b>Pendiente</b> → <b style="color:var(--ok)">Cumplió</b> → <b style="color:var(--warn)">Tardanza</b> → <b style="color:var(--bad)">No cumplió</b>. Los cortes con <b style="color:var(--gold2)">dato</b> se miden solos con la data del día.</p>
+  <div class="bar"><button class="btn gold" id="ckT1">Turno 1</button><button class="btn" id="ckT2">Turno 2</button><span class="fecha" id="ckDia"></span><button class="btn" id="reset" style="margin-left:auto">Limpiar turno</button></div>
+  <p id="ckSolo" class="nota" hidden style="color:var(--warn)">Solo la administradora marca el checklist. Tú puedes verlo.</p>
+  <div class="card tw ckm"><table><thead id="ckH"></thead><tbody id="ckB"></tbody><tfoot id="ckF"></tfoot></table></div>
+  <div class="legend"><span><i class="dot" style="background:var(--ok)"></i>Cumplió (suma)</span><span><i class="dot" style="background:var(--warn)"></i>Tardanza (no suma)</span><span><i class="dot" style="background:var(--bad)"></i>No cumplió</span></div>
+  <details class="col" style="margin-top:10px"><summary><span>Tendencia del día</span><span class="sm">salida ≤7:30 · 1er punto ≤8:00 en cada carga</span></summary><div id="ckTend"></div></details>
  </section>
  <section>
-  <h2><span class="n">02</span>Ranking de asistentes</h2>
-  <p class="sub">% de cortes a tiempo del checklist (T1 + T2) y los indicadores del día de su EDT.</p>
-  <div class="card tw"><table><thead><tr><th>#</th><th>Asistente</th><th>EDT · turno</th><th>Checklist</th><th>Salida ≤7:30</th><th>1er punto ≤8:00</th><th>HL entregado</th></tr></thead><tbody id="rk"></tbody></table></div>
-  <p class="nota">Meta en semáforo: ≥ 90% verde · 75–89% amarillo · &lt; 75% rojo. Las marcas del checklist se guardan en este dispositivo.</p>
+  <h2><span class="n">02</span>Ranking por empresario</h2>
+  <p class="sub">% de cortes cumplidos del checklist del día (T1 + T2) y los indicadores del día de cada EDT.</p>
+  <div class="card tw"><table><thead><tr><th>#</th><th>Empresario</th><th>Asistentes</th><th>Checklist</th><th>Salida ≤7:30</th><th>1er punto ≤8:00</th><th>HL entregado</th></tr></thead><tbody id="rk"></tbody></table></div>
+  <p class="nota">Meta en semáforo: ≥ 90% verde · 75–89% amarillo · &lt; 75% rojo. El checklist se guarda por día y lo ven todos.</p>
  </section>
  <section>
   <h2><span class="n">03</span>Placas pendientes por cargar en almacén</h2>
@@ -580,25 +578,30 @@ const asisOf=e=>ASIS.filter(a=>a.edt===e).map(a=>a.n+(a.t==='T1T2'?'':' ('+a.t+'
 
 /* ---------- checklist por asistente ---------- */
 const CORTES={T1:[
- {h:"06:00",n:"Ingreso y preparación",s:"Programación, unidades y conductores"},
- {h:"06:20",n:"Matinal",s:"Asistencia y mensaje de seguridad"},
- {h:"07:00",n:"Despacho",s:"Inicio de ruta VECFLEET y relevos"},
- {h:"07:30",n:"Salida de status",s:"Status enviado por el EDT",key:1,d:'sal'},
- {h:"08:00",n:"Ronda 1er punto",s:"Unidades en su primer cliente (Geotab)",d:'p1'},
- {h:"09:30",n:"Avance en ruta",s:"Atrasos de +30 min con motivo",d:'av2'},
- {h:"11:30",n:"Alerta temprana",s:"Rutas en riesgo y reprogramaciones",d:'av3'},
- {h:"13:00",n:"Desplanificación parcial",s:"Reporte parcial enviado",d:'av4'}],
+ {id:'mat',h:"06:20",n:"Matinal",s:"Asistencia y mensaje de seguridad"},
+ {id:'ini',h:"07:00",n:"Inicio de salida de camiones",s:"Inicio de ruta VECFLEET y relevos"},
+ {id:'sal',h:"07:30",n:"Salida de status",s:"Status enviado por el EDT",key:1,d:'sal'},
+ {id:'p1',h:"08:00",n:"Ronda 1er punto",s:"Unidades en su 1er cliente (Geotab)",d:'p1'},
+ {id:'age',h:"08:30",n:"Agenda publicada",s:"Agenda del día publicada",key:1},
+ {id:'av2',h:"09:30",n:"Avance en ruta",s:"Atrasos de +30 min con motivo",d:'av2'},
+ {id:'av3',h:"11:30",n:"Alerta temprana",s:"Rutas en riesgo y reprogramaciones",d:'av3'},
+ {id:'av4',h:"13:00",n:"Desplanificación parcial",s:"Reporte parcial enviado",d:'av4'}],
 T2:[
- {h:"15:00",n:"Unidades críticas",s:"+1 h de atraso: seguimiento por hora",d:'av5'},
- {h:"16:00",n:"Clientes N3",s:"Cobro en bancarización confirmado",d:'n3'},
- {h:"17:00",n:"Reprogramaciones",s:"No visitados llamados y reprogramados",d:'nov'},
- {h:"Retorno",n:"Post-ruta",s:"Final de ruta VECFLEET, rechazos",d:'al'},
- {h:"21:00",n:"Correo de cierre",s:"Desplanif., resumen EDT, reclamos",key:1},
- {h:"Cierre",n:"Llenado de clientes desplanificados",s:"Cada BK con despla. total o parcial con sus clientes en la bitácora",d:'dsp'}]};
-const ST=["pend","ok","tarde","no"],LBL={pend:"Pendiente",ok:"✔ A tiempo",tarde:"⏱ Tarde",no:"✖ No cumplió"};
+ {id:'av5',h:"15:00",n:"Unidades críticas",s:"+1 h de atraso: seguimiento por hora",d:'av5'},
+ {id:'n3',h:"16:00",n:"Clientes N3",s:"Cobro en bancarización confirmado",d:'n3'},
+ {id:'nov',h:"17:00",n:"Reprogramaciones",s:"No visitados llamados y reprogramados",d:'nov'},
+ {id:'al',h:"Retorno",n:"Post-ruta",s:"Final de ruta VECFLEET, rechazos",d:'al'},
+ {id:'cie',h:"21:00",n:"Correo de cierre",s:"Desplanif., resumen EDT, reclamos",key:1},
+ {id:'dsp',h:"Cierre",n:"Llenado de clientes desplanificados",s:"Cada BK con despla. total o parcial con sus clientes",d:'dsp'}]};
+const CKE=[['Reparto Rosales','Rosales'],['Adriancar','Adriancar'],['Importaciones &','Importaciones'],['Logitrack','Logitrack']];
+const ST=["pend","ok","tarde","no"],LBL={pend:"Pendiente",ok:"✔ Cumplió",tarde:"⏱ Tardanza",no:"✖ No cumplió"};
 let ck={};try{ck=JSON.parse(localStorage.getItem('ctrlAct3')||'{}')}catch(e){}
 let ckT=null;const save=()=>{try{localStorage.setItem('ctrlAct3',JSON.stringify(ck))}catch(e){}if(typeof NET!=='undefined'&&NET&&USER&&USER.r==='admin'){clearTimeout(ckT);ckT=setTimeout(()=>postAPI('ck',ck).catch(e=>console.warn(e)),800)}};
-const getA=n=>ck[n]||(ck[n]={T1:CORTES.T1.map(()=>({s:'pend',at:''})),T2:CORTES.T2.map(()=>({s:'pend',at:''}))});
+let ckTur='T1';
+const ckDia=()=>(D&&D.dia)||new Date(Date.now()-5*3600e3).toISOString().slice(0,10);
+const ckGet=(dia,t,e,id)=>(((((ck.m||{})[dia]||{})[t]||{})[e]||{})[id])||{s:'pend',at:''};
+const ckSet=(dia,t,e,id,v)=>{ck.m=ck.m||{};const a=ck.m[dia]=ck.m[dia]||{},b=a[t]=a[t]||{},c=b[e]=b[e]||{};c[id]=v;
+  const ds=Object.keys(ck.m).sort();while(ds.length>45)delete ck.m[ds.shift()]};
 const turnos=a=>a.t==='T1T2'?['T1','T2']:[a.t];
 function dato(code,a,al){
   const ix={av2:2,av3:3,av4:4,av5:5}[code];
@@ -610,7 +613,7 @@ function dato(code,a,al){
   if(code==='al')return [`${al.res}/${al.n} alertados entregaron`,pc(al.res,al.n)];
   if(code==='dsp'){if(!BX||!BX.b)return ['bitácora sin hoja BITACORA',null];const dia=(D&&D.dia)||'',v=BX.b.filter(r=>r[0]===dia&&r[4]===al.edt);if(!v.length)return ['sin desplanificaciones en la bitácora',null];const ok=v.filter(r=>r[6]>0).length;return [ok===v.length?`${ok}/${v.length} BK con clientes llenados`:`${v.length-ok} BK sin cumplimiento de ${v.length} (${v.filter(r=>!r[6]).map(r=>r[1]).join(', ')})`,pc(ok,v.length)]}
 }
-function ckPct(a){const x=getA(a.n);let t=0,o=0;turnos(a).forEach(k=>x[k].forEach(s=>{if(s.s!=='pend'){t++;if(s.s==='ok')o++}}));return t?Math.round(o/t*100):null}
+function ckPct(e,dia=ckDia()){let t=0,o=0;['T1','T2'].forEach(k=>CORTES[k].forEach(c=>{t++;if(ckGet(dia,k,e,c.id).s==='ok')o++}));const m=['T1','T2'].some(k=>CORTES[k].some(c=>ckGet(dia,k,e,c.id).s!=='pend'));return m?Math.round(o/t*100):null}
 /* ---- placas pendientes por cargar (almacén) ---- */
 let PC={placas:[]};
 const normP=p=>String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^PE(?=[A-Z0-9]{6}$)/,'');
@@ -627,28 +630,25 @@ $('pcAdd').onclick=async()=>{const ps=$('pcIn').value.split(/[\s,;]+/).map(normP
   try{await pcSave();$('pcMsg').textContent='✔ '+ps.length+' placa(s) registradas'}catch(e){$('pcMsg').textContent='✖ '+e.message}pcRender();if(D)renderRuta()};
 $('pcClr').onclick=async()=>{if(!PC.placas.length||!confirm('¿Quitar todas las placas pendientes de hoy?'))return;PC.placas=[];try{await pcSave()}catch(e){}pcRender();if(D)renderRuta()};
 function renderCk(){
-  $('ckEdt').innerHTML=ASIS.map((a,i)=>`<button class="chip${i===ckA?' on':''}" data-i="${i}">${a.n}</button>`).join('');
-  $('ckEdt').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{ckA=+b.dataset.i;const A=ASIS[ckA];$('tur').value=turnos(A)[0];renderCk()});
-  const A=ASIS[ckA],tl=turnos(A);
-  [...$('tur').options].forEach(o=>o.disabled=!tl.includes(o.value));
-  if(!tl.includes($('tur').value))$('tur').value=tl[0];
-  const t=$('tur').value,x=getA(A.n);CORTES[t].forEach((c,i)=>{if(!x[t][i])x[t][i]={s:'pend',at:''}});const st=x[t],ts=byEdt(A.edt),a=agg(ts),al=alertStats(ts);al.edt=A.edt;
-  $('asisInfo').innerHTML=`<span class="mono" style="font-size:11px;color:var(--mut)">ASISTENTE</span><br>${A.n} · <span style="color:var(--gold2)">${A.edt}</span> · ${A.t==='T1T2'?'T1 y T2':A.t}`;
-  {const H=(DIAH||[]).filter(h=>h.e&&h.e[A.edt]);const pl=(v,n)=>`<span class="pill ${cls(v)}" title="${n}">${v==null?'—':v+'%'}</span>`;
-   $('ckTend').innerHTML=H.length?`<div class="card" style="padding:8px 10px;overflow-x:auto"><div style="font:700 11px Barlow;color:var(--gold2);text-transform:uppercase;margin-bottom:4px">Tendencia del día · ${A.edt} (cada carga)</div><table style="font-size:12px"><tr><th style="text-align:left">Hora</th>${H.map(h=>`<th class="mono">${h.h}</th>`).join('')}</tr><tr><td>Salida ≤7:30</td>${H.map(h=>`<td>${pl(h.e[A.edt][0],'Salida')}</td>`).join('')}</tr><tr><td>1er punto ≤8:00</td>${H.map(h=>`<td>${pl(h.e[A.edt][1],'1er punto')}</td>`).join('')}</tr><tr><td>HL entregado</td>${H.map(h=>`<td>${pl(h.e[A.edt][2],'HL')}</td>`).join('')}</tr></table></div>`:''}
-  $('ckKpi').innerHTML=kpi('Rutas',a.rutas,`+${a.rec} recargas · ${a.pe} pedidos`)+kpi('Salida ≤7:30',a.salP+'%',`${a.sal}/${a.v1} unidades`,a.salP)+kpi('1er punto ≤8:00',a.p1P+'%',`${a.p1}/${a.v1} unidades`,a.p1P)+kpi('HL entregado',a.hlP+'%',`${f1(a.hle)} de ${f1(a.hl)} HL`,a.hlP);
-  $('rows').innerHTML=CORTES[t].map((c,i)=>{let dd='';if(c.d){const [txt,p]=dato(c.d,a,al);dd=`<span class="pill dat ${p==null?'n':cls(p)}">DATO · ${txt}</span>`}
-    return `<div class="row${c.key?' key':''}"><span class="h">${c.h}</span><span class="t">${c.n}${c.key?' <span class="pill r">SÍ O SÍ</span>':''}<small>${c.s}${st[i].at?' · marcado '+st[i].at:''}</small>${dd}</span><button class="st ${st[i].s}" data-i="${i}">${LBL[st[i].s]}</button></div>`}).join('');
-  $('rows').querySelectorAll('.st').forEach(b=>b.onclick=()=>{if(NET&&(!USER||USER.r!=='admin')){b.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'none'}],{duration:250});$('ckSolo').hidden=false;return}const c=st[+b.dataset.i];c.s=ST[(ST.indexOf(c.s)+1)%4];c.at=c.s==='pend'?'':new Date().toTimeString().slice(0,5);save();renderCk()});
-  const ok=st.filter(s=>s.s==='ok').length,p=Math.round(ok/st.length*100);
-  $('pct').textContent=p+'%';$('arc').setAttribute('stroke-dasharray',(p*3.14).toFixed(1)+' 314');$('arc').setAttribute('stroke',sem(p));
-  $('cOk').textContent=ok;$('cTa').textContent=st.filter(s=>s.s==='tarde').length;$('cNo').textContent=st.filter(s=>s.s==='no').length;
-  const rk=ASIS.map(A=>({A,c:ckPct(A),a:agg(byEdt(A.edt))})).sort((x,y)=>(y.c??-1)-(x.c??-1)||(y.a.salP-x.a.salP));
-  $('rk').innerHTML=rk.map((r,i)=>`<tr><td class="mono">${i+1}</td><td><b>${r.A.n}</b></td><td>${r.A.edt} · ${r.A.t==='T1T2'?'T1+T2':r.A.t}</td><td><span class="pill ${cls(r.c)}">${r.c==null?'—':r.c+'%'}</span></td><td><span class="pill ${cls(r.a.salP)}">${r.a.salP}%</span></td><td><span class="pill ${cls(r.a.p1P)}">${r.a.p1P}%</span></td><td><span class="pill ${cls(r.a.hlP)}">${r.a.hlP}%</span></td></tr>`).join('')+(()=>{const a=agg(T),cs=rk.map(r=>r.c).filter(v=>v!=null),c=cs.length?Math.round(cs.reduce((x,y)=>x+y,0)/cs.length):null;return `<tr class="tot"><td></td><td><b>TOTAL CD</b></td><td>${ASIS.length} asistentes</td><td><span class="pill ${cls(c)}">${c==null?'—':c+'%'}</span></td><td><span class="pill ${cls(a.salP)}">${a.salP}%</span></td><td><span class="pill ${cls(a.p1P)}">${a.p1P}%</span></td><td><span class="pill ${cls(a.hlP)}">${a.hlP}%</span></td></tr>`})();
+  const t=ckTur,dia=ckDia(),adm=!NET||(USER&&USER.r==='admin');
+  $('ckT1').classList.toggle('gold',t==='T1');$('ckT2').classList.toggle('gold',t==='T2');
+  $('ckDia').textContent='CHECKLIST DEL '+dia.split('-').reverse().join('/');
+  const E=CKE.map(([e,c])=>{const ts=byEdt(e),a=agg(ts),al=alertStats(ts);al.edt=e;return {e,c,ts,a,al}});
+  $('ckH').innerHTML=`<tr><th>Corte</th>${E.map(x=>`<th style="text-align:center">${x.c}<br><span style="font:500 10px Barlow;color:var(--mut);text-transform:none;letter-spacing:0">${esc(asisOf(x.e))}</span></th>`).join('')}</tr>`;
+  $('ckB').innerHTML=CORTES[t].map(c=>`<tr class="${c.key?'key':''}"><td><span class="h">${c.h}</span><span class="t">${c.n}</span>${c.key?' <span class="pill r">SÍ O SÍ</span>':''}<small>${c.s}</small></td>${E.map(x=>{const v=ckGet(dia,t,x.e,c.id);let dd='';
+     if(c.d&&x.ts.length){const [txt,p]=dato(c.d,x.a,x.al);dd=`<span class="dat ${p==null?'n':cls(p)}">${txt}${p!=null?' · '+p+'%':''}</span>`}else if(c.d)dd='<span class="dat n">sin rutas</span>';
+     return `<td class="c">${dd}<button class="st ${v.s}" data-e="${esc(x.e)}" data-id="${c.id}" title="${v.at?'marcado '+v.at:''}">${LBL[v.s]}</button>${v.at?`<small>${v.at}</small>`:''}</td>`}).join('')}</tr>`).join('');
+  $('ckF').innerHTML=`<tr><td style="text-align:left">Cumplimiento ${t==='T1'?'turno 1':'turno 2'}</td>${E.map(x=>{const n=CORTES[t].length,o=CORTES[t].filter(c=>ckGet(dia,t,x.e,c.id).s==='ok').length,m=CORTES[t].some(c=>ckGet(dia,t,x.e,c.id).s!=='pend'),p=Math.round(o/n*100);return `<td>${m?`<span class="pill ${cls(p)}">${o}/${n} · ${p}%</span>`:'<span class="pill n">—</span>'}</td>`}).join('')}</tr>`;
+  $('ckB').querySelectorAll('.st').forEach(b=>b.onclick=()=>{if(!adm){b.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'none'}],{duration:250});$('ckSolo').hidden=false;return}
+    const e=b.dataset.e,id=b.dataset.id,v=ckGet(dia,t,e,id),s2=ST[(ST.indexOf(v.s)+1)%4];ckSet(dia,t,e,id,{s:s2,at:s2==='pend'?'':nowHM()});save();renderCk()});
+  {const H=DIAH||[];const pl=v=>`<span class="pill ${cls(v)}">${v==null?'—':v+'%'}</span>`;
+   $('ckTend').innerHTML=H.length?`<div class="card tw"><table><thead><tr><th>Hora</th>${E.map(x=>`<th>${x.c}</th>`).join('')}</tr></thead><tbody>${H.map(h=>`<tr><td class="mono">${h.h}</td>${E.map(x=>{const r=h.e&&h.e[x.e];return `<td>${r?pl(r[0])+' '+pl(r[1]):'<span class="pill n">—</span>'}</td>`}).join('')}</tr>`).join('')}</tbody></table></div><p class="nota">En cada celda: salida ≤7:30 · 1er punto ≤8:00.</p>`:'<p class="nota">Aún no hay cargas del día.</p>'}
+  const rk=CKE.map(([e,c])=>({e,c,p:ckPct(e,dia),a:agg(byEdt(e))})).sort((x,y)=>(y.p??-1)-(x.p??-1)||(y.a.salP-x.a.salP));
+  $('rk').innerHTML=rk.map((r,i)=>`<tr><td class="mono">${i+1}</td><td><b>${r.c}</b></td><td style="white-space:normal">${esc(asisOf(r.e))}</td><td><span class="pill ${cls(r.p)}">${r.p==null?'—':r.p+'%'}</span></td><td><span class="pill ${cls(r.a.salP)}">${r.a.v1?r.a.salP+'%':'—'}</span></td><td><span class="pill ${cls(r.a.p1P)}">${r.a.v1?r.a.p1P+'%':'—'}</span></td><td><span class="pill ${cls(r.a.hlP)}">${r.a.hl?r.a.hlP+'%':'—'}</span></td></tr>`).join('');
   resort('rk');
 }
-$('tur').onchange=renderCk;
-$('reset').onclick=()=>{const x=getA(ASIS[ckA].n),t=$('tur').value;x[t]=CORTES[t].map(()=>({s:'pend',at:''}));save();renderCk()};
+$('ckT1').onclick=()=>{ckTur='T1';renderCk()};$('ckT2').onclick=()=>{ckTur='T2';renderCk()};
+$('reset').onclick=()=>{if(NET&&(!USER||USER.r!=='admin')){$('ckSolo').hidden=false;return}if(!confirm('¿Dejar en Pendiente todo el '+(ckTur==='T1'?'turno 1':'turno 2')+' de hoy?'))return;const m=(ck.m||{})[ckDia()];if(m)delete m[ckTur];save();renderCk()};
 
 /* ---------- ruta ---------- */
 function renderEdtF(){
@@ -1222,7 +1222,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-27i';
+const VERSION='2026-11-27j';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1582,7 +1582,7 @@ function boot(d){
   D=d;T=d.tours;ASIS=d.asis;T.forEach(t=>{if(t.sal&&t.p1&&t.sal>t.p1){t.salX=t.sal;t.sal=null}});
   const cnt={};T.forEach(t=>cnt[t.edt]=(cnt[t.edt]||0)+1);EDTS=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
   $('f1').textContent=$('f2').textContent=$('f3').textContent=$('f4').textContent=$('f6').textContent=$('f7').textContent='DATA DEL '+d.fecha;
-  if(!$('tur').value)$('tur').value='T1';renderCk();renderEdtF();renderRuta();renderAlert();
+  renderCk();renderEdtF();renderRuta();renderAlert();
   const s=[...T].sort((x,y)=>x.ruta.localeCompare(y.ruta)||x.v-y.v);fillSel(s);$('selV').innerHTML=s.map(t=>`<option value="${t.id}">${t.ruta} · V${t.v} · ${t.edt}</option>`).join('');$('selV').value=(T.find(t=>t.ruta==='BK3445'&&t.v===1)||s[0]).id;renderMR();renderVen();renderSIC();renderTorre();renderCarga();
   try{infoDia();$('sinData').hidden=true;pcLoad()}catch(e){}
   const keep=cur&&T.find(t=>t.ruta===cur.ruta&&t.v===cur.v);showRoute(keep?keep.id:(T.find(t=>t.ruta==='BK3445'&&t.v===1)||s[0]).id);
