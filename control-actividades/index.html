@@ -1125,7 +1125,7 @@ async function procesar(files,forzar){
       if(!d.tipo){log('   ✖ No lo reconozco. Debe ser Radar, BEES, Modulación, Geotab, SIC de ruta o Bitácora.');continue}
       SL[d.tipo]=d.rows;NUEVO.add(d.tipo);daily=true;const fe=MOTOR.fechaDe(d.tipo,d.rows);
       log(`   ✔ ${MOTOR.TIPOS[d.tipo].n}: ${(d.rows.length-1).toLocaleString('es-PE')} filas${fe?' · data del '+dmy(fe):''}`);
-      const id=await putJSON(d.rows);est.files[d.tipo]={id,n:f.name,at:nowL(),fecha:fe};
+      const id=await putJSON(d.rows);est.files[d.tipo]={id,n:f.name,at:nowL(),fecha:fe||(d.tipo!=='radar'&&est.files.radar&&est.files.radar.fecha)||null};
     }
     if(bnew){BX=bnew;$('bxAct').textContent='BITÁCORA AL '+BX.act;renderBX()}
     if(daily||bnew){
@@ -1153,7 +1153,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-25q';
+const VERSION='2026-11-27a';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
