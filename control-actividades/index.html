@@ -282,9 +282,8 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
  </section>
  <div id="bxDes">
   <section><div class="vk" id="bxDK"></div></section>
-  <section><h2><span class="n">D0</span>Impacto por empresario</h2><p class="sub">Lo que cada EDT deja de entregar y de cobrar, y lo que sus reprogramaciones le suman al día siguiente. Toca un empresario para filtrar todo el reporte.</p>
-   <div class="vk" id="bxEC"></div>
-   <div class="card tw" style="margin-top:10px"><table><thead><tr><th>Empresario</th><th>POCs desplan.</th><th>HL desplan.</th><th>Cajas</th><th>Reprog. POCs</th><th>Reprog. HL</th><th>ZT POCs</th><th>ZT HL</th><th>% ZT (HL)</th><th>Impacto día siguiente</th><th>Deja de cobrar</th></tr></thead><tbody id="bxEdtT"></tbody></table></div>
+  <section><h2><span class="n">D0</span>Impacto por empresario</h2><p class="sub">Todos los empresarios, desplanifiquen o no: lo que dejan de entregar y de cobrar, y lo que sus reprogramaciones suman al día siguiente. Toca un empresario para filtrar todo el reporte.</p>
+   <div class="card tw"><table><thead><tr><th>Empresario</th><th>POCs desplan.</th><th>HL desplan.</th><th>Cajas</th><th>Reprog. POCs</th><th>Reprog. HL</th><th>ZT POCs</th><th>ZT HL</th><th>% ZT (HL)</th><th>Impacto día siguiente</th><th>Deja de cobrar</th></tr></thead><tbody id="bxEdtT"></tbody></table></div>
    <div class="bar tar" id="bxTar"></div>
    <p class="nota">Deja de cobrar = cajas desplanificadas × tarifa por caja (supuesta: cámbiala con la tarifa real de cada empresario). Impacto día siguiente = POCs y HL reprogramados que se suman a la carga del día siguiente; "≈ camiones" usa el HL promedio por ruta de ese empresario en el día cargado en Control T2.</p></section>
   <section><h2><span class="n">D1</span>Impacto diario</h2><p class="sub">HL desplanificado por día: reprogramación y ZT.</p><div class="card" id="bxDia2"></div></section>
@@ -1218,7 +1217,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-27c';
+const VERSION='2026-11-27d';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1369,22 +1368,19 @@ function renderBX(){
   // la tabla por empresario respeta fechas y supervisor, pero muestra todos los EDT
   const dE=allD.filter(r=>(!bxF.de||r[0]>=bxF.de)&&(!bxF.ha||r[0]<=bxF.ha)&&(!bxF.sv||r[10]===bxF.sv));
   const nd=new Set(dE.map(r=>r[0])).size||1;
-  const ER=[...new Set(dE.map(r=>r[3]))].map(e=>{const v=dE.filter(r=>r[3]===e),p=v.filter(r=>r[8]==='REP'),z=v.filter(r=>r[8]==='ZT'),h=sum(v,7),hp=sum(p,7),hr=hlRuta(e),m={};v.forEach(r=>{if(r[9])m[r[9]]=(m[r[9]]||0)+1});const mm=Object.entries(m).sort((a,b)=>b[1]-a[1])[0];
-    return {e,poc:ucl(v),hl:h,ca:sum(v,6),pp:ucl(p),ph:hp,pc:sum(p,6),zp:ucl(z),zh:sum(z,7),pz:h?sum(z,7)/h*100:0,cam:hr?hp/nd/hr:null,sol:sum(v,6)*tar(e),mot:mm?mm[0]:'—'}}).sort((a,b)=>b.hl-a.hl);
+  // todos los empresarios: los de la base de placas, los del día cargado y los que aparecen en la bitácora (desplanifiquen o no)
+  if(!BASE&&!window.__bxBase){window.__bxBase=1;cargarBase().then(()=>renderBX()).catch(()=>{})}
+  const EN=e=>MOTOR&&MOTOR.EDTN&&MOTOR.EDTN[e]||e;
+  const edtsT=new Set([...((BASE&&BASE.plr)||[]).map(r=>EN(r[4])),...((D&&D.tours)||[]).map(t=>t.edt),...allD.map(r=>r[3])].filter(e=>e&&e!=='—'&&e!=='Sin EDT'));dE.forEach(r=>edtsT.add(r[3]));
+  const ER=[...edtsT].map(e=>{const v=dE.filter(r=>r[3]===e),p=v.filter(r=>r[8]==='REP'),z=v.filter(r=>r[8]==='ZT'),h=sum(v,7),hp=sum(p,7),hr=hlRuta(e),m={};v.forEach(r=>{if(r[9])m[r[9]]=(m[r[9]]||0)+1});const mm=Object.entries(m).sort((a,b)=>b[1]-a[1])[0];
+    return {e,poc:ucl(v),hl:h,ca:sum(v,6),pp:ucl(p),ph:hp,pc:sum(p,6),zp:ucl(z),zh:sum(z,7),pz:h?sum(z,7)/h*100:0,cam:hr?hp/nd/hr:null,sol:sum(v,6)*tar(e),mot:mm?mm[0]:'—'}}).sort((a,b)=>b.hl-a.hl||a.e.localeCompare(b.e));
   const camT=x=>x.cam==null?'':` · ≈ ${x.cam.toFixed(1)} camión${x.cam>=1.05?'es':''}${nd>1?'/día':''}`;
   const S2=n=>'S/ '+Math.round(n).toLocaleString('es-PE');
-  $('bxEC').innerHTML=ER.map(x=>`<div class="vc edc click${bxF.edt===x.e?' on':''}" data-e="${x.e}" style="--c:${x.pz>=30?'#D8253A':x.pz>=15?'#F5B800':'#E0A92A'}"><div class="l">${x.e}</div><div class="v">${S2(x.sol)}</div><div class="s" style="margin-bottom:6px">deja de cobrar · ${nf(x.ca)} cajas × S/ ${tar(x.e).toFixed(2)}</div>
-    <div class="row2"><span>Desplanificado</span><b>${x.poc} POCs · ${f1(x.hl)} HL</b></div>
-    <div class="row2"><span style="color:#E0A92A">Reprogramación</span><b>${x.pp} POCs · ${f1(x.ph)} HL</b></div>
-    <div class="row2"><span style="color:#ff6b7a">ZT (rechazo)</span><b>${x.zp} POCs · ${f1(x.zh)} HL</b></div>
-    <div class="row2"><span>Día siguiente</span><b>+${x.pp} POCs · +${f1(x.ph)} HL${camT(x)}</b></div>
-    <div class="row2"><span>Motivo principal</span><b style="font-family:Barlow;font-size:13px">${x.mot}</b></div></div>`).join('')||'<p class="nota">Sin desplanificaciones en este periodo.</p>';
   const tot=ER.reduce((a,x)=>({poc:a.poc+x.poc,hl:a.hl+x.hl,ca:a.ca+x.ca,pp:a.pp+x.pp,ph:a.ph+x.ph,zp:a.zp+x.zp,zh:a.zh+x.zh,sol:a.sol+x.sol}),{poc:0,hl:0,ca:0,pp:0,ph:0,zp:0,zh:0,sol:0});
-  $('bxEdtT').innerHTML=ER.map(x=>`<tr class="click${bxF.edt===x.e?' selr':''}" data-e="${x.e}"><td><b>${x.e}</b></td><td>${x.poc}</td><td>${f1(x.hl)}</td><td>${nf(x.ca)}</td><td>${x.pp}</td><td>${f1(x.ph)}</td><td>${x.zp}</td><td>${f1(x.zh)}</td><td><span class="pill ${x.pz>=30?'r':x.pz>=15?'y':'g'}">${x.pz.toFixed(0)}%</span></td><td>+${x.pp} POCs · +${f1(x.ph)} HL${camT(x)}</td><td><b>${S2(x.sol)}</b></td></tr>`).join('')+
+  $('bxEdtT').innerHTML=ER.map(x=>`<tr class="click${bxF.edt===x.e?' selr':''}" data-e="${x.e}"${x.poc?'':' style="opacity:.55"'}><td><b>${x.e}</b></td><td>${x.poc}</td><td>${f1(x.hl)}</td><td>${nf(x.ca)}</td><td>${x.pp}</td><td>${f1(x.ph)}</td><td>${x.zp}</td><td>${f1(x.zh)}</td><td><span class="pill ${x.pz>=30?'r':x.pz>=15?'y':'g'}">${x.pz.toFixed(0)}%</span></td><td>+${x.pp} POCs · +${f1(x.ph)} HL${camT(x)}</td><td><b>${S2(x.sol)}</b></td></tr>`).join('')+
     (ER.length?`<tr class="tot"><td>TOTAL</td><td>${tot.poc}</td><td>${f1(tot.hl)}</td><td>${nf(tot.ca)}</td><td>${tot.pp}</td><td>${f1(tot.ph)}</td><td>${tot.zp}</td><td>${f1(tot.zh)}</td><td>${tot.hl?(tot.zh/tot.hl*100).toFixed(0):0}%</td><td>+${tot.pp} POCs · +${f1(tot.ph)} HL</td><td>${S2(tot.sol)}</td></tr>`:'');
   resort('bxEdtT');
   const pickE=e=>{bxF.edt=bxF.edt===e?'Todos':e;renderBX()};
-  $('bxEC').querySelectorAll('[data-e]').forEach(el=>el.onclick=()=>pickE(el.dataset.e));
   $('bxEdtT').querySelectorAll('tr[data-e]').forEach(el=>el.onclick=()=>pickE(el.dataset.e));
   $('bxTar').innerHTML='<b style="font:800 15px \'Big Shoulders Display\';color:var(--gold2);text-transform:uppercase">Tarifa por caja (S/)</b>'+ER.map(x=>`<label>${x.e}<input type="number" step="0.01" min="0" value="${tar(x.e).toFixed(2)}" data-t="${x.e}"></label>`).join('');
   $('bxTar').querySelectorAll('input').forEach(el=>el.onchange=()=>{TAR[el.dataset.t]=Math.max(0,+el.value||0);try{localStorage.setItem('ct2_tarifa',JSON.stringify(TAR))}catch(e){}renderBX()});
