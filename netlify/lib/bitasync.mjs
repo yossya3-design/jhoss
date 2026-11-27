@@ -6,7 +6,8 @@ import { gzipSync } from "node:zlib";
 import { createHash } from "node:crypto";
 
 const FILE_ID = "1TwSBNWfZPRqk0GsDTjd1HUMrkwsDNHDN";
-const HOJAS = ["DESPLANIFICACIÓN", "RECLAMOS", "ADULTERADO", "BD EDT", "BD CLIENTE", "AGENDAS TELEFÓNICAS"];
+const MV = 2; // sube este número cuando cambie lo que se extrae de la bitácora
+const HOJAS = ["BITACORA", "DESPLANIFICACIÓN", "RECLAMOS", "ADULTERADO", "BD EDT", "BD CLIENTE", "AGENDAS TELEFÓNICAS"];
 const URLS = [
   `https://drive.usercontent.google.com/download?id=${FILE_ID}&export=download&confirm=t`,
   `https://drive.google.com/uc?export=download&id=${FILE_ID}`,
@@ -29,7 +30,7 @@ export async function sincronizar() {
   const buf = await bajar();
   const hash = createHash("sha1").update(buf).digest("hex").slice(0, 16);
   const prev = await st.get("bitaptr", { type: "json" });
-  if (prev && prev.hash === hash) {
+  if (prev && prev.hash === hash && prev.mv === MV) {
     await st.setJSON("bitaptr", Object.assign({}, prev, { chk: limaAhora() }));
     return { cambio: false, act: prev.act, chk: limaAhora() };
   }
@@ -38,9 +39,9 @@ export async function sincronizar() {
   for (const n of wb.SheetNames) sh[n] = XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null });
   const b = M.bita(sh);
   if (!b.d.length) throw new Error("La bitácora salió vacía");
-  const id = "bita-" + hash;
+  const id = "bita-" + hash + "-" + MV;
   await st.set("f/" + id, gzipSync(JSON.stringify(b)));
   const ahora = limaAhora();
-  await st.setJSON("bitaptr", { id, hash, n: "Drive · BITACORA_DELIVERY_CD_CALLAO.xlsx", at: ahora, chk: ahora, act: b.act });
+  await st.setJSON("bitaptr", { id, hash, mv: MV, n: "Drive · BITACORA_DELIVERY_CD_CALLAO.xlsx", at: ahora, chk: ahora, act: b.act });
   return { cambio: true, act: b.act, chk: ahora, d: b.d.length };
 }

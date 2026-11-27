@@ -286,6 +286,9 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
    <div class="card tw"><table><thead><tr><th>Empresario</th><th>POCs desplan.</th><th>HL desplan.</th><th>Cajas</th><th>Reprog. POCs</th><th>Reprog. HL</th><th>ZT POCs</th><th>ZT HL</th><th>% ZT (HL)</th><th>Impacto día siguiente</th><th>Deja de cobrar</th></tr></thead><tbody id="bxEdtT"></tbody></table></div>
    <div class="bar tar" id="bxTar"></div>
    <p class="nota">Deja de cobrar = cajas desplanificadas × tarifa por caja (supuesta: cámbiala con la tarifa real de cada empresario). Impacto día siguiente = POCs y HL reprogramados que se suman a la carga del día siguiente; "≈ camiones" usa el HL promedio por ruta de ese empresario en el día cargado en Control T2.</p></section>
+  <section><h2><span class="n">D0b</span>Llenado de clientes desplanificados</h2><p class="sub">Hoja BITACORA: cada BK con desplanificación total o parcial (sin cambio de cabecera) debe tener sus clientes llenados en DESPLANIFICACIÓN. Toca un empresario para ver los BK sin llenar.</p>
+   <div class="card tw"><table><thead><tr><th>Empresario</th><th>Despla. total</th><th>Despla. parcial</th><th>BK desplan.</th><th>Con clientes</th><th>Sin cumplimiento</th><th>% cumplimiento</th></tr></thead><tbody id="bxLlT"></tbody></table></div>
+   <p class="nota" id="bxLlN"></p></section>
   <section><h2><span class="n">D1</span>Impacto diario</h2><p class="sub">HL desplanificado por día: reprogramación y ZT.</p><div class="card" id="bxDia2"></div></section>
   <section><h2><span class="n">D2</span>Impacto por supervisor de ventas</h2><p class="sub">Toca un supervisor para filtrar todo el reporte. Toca un título para ordenar.</p>
    <div class="card tw"><table><thead><tr><th>Supervisor</th><th>POCs</th><th>HL</th><th>Cajas</th><th>Reprog. POCs</th><th>Reprog. HL</th><th>ZT POCs</th><th>ZT HL</th><th>% ZT (HL)</th><th>Motivo principal</th></tr></thead><tbody id="bxSvT"></tbody></table></div></section>
@@ -590,7 +593,8 @@ T2:[
  {h:"16:00",n:"Clientes N3",s:"Cobro en bancarización confirmado",d:'n3'},
  {h:"17:00",n:"Reprogramaciones",s:"No visitados llamados y reprogramados",d:'nov'},
  {h:"Retorno",n:"Post-ruta",s:"Final de ruta VECFLEET, rechazos",d:'al'},
- {h:"21:00",n:"Correo de cierre",s:"Desplanif., resumen EDT, reclamos",key:1}]};
+ {h:"21:00",n:"Correo de cierre",s:"Desplanif., resumen EDT, reclamos",key:1},
+ {h:"Cierre",n:"Llenado de clientes desplanificados",s:"Cada BK con despla. total o parcial con sus clientes en la bitácora",d:'dsp'}]};
 const ST=["pend","ok","tarde","no"],LBL={pend:"Pendiente",ok:"✔ A tiempo",tarde:"⏱ Tarde",no:"✖ No cumplió"};
 let ck={};try{ck=JSON.parse(localStorage.getItem('ctrlAct3')||'{}')}catch(e){}
 let ckT=null;const save=()=>{try{localStorage.setItem('ctrlAct3',JSON.stringify(ck))}catch(e){}if(typeof NET!=='undefined'&&NET&&USER&&USER.r==='admin'){clearTimeout(ckT);ckT=setTimeout(()=>postAPI('ck',ck).catch(e=>console.warn(e)),800)}};
@@ -604,6 +608,7 @@ function dato(code,a,al){
   if(code==='n3')return [`${a.n3} clientes N3 en ruta`,null];
   if(code==='nov')return [`${a.cnt.NOV||0} no visitados por reprogramar`,null];
   if(code==='al')return [`${al.res}/${al.n} alertados entregaron`,pc(al.res,al.n)];
+  if(code==='dsp'){if(!BX||!BX.b)return ['bitácora sin hoja BITACORA',null];const dia=(D&&D.dia)||'',v=BX.b.filter(r=>r[0]===dia&&r[4]===al.edt);if(!v.length)return ['sin desplanificaciones en la bitácora',null];const ok=v.filter(r=>r[6]>0).length;return [ok===v.length?`${ok}/${v.length} BK con clientes llenados`:`${v.length-ok} BK sin cumplimiento de ${v.length} (${v.filter(r=>!r[6]).map(r=>r[1]).join(', ')})`,pc(ok,v.length)]}
 }
 function ckPct(a){const x=getA(a.n);let t=0,o=0;turnos(a).forEach(k=>x[k].forEach(s=>{if(s.s!=='pend'){t++;if(s.s==='ok')o++}}));return t?Math.round(o/t*100):null}
 /* ---- placas pendientes por cargar (almacén) ---- */
@@ -627,7 +632,7 @@ function renderCk(){
   const A=ASIS[ckA],tl=turnos(A);
   [...$('tur').options].forEach(o=>o.disabled=!tl.includes(o.value));
   if(!tl.includes($('tur').value))$('tur').value=tl[0];
-  const t=$('tur').value,x=getA(A.n),st=x[t],ts=byEdt(A.edt),a=agg(ts),al=alertStats(ts);
+  const t=$('tur').value,x=getA(A.n);CORTES[t].forEach((c,i)=>{if(!x[t][i])x[t][i]={s:'pend',at:''}});const st=x[t],ts=byEdt(A.edt),a=agg(ts),al=alertStats(ts);al.edt=A.edt;
   $('asisInfo').innerHTML=`<span class="mono" style="font-size:11px;color:var(--mut)">ASISTENTE</span><br>${A.n} · <span style="color:var(--gold2)">${A.edt}</span> · ${A.t==='T1T2'?'T1 y T2':A.t}`;
   {const H=(DIAH||[]).filter(h=>h.e&&h.e[A.edt]);const pl=(v,n)=>`<span class="pill ${cls(v)}" title="${n}">${v==null?'—':v+'%'}</span>`;
    $('ckTend').innerHTML=H.length?`<div class="card" style="padding:8px 10px;overflow-x:auto"><div style="font:700 11px Barlow;color:var(--gold2);text-transform:uppercase;margin-bottom:4px">Tendencia del día · ${A.edt} (cada carga)</div><table style="font-size:12px"><tr><th style="text-align:left">Hora</th>${H.map(h=>`<th class="mono">${h.h}</th>`).join('')}</tr><tr><td>Salida ≤7:30</td>${H.map(h=>`<td>${pl(h.e[A.edt][0],'Salida')}</td>`).join('')}</tr><tr><td>1er punto ≤8:00</td>${H.map(h=>`<td>${pl(h.e[A.edt][1],'1er punto')}</td>`).join('')}</tr><tr><td>HL entregado</td>${H.map(h=>`<td>${pl(h.e[A.edt][2],'HL')}</td>`).join('')}</tr></table></div>`:''}
@@ -1217,7 +1222,7 @@ async function procesar(files,forzar){
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-27f';
+const VERSION='2026-11-27g';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1385,6 +1390,17 @@ function renderBX(){
   $('bxEdtT').querySelectorAll('tr[data-e]').forEach(el=>el.onclick=()=>pickE(el.dataset.e));
   $('bxTar').innerHTML='<b style="font:800 15px \'Big Shoulders Display\';color:var(--gold2);text-transform:uppercase">Tarifa por caja (S/)</b>'+ER.map(x=>`<label>${x.e}<input type="number" step="0.01" min="0" value="${tar(x.e).toFixed(2)}" data-t="${x.e}"></label>`).join('');
   $('bxTar').querySelectorAll('input').forEach(el=>el.onchange=()=>{TAR[el.dataset.t]=Math.max(0,+el.value||0);try{localStorage.setItem('ct2_tarifa',JSON.stringify(TAR))}catch(e){}renderBX()});
+  // llenado de clientes por BK desplanificado (hoja BITACORA)
+  {const BB=(BX.b||[]).filter(r=>(!bxF.de||r[0]>=bxF.de)&&(!bxF.ha||r[0]<=bxF.ha));
+   if(!BX.b){$('bxLlT').innerHTML='<tr><td colspan="7" class="nota">La bitácora aún no trae la hoja BITACORA: pulsa 🔄 Actualizar bitácora.</td></tr>';$('bxLlN').textContent=''}
+   else{const G={};BB.forEach(r=>{(G[r[4]]=G[r[4]]||[]).push(r)});
+    const LR=Object.entries(G).map(([e,v])=>{const ok=v.filter(r=>r[6]>0).length;return {e,v,t:v.filter(r=>r[3]==='T').length,p:v.filter(r=>r[3]==='P').length,n:v.length,ok,no:v.length-ok,pc:pc(ok,v.length)}}).sort((a,b)=>b.no-a.no||b.n-a.n);
+    const tt=LR.reduce((a,x)=>({t:a.t+x.t,p:a.p+x.p,n:a.n+x.n,ok:a.ok+x.ok,no:a.no+x.no}),{t:0,p:0,n:0,ok:0,no:0});
+    const bk=r=>`${r[1]} V${r[2]} · ${r[3]==='T'?'total':'parcial'}${bxF.de&&bxF.de===bxF.ha?'':' · '+dmy(r[0])}`;
+    $('bxLlT').innerHTML=LR.map(x=>`<tr class="click" data-ll="${esc(x.e)}"><td><b>${esc(x.e)}</b></td><td>${x.t}</td><td>${x.p}</td><td>${x.n}</td><td>${x.ok}</td><td>${x.no?`<span class="pill r">${x.no} BK sin cumplimiento</span>`:'<span class="pill g">0</span>'}</td><td><span class="pill ${cls(x.pc)}">${x.pc}%</span></td></tr><tr class="exp" data-for="${esc(x.e)}" hidden><td colspan="7" style="white-space:normal;font-size:12px;color:var(--mut)">${x.no?'<b style="color:#ff6b7a">Sin llenar:</b> '+x.v.filter(r=>!r[6]).map(bk).join(' · ')+'<br>':''}${x.ok?'<b style="color:#6fdc8a">Llenados:</b> '+x.v.filter(r=>r[6]).map(r=>bk(r)+' ('+r[6]+' clientes)').join(' · '):''}</td></tr>`).join('')+
+     (LR.length?`<tr class="tot"><td>TOTAL</td><td>${tt.t}</td><td>${tt.p}</td><td>${tt.n}</td><td>${tt.ok}</td><td>${tt.no}</td><td>${pc(tt.ok,tt.n)??'—'}%</td></tr>`:'<tr><td colspan="7" class="nota">Sin desplanificaciones en la hoja BITACORA para este periodo.</td></tr>');
+    $('bxLlT').querySelectorAll('tr[data-ll]').forEach(el=>el.onclick=()=>{const x=$('bxLlT').querySelector(`tr.exp[data-for="${CSS.escape(el.dataset.ll)}"]`);x.hidden=!x.hidden});
+    $('bxLlN').textContent=tt.n?`${tt.n} desplanificaciones (${tt.t} totales y ${tt.p} parciales) · ${tt.no} BK sin clientes llenados. Se cruza por número de transporte (o ruta + viaje) contra la hoja DESPLANIFICACIÓN del mismo día.`:''}}
   // diario
   const days=[...new Set(fs)].slice(-31),mxd=Math.max(...days.map(f=>sum(d.filter(r=>r[0]===f),7)),.01);
   $('bxDia2').innerHTML=`<div style="display:flex;align-items:flex-end;gap:3px;height:170px;overflow-x:auto;padding-top:16px">${days.map(f=>{const v=d.filter(r=>r[0]===f),z=sum(v.filter(r=>r[8]==='ZT'),7),p=sum(v.filter(r=>r[8]==='REP'),7),o=sum(v,7)-z-p;return `<div title="${dmy(f)} · ${f1(p)} HL reprog · ${f1(z)} HL ZT" style="flex:1 0 18px;display:flex;flex-direction:column;justify-content:flex-end;height:100%;align-items:center"><span class="mono" style="font-size:8px;color:var(--mut)">${Math.round(z+p+o)}</span><i style="width:100%;height:${o/mxd*120}px;background:#6b665b"></i><i style="width:100%;height:${p/mxd*120}px;background:#F5B800"></i><i style="width:100%;height:${z/mxd*120}px;background:#D8253A;border-radius:0"></i><span class="mono" style="font-size:8px;color:var(--mut);margin-top:3px">${dmy(f)}</span></div>`}).join('')}</div><div class="legend"><span><i class="dot" style="background:#F5B800"></i>Reprogramación</span><span><i class="dot" style="background:#D8253A"></i>ZT (rechazo)</span><span><i class="dot" style="background:#6b665b"></i>Sin clasificar</span></div>`;

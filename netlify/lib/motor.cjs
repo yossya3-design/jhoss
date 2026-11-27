@@ -237,8 +237,14 @@ function bita(S){ // S: hojas como AOA
     [[1,'ATLAS','930 439 078','DANIA RODRIGUEZ'],[6,'ADRIAN CAR','927346022','FRANCESCA VIETI'],[11,'REPARTO ROSALES','949134826','MARIBEL PUJADA'],[16,'LOGITRACK','','']].forEach(([c,et,tel,sup])=>{
       AG[et]={tel,sup,rows:[]};for(let i=4;i<ag.length;i++){const r=ag[i]||[];if(NA(r[c]))continue;const tl=r[c+3];
         AG[et].rows.push([String(r[c]).trim(),str(r[c+1]).trim(),str(r[c+2]).trim(),NA(tl)?'':(typeof tl==='number'?String(Math.trunc(tl)):String(tl).trim())])}})}
+  // hoja BITACORA: desplanificaciones totales y parciales por BK (sin cambio de cabecera) y si el asistente llenó sus clientes
+  const Bk=[];{const A=sh(/^BITACORA$/i);let hi=-1;for(let i=0;i<Math.min(15,A.length);i++){const h=(A[i]||[]).map(x=>String(x==null?'':x).trim().toUpperCase());if(h.includes('FECHA')&&h.includes('RUTA')&&h.includes('MOTIVO')){hi=i;break}}
+    if(hi>=0){const bo=objs(A.slice(hi));const byT={},byRV={};
+      de.forEach(r=>{const f=ok(r.FECHA);if(!f)return;const t=id(r.TRANSPORTE),k=f+'|'+str(r.RUTA).trim()+'|'+id(r['# VIAJE']);if(t)byT[f+'|'+t]=(byT[f+'|'+t]||0)+1;byRV[k]=(byRV[k]||0)+1});
+      bo.forEach(r=>{const f=ok(r.FECHA),m=str(r.MOTIVO).toUpperCase();if(!f||!m.includes('DESPLAN'))return;const ruta=str(r.RUTA).trim(),v=id(r.VIAJE),t=id(r.TRANSPORTE);
+        const n=(t&&byT[f+'|'+t])||byRV[f+'|'+ruta+'|'+v]||0;Bk.push([f,ruta,v,m.includes('PARCIAL')?'P':'T',en(ruta),t,n])})}}
   const now=new Date(Date.now()-5*3600e3);
-  return {act:pad(now.getUTCDate())+'/'+pad(now.getUTCMonth()+1)+'/'+now.getUTCFullYear()+' '+pad(now.getUTCHours())+':'+pad(now.getUTCMinutes()),d:D,r:Rr,a:A,ag:AG,agf};
+  return {b:Bk,act:pad(now.getUTCDate())+'/'+pad(now.getUTCMonth()+1)+'/'+now.getUTCFullYear()+' '+pad(now.getUTCHours())+':'+pad(now.getUTCMinutes()),d:D,r:Rr,a:A,ag:AG,agf};
 }
 
 /* ---------- bases maestras (placas por EDT, clientes, N3, volumen) ---------- */
