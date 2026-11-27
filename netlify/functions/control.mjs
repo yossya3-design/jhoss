@@ -50,6 +50,7 @@ export default async (req) => {
         return new Response(v, { headers: { "content-type": "application/octet-stream", "cache-control": "private, max-age=31536000, immutable" } });
       }
       if (op === "ck") return json({ ok: true, ck: (await st.get("ck", { type: "json" })) || {} });
+      if (op === "base") return json({ ok: true, base: (await st.get("baseptr", { type: "json" })) || null });
       if (op === "pend") {
         const dia = url.searchParams.get("dia") || "";
         if (!DIA_OK.test(dia)) return json({ ok: false, error: "dia" }, 400);
@@ -88,6 +89,14 @@ export default async (req) => {
         delete e.bita;
         e.por = s.n;
         await st.setJSON("estado", e);
+        return json({ ok: true });
+      }
+      if (op === "base") {
+        if (!admin) return json({ ok: false, error: "Solo la administradora actualiza las bases maestras" }, 403);
+        const b = limpio(await req.json(), 4000);
+        if (!ID_OK.test(b.id || "")) return json({ ok: false, error: "id" }, 400);
+        b.por = s.n;
+        await st.setJSON("baseptr", b);
         return json({ ok: true });
       }
       if (op === "bitaptr") {

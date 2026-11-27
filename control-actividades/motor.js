@@ -87,7 +87,7 @@ function fechaDe(tipo,rows){
 /* ---------- cálculo principal ---------- */
 function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
   const R=objs(F.radar),Bs=objs(F.bees),MD=objs(F.mod||[]),GE=objs(F.geo||[]),SI=objs(F.sic||[]);
-  const vol=B.vol||{},N3=B.n3||{},XY=B.xy||{},PL=B.pl||{};
+  const vol=B.vol||{},N3=B.n3||{},XY=B.xy||{},PL=B.pl||{},RU=B.ru||{};
   // día de operación
   const dc={};R.forEach(r=>{const d=dateOf(r.FechaPla);if(d)dc[d]=(dc[d]||0)+1});
   let dia=(Object.entries(dc).sort((a,b)=>b[1]-a[1])[0]||[])[0];
@@ -177,7 +177,7 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
         hP:mn(lp)!=null&&mx(spp)!=null?r_((mx(spp)-mn(lp))/3600,2):null,hE:mn(le)!=null&&mx(se)!=null?r_((mx(se)-mn(le))/3600,2):null,
         nP:gt.length,nE:vis.filter(Boolean).length,adh:dev.length?Math.round(dev.filter(d=>d<=3).length/dev.length*100):null,
         iP:hhmm(mn(lp)),fP:hhmm(mx(spp)),iE:hhmm(mn(le)),fE:hhmm(mx(se))}}
-    const et=PL[t.placa]!=null?PL[t.placa]:t.emp;
+    const et=PL[t.placa]!=null?PL[t.placa]:(RU[t.ruta]!=null?RU[t.ruta]:t.emp);
     // multiparada
     const tm=h=>!h?null:(+h.slice(0,2))*60+(+h.slice(3,5));
     const arr=cl.filter(z=>z.la!=null&&(z.gv||z.fr));
@@ -189,7 +189,7 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
     const hlb=Bs.filter(b=>b.base===t.tour&&b.tour_status!=='CANCELLED').reduce((s,b)=>s+(isNaN(b.hs)?0:b.hs),0);
     const sdv=sb.reduce((s,b)=>s+(isNaN(b.dv)?0:b.dv),0),srv=sb.reduce((s,b)=>s+(isNaN(b.rv)?0:b.rv),0);
     const cnt={};sb.forEach(b=>cnt[b.est]=(cnt[b.est]||0)+1);
-    tours.push({id:t.tour,ruta:t.ruta,v,edt:EDT[et]||et||'—',placa:t.placa,cond:title(str(t.cond)),ini:s5(t.ini)||'nan',
+    tours.push({id:t.tour,ruta:t.ruta,v,edt:EDTN[et]||(et&&typeof et==='string'?title(et):et)||'—',placa:t.placa,cond:title(str(t.cond)),ini:s5(t.ini)||'nan',
       cli:t.cli,env:envL.length?envL:undefined,pe:t.pe,ent:t.ent,hlr0:isNaN(t.hl)?null:r_(t.hl,1),hl:r_(Math.max(isNaN(t.hl)?0:t.hl,hlb,sdv+srv),1),na:t.na,
       sal:start[t.tour]!=null?hmT(start[t.tour]):null,p1,p1p,hle:r_(sdv,1),hlr:r_(srv,1),eff,av,cnt,al:cl.filter(z=>z.al).length,cl});
   }
@@ -203,7 +203,7 @@ function calc(F,B){ // F: {radar,bees,mod,geo,sic} como AOA slim; B: base fija
   const byp={};tours.forEach(t=>(byp[t.placa]=byp[t.placa]||[]).push(t));
   const td=v=>NA(v)?null:(typeof v==='number'?r_(v*24,2):(()=>{const s=secs(v);return s==null?null:r_(s/3600,2)})());
   const sic=SI.filter(x=>!NA(x.Unidad)).map(x=>{const pl=str(x.Unidad),ts=byp[pl]||[],et=PL[pl];
-    const row={placa:pl,edt:ts.length?ts[0].edt:(typeof et==='string'?(EDT[et]||et):'—'),rutas:[...new Set(ts.map(t=>t.ruta))].sort(),vj:ts.length,
+    const row={placa:pl,edt:ts.length?ts[0].edt:(typeof et==='string'?(EDTN[et]||title(et)):'—'),rutas:[...new Set(ts.map(t=>t.ruta))].sort(),vj:ts.length,
       ini:s5(x['Hora Ini. Real']),fin:s5(x['H. Fin Real']),lim:s5(x['Hora Fin Plan (lim. 10:30)']),av:td(x['Tiempo Avance']),rest:td(x['Tiempo Restante']),
       km:NA(x['Dist. (Km)'])?null:r_(num(x['Dist. (Km)']),1),tcd:s5(x['Tiempo en CD']),ub:NA(x['Ubicación'])?null:String(x['Ubicación'])};
     // salida del viaje 1 = salida de geocerca del SIC; si el SIC no la tiene, la unidad sigue en el CD (no se usa el inicio de BEES)
@@ -241,6 +241,32 @@ function bita(S){ // S: hojas como AOA
   return {act:pad(now.getUTCDate())+'/'+pad(now.getUTCMonth()+1)+'/'+now.getUTCFullYear()+' '+pad(now.getUTCHours())+':'+pad(now.getUTCMinutes()),d:D,r:Rr,a:A,ag:AG,agf};
 }
 
-const API={calc,bita,detect,fechaDe,TIPOS,noPE};
+/* ---------- bases maestras (placas por EDT, clientes, N3, volumen) ---------- */
+// S: hojas como AOA. Devuelve solo las partes que reconoce: {pl,ru,plr} | {xy} | {n3} | {vol}
+function baseDe(S){
+  const out={},norm=x=>String(x==null?'':x).trim().toUpperCase();
+  const tabla=(aoa,need)=>{for(let i=0;i<Math.min(15,aoa.length);i++){const h=(aoa[i]||[]).map(norm);if(need.every(n=>h.includes(n)))return objs(aoa.slice(i))}return null};
+  for(const n of Object.keys(S)){const A=S[n]||[];let t;
+    if((t=tabla(A,['TRACTOR','E.T']))){const pl={},ru={},cnt={},plr=[];
+      const K=o=>{const m={};for(const k in o)m[norm(k)]=o[k];return m};
+      t.forEach(o=>{const r=K(o),p=id(r['TRACTOR']),e=NA(r['E.T'])?'':String(r['E.T']).trim(),ruta=id(r['RUTA']);if(!e)return;
+        if(p){(cnt[p]=cnt[p]||new Set()).add(e);pl[p]=e}if(ruta)ru[ruta]=e;
+        plr.push([ruta,p,NA(r['CONDUCTOR1'])?'':id(r['CONDUCTOR1']),NA(r['COD. E.T'])?'':id(r['COD. E.T']),e,NA(r['CAPACIDAD'])?null:num(r['CAPACIDAD'])])});
+      for(const p in cnt)if(cnt[p].size>1)delete pl[p]; // placa comodín usada por varios EDT: manda la ruta
+      if(plr.length)Object.assign(out,{pl,ru,plr});continue}
+    if((t=tabla(A,['CUSTOMER ID','LATITUDE','LONGITUDE']))){const xy={};
+      t.forEach(o=>{const c=id(o['Customer ID']),la=num(o.Latitude),lo=num(o.Longitude);if(/^\d+$/.test(c)&&!isNaN(la)&&!isNaN(lo)&&la&&lo&&!(c in xy))xy[c]=[Math.round(la*1e5)/1e5,Math.round(lo*1e5)/1e5]});
+      if(Object.keys(xy).length)out.xy=xy;continue}
+    if((t=tabla(A,['CODIGO','CHECK']))){const n3={};
+      t.forEach(o=>{const c=id(o.CODIGO);if(/^\d+$/.test(c)&&!NA(o.CHECK)&&!(c in n3))n3[c]=String(o.CHECK)});
+      if(Object.keys(n3).length)out.n3=n3;continue}
+    if((t=tabla(A,['MATERIAL','VOLUMEN']))){const vol={};
+      t.forEach(o=>{const m=id(o.Material??o.MATERIAL),v=num(o.VOLUMEN??o.Volumen);if(m&&!isNaN(v)&&!(m in vol))vol[m]=v});
+      if(Object.keys(vol).length)out.vol=vol;continue}
+  }
+  return Object.keys(out).length?out:null;
+}
+
+const API={calc,bita,detect,fechaDe,TIPOS,noPE,baseDe,EDTN};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;else G.MOTOR=API;
 })(typeof window!=='undefined'?window:globalThis);

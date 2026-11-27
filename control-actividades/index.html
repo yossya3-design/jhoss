@@ -337,6 +337,13 @@ footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);display
   <p class="sub">Si un día no hay descarga automática, baja el formato, pega la data con las mismas columnas y súbelo arriba. La página reconoce el archivo por sus columnas, no por el nombre.</p>
   <div id="fmtList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px"></div>
  </section>
+ <section>
+  <h2><span class="n">29</span>Bases maestras</h2>
+  <p class="sub">Cuando cambie la relación de placas por EDT, el maestro de clientes o el de volumen, sube el Excel nuevo en <b>📤 Elegir archivos del corte</b> (o aquí). La página lo reconoce por sus columnas, actualiza la base para todos y recalcula el día. Solo la administradora puede actualizarlas.</p>
+  <label class="btn gold" style="display:inline-block;text-align:center;padding:10px 14px">📤 Subir base actualizada<input id="baseIn" type="file" multiple accept=".xlsx,.xls,.xlsm,.csv" hidden></label>
+  <div id="baseList" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-top:10px"></div>
+  <p class="nota" id="baseMsg"></p>
+ </section>
 </div>
 
 <!-- CHECKLIST -->
@@ -1113,7 +1120,7 @@ function renderSlots(){
     if(f){const vie=k!=='bita'&&k!=='sic'&&f.fecha&&dia&&f.fecha!==dia;pill=`<span class="pill ${vie?'y':'g'}">${vie?'⚠ otro día':'✔ '+esc(f.at.slice(11,16))}</span>`;det=`${esc(f.n||'')} · ${esc(f.at.slice(8,10)+'/'+f.at.slice(5,7)+' '+f.at.slice(11,16))}${f.fecha?' · data del '+esc(dmy(f.fecha)):''}`}
     else if(k!=='bita'&&!(UPST&&UPST.data)){pill='<span class="pill n">data de ejemplo</span>';det='Aún no se sube nada desde aquí'}
     return `<div class="card" style="padding:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><b>${n}</b>${pill}</div><small style="color:var(--mut)">${u}</small><small class="mono" style="font-size:10px;color:var(--mut)">${det}${k==='bita'&&f&&f.chk?' · revisado '+esc(f.chk.slice(11,16)):''}</small>${k==='bita'?'<button class="btn gold bitaYa" style="padding:6px;font-size:13px;margin-top:4px">🔄 Actualizar ahora desde el Drive</button><small class="nota bitaMsg" style="margin:0"></small>':''}</div>`}).join('')
-   +`<div class="card" style="padding:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:6px"><b>Bases fijas</b><span class="pill n">fija</span></div><small style="color:var(--mut)">Maestro de clientes (coordenadas y N3), placas por EDT y maestro SKU × volumen. No se suben cada día.</small></div>`;
+   +`<div class="card" style="padding:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:6px"><b>Bases maestras</b><span class="pill n">ver 29</span></div><small style="color:var(--mut)">Placas por EDT, clientes (coordenadas y N3) y volumen por SKU. Se cambian solo cuando cambian: súbelas aquí mismo.</small></div>`;
   $('upNota').textContent=(UPST&&UPST.data?`Última recalculada: ${UPST.data.at.slice(8,10)}/${UPST.data.at.slice(5,7)} ${UPST.data.at.slice(11,16)} · data del ${UPST.fecha}. `:'')+'Mínimo para recalcular: Radar y BEES. Lo que no subas en un corte se mantiene del corte anterior. La bitácora se actualiza sola desde el Drive cada hora (6:00–22:00); si la subes aquí, se usa la tuya.';
 }
 const nowL=()=>new Date(Date.now()-5*3600e3).toISOString().slice(0,19).replace('T',' ');
@@ -1126,6 +1133,34 @@ async function putJSON(o){
   if(!AS)return null;const a=await AS.upload(new Blob([JSON.stringify(o)],{type:'application/json'}));return a.id}
 const postAPI=async(op,o)=>{const r=await afetch(API+'?op='+op,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(o)});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||('no se pudo guardar ('+r.status+')'))}};
 const CAN_SAVE=()=>NET||!!DB;
+/* ---------- bases maestras: placas por EDT, clientes (coordenadas y N3), volumen por SKU ---------- */
+let BASE=null,BASEP=null;
+async function basePtr(){if(!NET)return null;try{const r=await afetch(API+'?op=base',{cache:'no-store'});const j=await r.json();return j.ok?j.base:null}catch(e){return null}}
+async function cargarBase(){BASEP=await basePtr();
+  if(BASE&&BASE._id===(BASEP&&BASEP.id||'fija'))return BASE;
+  let b;if(BASEP&&BASEP.id){try{b=await getJSON(BASEP.id)}catch(e){b=null}}
+  if(!b)b=await (await fetch('base.json',{cache:'no-store'})).json();
+  b._id=BASEP&&BASEP.id||'fija';BASE=b;return b}
+const BASES=[['pl','Placas por EDT','PLACAS POR EDT - RELACIÓN.xlsx (columnas Ruta, Tractor, E.T)'],['xy','Clientes · coordenadas','BD_CLIENTE.xlsx hoja BD CLIENTES (Customer ID, Latitude, Longitude)'],['n3','Clientes N3','BD_CLIENTE.xlsx hoja CLIENTE N3 (CODIGO, CHECK)'],['vol','Volumen por SKU','MAESTRO SKU X VOLUMEN.xlsx (Material, VOLUMEN)']];
+async function renderBases(){const box=$('baseList');if(!box)return;
+  let b;try{b=await cargarBase()}catch(e){box.innerHTML='<p class="nota">No se pudo leer la base.</p>';return}
+  const at=k=>BASEP&&BASEP.at&&BASEP.at[k]?`actualizada ${esc(BASEP.at[k].slice(8,10)+'/'+BASEP.at[k].slice(5,7)+' '+BASEP.at[k].slice(11,16))}${BASEP.por?' · '+esc(BASEP.por):''}`:'base original';
+  const n=k=>k==='pl'?`${Object.keys(b.pl||{}).length} placas · ${Object.keys(b.ru||{}).length} rutas`:`${Object.keys(b[k]||{}).length.toLocaleString('es-PE')} registros`;
+  box.innerHTML=BASES.map(([k,nm,u])=>`<div class="card" style="padding:10px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><b>${nm}</b><span class="pill ${BASEP&&BASEP.at&&BASEP.at[k]?'g':'n'}">${n(k)}</span></div><small style="color:var(--mut)">${u}</small><small class="mono" style="font-size:10px;color:var(--mut)">${at(k)}</small>${k==='pl'||k==='vol'?`<button class="btn" data-bd="${k}" style="padding:6px 10px;font-size:12px;margin-top:4px">⬇ Descargar ${nm.toLowerCase()}</button>`:''}</div>`).join('');
+  box.querySelectorAll('[data-bd]').forEach(el=>el.onclick=async()=>{const k=el.dataset.bd;try{await loadJS(XLSX_URL,()=>window.XLSX);
+    const rows=k==='pl'?[['Ruta','Tractor','Conductor1','Cod. E.T','E.T','Capacidad'],...(b.plr||Object.entries(b.pl||{}).map(([p,e])=>['',p,'','',e,null]))]:[['Material','VOLUMEN'],...Object.entries(b.vol||{}).map(([m,v])=>[+m||m,v])];
+    const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=rows[0].map(c=>({wch:k==='pl'&&c==='E.T'?36:14}));XLSX.utils.book_append_sheet(wb,ws,k==='pl'?'DISPO':'VOLUMEN');
+    await saveFile(k==='pl'?'PLACAS POR EDT - RELACIÓN.xlsx':'MAESTRO SKU X VOLUMEN.xlsx',new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}))}catch(e){$('baseMsg').textContent='No se pudo descargar: '+e.message}});
+}
+async function guardarBase(parte,nombre,log){
+  if(NET&&(!USER||USER.r!=='admin'))throw new Error('solo la administradora actualiza las bases maestras');
+  const b=JSON.parse(JSON.stringify(await cargarBase()));delete b._id;Object.assign(b,parte);
+  const id=await putJSON(b);if(!id)throw new Error('no se pudo guardar la base');
+  const at=Object.assign({},(BASEP&&BASEP.at)||{});const t=nowL();Object.keys(parte).forEach(k=>{if(k!=='ru'&&k!=='plr')at[k]=t});
+  if(NET)await postAPI('base',{id,at,n:nombre});
+  b._id=id;BASE=b;BASEP={id,at,n:nombre,por:USER&&USER.n};
+  log(`   ✔ Base actualizada: ${Object.keys(parte).filter(k=>k!=='ru'&&k!=='plr').map(k=>BASES.find(x=>x[0]===k)[1]+(k==='pl'?` (${Object.keys(parte.pl).length} placas, ${Object.keys(parte.ru||{}).length} rutas)`:` (${Object.keys(parte[k]).length.toLocaleString('es-PE')})`)).join(' · ')}`);
+}
 async function saveEstado(est){if(NET){const e=Object.assign({},est);if(e.bita&&e.bita._new){const b=e.bita;delete b._new;await postAPI('bitaptr',b)}delete e.bita;return postAPI('estado',e)}if(est.bita)delete est.bita._new;return DB.doc('cfg/estado').set(est)}
 async function saveDia(dia,o){
   if(NET)return postAPI('dia',Object.assign({dia},o));
@@ -1134,6 +1169,7 @@ async function getDia(dia){
   if(NET){const r=await afetch(API+'?op=dia&dia='+dia,{cache:'no-store'});const j=await r.json();return j.ok?j.dia:null}
   if(!DB)return null;const sn=await DB.doc('dias/'+dia).get();return sn.exists?sn.data():null}
 function snapDe(out){const o={h:nowHM(),e:{}};const prevD=D;try{D=out;[...new Set(out.tours.map(t=>t.edt))].forEach(e=>{const a=agg(out.tours.filter(t=>t.edt===e));o.e[e]=[a.salP,a.p1P,a.hlP]});const a=agg(out.tours);o.e['CD']=[a.salP,a.p1P,a.hlP]}finally{D=prevD}return o}
+$('baseIn').onchange=ev=>{const files=[...ev.target.files];ev.target.value='';if(files.length){go('carga');procesar(files,false).then(()=>{$('baseMsg').textContent=$('upMsg').textContent.split('\n').filter(l=>/Base|✖/.test(l)).join(' ')})}};
 $('upIn').onchange=ev=>{const files=[...ev.target.files];ev.target.value='';if(files.length)procesar(files,false)};
 async function procesar(files,forzar){
   const msg=$('upMsg');const log=t=>{msg.textContent+=t+'\n'};msg.textContent='';
@@ -1141,7 +1177,7 @@ async function procesar(files,forzar){
     log('Preparando…');await loadJS(XLSX_URL,()=>window.XLSX);await loadJS('motor.js',()=>window.MOTOR);
     // carga automática: puede llegar antes de que la página lea lo guardado; sin esto se pisaban los archivos del día
     if(NET&&!UPST){const r=await afetch(API+'?op=estado',{cache:'no-store'});const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error('no se pudo leer lo guardado; intenta de nuevo');UPST=j.estado||{files:{}}}
-    const est=JSON.parse(JSON.stringify(UPST||{files:{}}));est.files=est.files||{};let daily=!!forzar,bnew=null;const NUEVO=new Set();if(forzar)log('↻ Recalculando con los archivos guardados de hoy…');
+    const est=JSON.parse(JSON.stringify(UPST||{files:{}}));est.files=est.files||{};let daily=!!forzar,bnew=null,BASECHG=false;const NUEVO=new Set();if(forzar)log('↻ Recalculando con los archivos guardados de hoy…');
     for(const f of files){
       log('📄 '+f.name+': leyendo…');
       let sh=f.sheets;if(!sh){const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});sh={};wb.SheetNames.forEach(n=>sh[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null}))}
@@ -1149,7 +1185,9 @@ async function procesar(files,forzar){
       if(d.tipo==='bita'){bnew=MOTOR.bita(sh);log(`   ✔ Bitácora: ${bnew.d.length} desplanificaciones, ${bnew.r.length} reclamos, ${bnew.a.length} adulterado`);
         const id=await putJSON(bnew);est.bita={id,n:f.name,at:nowL(),act:bnew.act,_new:1};continue}
       if(d.tipo==='fox'){log('   ℹ Este resumen de Foxtrot no hace falta: el avance ya viene en el archivo BEES.');continue}
-      if(!d.tipo){log('   ✖ No lo reconozco. Debe ser Radar, BEES, Modulación, Geotab, SIC de ruta o Bitácora.');continue}
+      if(!d.tipo){const bd=MOTOR.baseDe(sh);
+        if(bd){try{await guardarBase(bd,f.name,log);daily=true;BASECHG=true}catch(e){log('   ✖ '+e.message)}continue}
+        log('   ✖ No lo reconozco. Debe ser Radar, BEES, Modulación, Geotab, SIC de ruta, Bitácora o una base maestra (placas por EDT, clientes, volumen).');continue}
       SL[d.tipo]=d.rows;NUEVO.add(d.tipo);daily=true;const fe=MOTOR.fechaDe(d.tipo,d.rows);
       log(`   ✔ ${MOTOR.TIPOS[d.tipo].n}: ${(d.rows.length-1).toLocaleString('es-PE')} filas${fe?' · data del '+dmy(fe):''}`);
       const id=await putJSON(d.rows);est.files[d.tipo]={id,n:f.name,at:nowL(),fecha:fe||(d.tipo!=='radar'&&est.files.radar&&est.files.radar.fecha)||null};
@@ -1167,7 +1205,7 @@ async function procesar(files,forzar){
         catch(e){log('⚠ No se pudo recuperar '+MOTOR.TIPOS[k].n+' guardado ('+e.message+'). Vuelve a subirlo.');delete est.files[k]}
       }
       if(SL.radar&&SL.bees){
-        log('⚙ Recalculando…');const base=await (await fetch('base.json')).json();
+        log('⚙ Recalculando…');const base=await cargarBase();
         const out=MOTOR.calc(SL,base);const dias=['bees','mod','geo'].map(k=>est.files[k]&&est.files[k].fecha).filter(x=>x&&x!==out.dia);
         if(dias.length)log('⚠ Ojo: hay archivos de otro día ('+[...new Set(dias)].map(dmy).join(', ')+') que el Radar del '+dmy(out.dia)+'.');
         const id=await putJSON(out);est.data={id,at:nowL()};est.fecha=out.fecha;est.dia=out.dia;
@@ -1176,11 +1214,11 @@ async function procesar(files,forzar){
       }else if(daily)log('Falta '+(!SL.radar?'el Radar':'el BEES')+(dia?' del '+dmy(dia):'')+' para recalcular. Súbelo y se arma todo.');
       est.at=nowL();
       if(CAN_SAVE()){await saveEstado(est);delete (est.bita||{})._new;log('💾 Guardado: todos ven esta data.')}else log('⚠ No se pudo guardar para los demás. La data se ve solo en esta pantalla.');
-      UPST=est;renderSlots();
+      UPST=est;renderSlots();if(BASECHG)renderBases();
     }
   }catch(e){console.error(e);log('✖ Error: '+(e&&e.message||e))}
 }
-const VERSION='2026-11-27b';
+const VERSION='2026-11-27c';
 async function chkVersion(){if(!NET)return;try{const v=(await (await fetch('version.txt?t='+Date.now(),{cache:'no-store'})).text()).trim();if(v&&v!==VERSION&&!$('verBan')){document.body.insertAdjacentHTML('afterbegin','<div id="verBan" style="position:fixed;top:0;left:0;right:0;z-index:60;background:#F2C52A;color:#1a1300;text-align:center;padding:10px;font-weight:700;cursor:pointer">Hay una versión nueva de Control T2 · toca aquí para actualizar</div>');$('verBan').onclick=()=>location.reload()}}catch(e){}}
 if(NET){chkVersion();setInterval(chkVersion,120000)}
 if(!NET)document.body.insertAdjacentHTML('afterbegin','<a href="https://seguimiento-delivery-t2.netlify.app/control" target="_blank" rel="noopener" style="display:block;position:relative;z-index:5;background:#D8253A;color:#fff;text-align:center;padding:10px;font-weight:700;text-decoration:none">⚠ Esta es la copia de prueba en Claude (data de ejemplo). La data real del día está en Control T2 → toca aquí para abrirlo</a>');
@@ -1522,7 +1560,7 @@ function resort(id){const tb=$(id);if(!tb)return;const st=SORT[id];
 }
 
 /* ---------- nav ---------- */
-function go(p){document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));window.scrollTo({top:document.getElementById('nav').offsetTop,behavior:'smooth'})}
+function go(p){if(p==='carga')renderBases();document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));window.scrollTo({top:document.getElementById('nav').offsetTop,behavior:'smooth'})}
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.p));
 function tick(){const d=new Date();$('hora').textContent=d.toTimeString().slice(0,5);$('fecha').textContent=d.toLocaleDateString('es-PE',{weekday:'short',day:'2-digit',month:'short'})}
 tick();setInterval(tick,15000);
